@@ -372,6 +372,37 @@ tbody tr.highlight td{background:var(--gold-dim)}
 .team-chip:hover{border-color:var(--border3);color:var(--text)}
 .team-chip.active{border-color:var(--gold-border);color:var(--gold);background:var(--gold-dim)}
 
+/* ─── INSIGHTS ─── */
+.insights-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-bottom:1.5rem}
+.insight-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1rem 1.1rem;position:relative;overflow:hidden}
+.insight-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.insight-card.type-record::before{background:var(--gold)}
+.insight-card.type-player::before{background:var(--teal)}
+.insight-card.type-matchup::before{background:#7F77DD}
+.insight-card.type-streak::before{background:var(--crimson)}
+.insight-card.type-proj::before{background:#e0b84d}
+.insight-label{font-size:0.65rem;font-weight:600;color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:4px}
+.insight-text{font-size:0.88rem;color:var(--text);line-height:1.5}
+.insight-text strong{color:var(--gold)}
+.insight-sub{font-size:0.72rem;color:var(--text3);margin-top:4px}
+
+/* ─── PROJECTIONS ─── */
+.diff-pos{color:var(--teal);font-weight:600}
+.diff-neg{color:var(--crimson);font-weight:600}
+.diff-neu{color:var(--text3)}
+.luck-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.luck-cards{grid-template-columns:1fr}}
+.luck-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.85rem 1rem}
+.luck-card.lucky{border-left:3px solid var(--teal)}
+.luck-card.unlucky{border-left:3px solid var(--crimson)}
+.luck-label{font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px}
+.lucky .luck-label{color:var(--teal)}
+.unlucky .luck-label{color:var(--crimson)}
+.luck-game{font-size:0.82rem;color:var(--text);margin-bottom:2px}
+.luck-meta{font-size:0.72rem;color:var(--text3)}
+
 /* ─── SMART SEARCH ─── */
 .search-bubble{background:var(--surface);border:1px solid var(--border2);border-radius:20px;
   padding:4px 12px;font-size:0.78rem;color:var(--text2);cursor:pointer;transition:all 0.15s;
@@ -439,6 +470,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <button class="tab-btn" onclick="switchTab('awards')">Awards</button>
       <button class="tab-btn" onclick="switchTab('probowl')">Pro Bowl</button>
       <button class="tab-btn" onclick="switchTab('hof')">Hall of Fame</button>
+      <button class="tab-btn" onclick="switchTab('projections')">Projections</button>
       <button class="tab-btn" onclick="switchTab('search')">🔍 Smart Search</button>
     </div>
     <div class="topbar-right">
@@ -454,6 +486,11 @@ tbody tr.highlight td{background:var(--gold-dim)}
     <div class="panel active" id="panel-home">
       <div class="sh"><h2>Season Timeline</h2><span class="sh-sub">Docile League · 2014–2025</span></div>
       <div id="timeline-content"></div>
+      <div class="sh" style="margin-top:2rem"><h2>Automated Insights</h2>
+        <span class="sh-sub">Generated from loaded season data</span>
+        <div class="sh-right"><button onclick="generateInsights()" class="add-btn-sm">↻ Regenerate</button></div>
+      </div>
+      <div id="insights-grid" class="insights-grid"></div>
     </div>
 
     <!-- STANDINGS -->
@@ -577,6 +614,58 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <div id="hof-content"></div>
       <div class="sh" style="margin-top:2rem"><h2>Future Candidates</h2><span class="sh-sub">Based on league performance</span></div>
       <div id="hof-candidates"></div>
+    </div>
+
+    <!-- PROJECTIONS -->
+    <div class="panel" id="panel-projections">
+      <div class="sh"><h2>Projections & Performance</h2>
+        <span class="sh-sub">Actual vs projected · 2020–2025 · starters only</span>
+        <div class="sh-right">
+          <select class="f-sel" id="proj-yr-sel" onchange="renderProjections()" style="margin-right:6px">
+            <option value="all">All seasons</option>
+          </select>
+          <select class="f-sel" id="proj-mgr-sel" onchange="renderProjections()">
+            <option value="all">All managers</option>
+          </select>
+        </div>
+      </div>
+      <!-- Lucky/Unlucky matchup analysis -->
+      <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">Lucky & Unlucky Wins</h2>
+        <span class="sh-sub">Won despite being outprojected, or lost despite being projected higher</span>
+      </div>
+      <div id="luck-content" style="margin-bottom:2rem"></div>
+      <!-- Beat/missed projections by player -->
+      <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">Player Projection Performance</h2>
+        <span class="sh-sub">How starters fared vs their pre-game projections</span>
+      </div>
+      <div class="filters" style="margin-bottom:1rem">
+        <input class="s-input" id="proj-search" placeholder="Search player…" oninput="renderProjections()" style="width:160px">
+        <select class="f-sel" id="proj-pos-sel" onchange="renderProjections()">
+          <option value="all">All positions</option>
+          <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
+        </select>
+        <select class="f-sel" id="proj-sort-sel" onchange="renderProjections()">
+          <option value="diff">Biggest over-performers</option>
+          <option value="underdiff">Biggest under-performers</option>
+          <option value="starts">Most starts</option>
+        </select>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>Player</th><th>Pos</th><th>Starts w/ proj</th>
+          <th>Actual pts</th><th>Projected pts</th>
+          <th>Total diff</th><th>Avg diff/start</th><th>Beat proj</th>
+        </tr></thead>
+        <tbody id="proj-body"></tbody>
+      </table></div>
+      <!-- Manager luck summary -->
+      <div class="sh" style="margin-top:1.5rem;margin-bottom:0.75rem"><h2 style="font-size:1.1rem">Manager Luck Summary</h2>
+        <span class="sh-sub">Total actual vs projected across all starts</span>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Manager</th><th>Starts w/ proj</th><th>Actual</th><th>Projected</th><th>Diff</th><th>Avg diff/start</th><th>Beat proj %</th></tr></thead>
+        <tbody id="proj-mgr-body"></tbody>
+      </table></div>
     </div>
 
     <!-- SMART SEARCH -->
@@ -1108,13 +1197,19 @@ async function loadSeason(year,lid){
   const scoring=league.scoring_settings||{};
   const weekCount=Math.max((parseInt(league.settings?.playoff_week_start||14)-1),13);
   const weekNums=Array.from({length:weekCount},(_,i)=>i+1);
-  const [weekResults,txResults,statResults]=await Promise.all([
+  // Only fetch projections for 2020+ (data reliability)
+  const fetchProj=parseInt(year)>=2020;
+  const [weekResults,txResults,statResults,projResults]=await Promise.all([
     Promise.all(weekNums.map(w=>apiFetch(`/league/${lid}/matchups/${w}`).then(mu=>({w,mu})).catch(()=>({w,mu:[]})))),
     Promise.all(weekNums.map(w=>apiFetch(`/league/${lid}/transactions/${w}`).then(tx=>tx.map(t=>({...t,week:w,year:parseInt(year)}))).catch(()=>[]))),
-    Promise.all(weekNums.map(w=>apiFetch(`/stats/nfl/regular/${year}/${w}`).then(s=>({w,s})).catch(()=>({w,s:{}}))))
+    Promise.all(weekNums.map(w=>apiFetch(`/stats/nfl/regular/${year}/${w}`).then(s=>({w,s})).catch(()=>({w,s:{}})))),
+    fetchProj
+      ? Promise.all(weekNums.map(w=>apiFetch(`/projections/nfl/regular/${year}/${w}`).then(s=>({w,s})).catch(()=>({w,s:{}}))))
+      : Promise.resolve(weekNums.map(w=>({w,s:{}})))
   ]);
   const matchupsByWeek={};weekResults.forEach(({w,mu})=>matchupsByWeek[w]=mu);
   const statByWeek={};statResults.forEach(({w,s})=>statByWeek[w]=s);
+  const projByWeek={};projResults.forEach(({w,s})=>projByWeek[w]=s);
   const trades=txResults.flat().filter(t=>t.type==='trade'&&t.status==='complete');
   DB.transactions.push(...trades);
   // Collect all starters for all teams
@@ -1140,7 +1235,14 @@ async function loadSeason(year,lid){
             if(points===null)points=ps.pts_ppr??ps.pts_std??ps.pts_half_ppr??null;
           }
         }
-        const entry={pid,week:w,year:parseInt(year),points,
+        // Projected points
+        const projStats=(projByWeek[w]||{})[pid];
+        let projected=null;
+        if(projStats){
+          projected=calcPoints(projStats,scoring);
+          if(projected===null)projected=projStats.pts_ppr??projStats.pts_std??projStats.pts_half_ppr??null;
+        }
+        const entry={pid,week:w,year:parseInt(year),points,projected,
           teamName:team?.name||'Unknown',teamRosterId:matchup.roster_id,
           isMe:matchup.roster_id===myRosterId,
           managerKey:team?.managerKey||'Unknown'};
@@ -1149,7 +1251,7 @@ async function loadSeason(year,lid){
       });
     });
   });
-  DB.seasons.push({year:parseInt(year),lid,league,teams,myRosterId,matchupsByWeek,scoring});
+  DB.seasons.push({year:parseInt(year),lid,league,teams,myRosterId,matchupsByWeek,scoring,projByWeek});
 }
 
 function calcPoints(stats,scoring){
@@ -1299,7 +1401,7 @@ function getSeasons(){
   return v==='all'?DB.seasons:DB.seasons.filter(s=>s.year==v);
 }
 function onSeasonChange(){renderAll();}
-function renderAll(){renderMetrics();renderStandings();renderMatchups();renderPlayers();renderH2H();renderPlayoffs();renderTrades();renderAwards();renderDocile();renderProbowl();renderHof();renderTimeline();}
+function renderAll(){renderMetrics();renderStandings();renderMatchups();renderPlayers();renderH2H();renderPlayoffs();renderTrades();renderAwards();renderDocile();renderProbowl();renderHof();renderTimeline();generateInsights();}
 
 function syncAllYrBtn(){
   const years=DB.seasons.map(s=>s.year);
@@ -2052,11 +2154,12 @@ function renderHof(){
 // ══════════════════════════════════════════════════════════════
 // TAB SWITCHING
 // ══════════════════════════════════════════════════════════════
-const TABS=['home','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','search'];
+const TABS=['home','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','projections','search'];
 function switchTab(name){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',TABS[i]===name));
   TABS.forEach(t=>document.getElementById('panel-'+t).classList.toggle('active',t===name));
   if(name==='search')initSearch();
+  if(name==='projections')renderProjections();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2250,64 +2353,357 @@ function buildLeagueContext(){
     if(cup)lines.push(`  ${pr.year}: ${cup.w} def ${cup.l} (${cup.ws}-${cup.ls})`);
   });
 
+  // Projection performance summary (2020+)
+  const withProj=DB.allStarters.filter(s=>s.projected!=null&&s.points!=null);
+  if(withProj.length>0){
+    lines.push('\nPROJECTION PERFORMANCE SUMMARY:');
+    // Manager-level over/under
+    const mgrProj={};
+    withProj.forEach(s=>{
+      const k=s.managerKey;if(!k)return;
+      if(!mgrProj[k])mgrProj[k]={diff:0,n:0,beat:0};
+      mgrProj[k].diff+=(s.points-s.projected);mgrProj[k].n++;
+      if(s.points>=s.projected)mgrProj[k].beat++;
+    });
+    Object.entries(mgrProj).sort((a,b)=>b[1].diff-a[1].diff).forEach(([k,d])=>{
+      const beatPct=Math.round(d.beat/d.n*100);
+      lines.push(`  ${k}: avg ${d.diff>0?'+':''}${(d.diff/d.n).toFixed(1)} pts/start vs projection (${beatPct}% beat projection, ${d.n} starts)`);
+    });
+    // Top 10 individual over-performers (min 4 starts)
+    const pidProj={};
+    withProj.forEach(s=>{
+      if(!pidProj[s.pid])pidProj[s.pid]={diff:0,n:0};
+      pidProj[s.pid].diff+=(s.points-s.projected);pidProj[s.pid].n++;
+    });
+    lines.push('\nTOP PLAYER PROJECTION OUTPERFORMERS (min 4 starts):');
+    Object.entries(pidProj).filter(([,d])=>d.n>=4).map(([pid,d])=>{
+      const m=DB.playerMeta[pid];
+      return{name:m?`${m.first_name} ${m.last_name}`:'?',pos:m?.fantasy_positions?.[0]||'?',avg:d.diff/d.n,n:d.n};
+    }).sort((a,b)=>b.avg-a.avg).slice(0,10).forEach(p=>{
+      lines.push(`  ${p.name}(${p.pos}): ${p.avg>0?'+':''}${p.avg.toFixed(1)} avg vs projection across ${p.n} starts`);
+    });
+  }
+
   return lines.join('\n');
+}
+
+// ══════════════════════════════════════════════════════════════
+// AUTOMATED INSIGHTS
+// ══════════════════════════════════════════════════════════════
+function generateInsights(){
+  const el=document.getElementById('insights-grid');
+  if(!el)return;
+  if(!DB.seasons.length){el.innerHTML='<div class="empty">Load seasons to generate insights.</div>';return;}
+  const cards=[];
+
+  const pAgg={};
+  DB.allStarters.forEach(s=>{
+    if(!pAgg[s.pid])pAgg[s.pid]={pts:0,starts:0,byMgr:{}};
+    pAgg[s.pid].pts+=(s.points||0);pAgg[s.pid].starts++;
+    const mk=s.managerKey||'?';
+    if(!pAgg[s.pid].byMgr[mk])pAgg[s.pid].byMgr[mk]={pts:0,starts:0};
+    pAgg[s.pid].byMgr[mk].pts+=(s.points||0);pAgg[s.pid].byMgr[mk].starts++;
+  });
+  const ranked=Object.entries(pAgg).map(([pid,d])=>{
+    const m=DB.playerMeta[pid];
+    return{pid,name:m?`${m.first_name} ${m.last_name}`:'PID:'+pid,
+      pos:m?.fantasy_positions?.[0]||'?',pts:d.pts,starts:d.starts,avg:d.pts/d.starts,byMgr:d.byMgr};
+  }).sort((a,b)=>b.pts-a.pts);
+
+  if(ranked[0]){
+    const r=ranked[0];
+    cards.push({type:'player',label:'All-Time League Leader',
+      text:`<strong>${r.name}</strong> (${r.pos}) leads all-time with <strong>${r.pts.toFixed(1)} pts</strong> across ${r.starts} starts — <strong>${r.avg.toFixed(1)}</strong> per game.`});
+  }
+
+  const byPos={};ranked.forEach(r=>{if(!byPos[r.pos])byPos[r.pos]=r;});
+  ['QB','RB','WR','TE'].forEach(pos=>{
+    const r=byPos[pos];if(!r)return;
+    const posRanked=ranked.filter(x=>x.pos===pos);
+    cards.push({type:'player',label:`Top ${pos} All-Time`,
+      text:`<strong>${r.name}</strong> is the highest-scoring ${pos} in league history with <strong>${r.pts.toFixed(1)} pts</strong> in ${r.starts} starts. Runner-up: ${posRanked[1]?.name||'N/A'} (${posRanked[1]?.pts.toFixed(1)||'—'} pts).`});
+  });
+
+  const mgrAgg={};
+  DB.seasons.forEach(s=>s.teams.forEach(t=>{
+    const k=t.managerKey||t.name;
+    if(!mgrAgg[k])mgrAgg[k]={w:0,l:0,pf:0,pa:0};
+    mgrAgg[k].w+=t.wins;mgrAgg[k].l+=t.losses;mgrAgg[k].pf+=t.pf;mgrAgg[k].pa+=t.pa;
+  }));
+  const mgrRanked=Object.entries(mgrAgg).map(([k,d])=>({k,...d,pct:d.w/(d.w+d.l||1)})).sort((a,b)=>b.w-a.w);
+  if(mgrRanked[0]){
+    const r=mgrRanked[0];
+    cards.push({type:'record',label:'Best All-Time Record',
+      text:`<strong>${r.k}</strong> leads all managers with <strong>${r.w}–${r.l}</strong> (${(r.pct*100).toFixed(0)}% win rate).`});
+  }
+  const topScorer=[...mgrRanked].sort((a,b)=>b.pf-a.pf)[0];
+  if(topScorer){
+    const g=topScorer.w+topScorer.l;
+    cards.push({type:'record',label:'Highest Scoring Manager',
+      text:`<strong>${topScorer.k}</strong> has scored the most points: <strong>${topScorer.pf.toLocaleString(undefined,{maximumFractionDigits:0})}</strong> total (<strong>${g>0?(topScorer.pf/g).toFixed(1):'—'}</strong> PPG).`});
+  }
+
+  const h2hW={};
+  DB.seasons.forEach(s=>{
+    Object.entries(s.matchupsByWeek).forEach(([w,mus])=>{
+      const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+      Object.values(byId).forEach(pair=>{
+        if(pair.length<2)return;
+        const[a,b]=pair;
+        const ta=s.teams.find(t=>t.rosterId===a.roster_id);
+        const tb=s.teams.find(t=>t.rosterId===b.roster_id);
+        if(!ta||!tb)return;
+        const ka=ta.managerKey||ta.name,kb=tb.managerKey||tb.name;
+        const key=[ka,kb].sort().join('|');
+        if(!h2hW[key])h2hW[key]={a:ka,b:kb,aw:0,bw:0};
+        if((a.points||0)>(b.points||0))h2hW[key].aw++;else h2hW[key].bw++;
+      });
+    });
+  });
+  const dominantH2H=Object.values(h2hW).filter(r=>r.aw+r.bw>=4).sort((a,b)=>{
+    return(Math.abs(b.aw-b.bw)/(b.aw+b.bw))-(Math.abs(a.aw-a.bw)/(a.aw+a.bw));
+  })[0];
+  if(dominantH2H){
+    const{a,b,aw,bw}=dominantH2H;
+    const dom=aw>bw?a:b,sub=aw>bw?b:a,dw=aw>bw?aw:bw,lw=aw>bw?bw:aw;
+    cards.push({type:'matchup',label:'Most Lopsided Rivalry',
+      text:`<strong>${dom}</strong> dominates <strong>${sub}</strong> head-to-head with a <strong>${dw}–${lw}</strong> record in loaded seasons.`});
+  }
+
+  const withProj=DB.allStarters.filter(s=>s.projected!=null&&s.points!=null);
+  if(withProj.length>100){
+    const mgrLuck={};
+    withProj.forEach(s=>{
+      const k=s.managerKey;if(!k)return;
+      if(!mgrLuck[k])mgrLuck[k]={diff:0,n:0};
+      mgrLuck[k].diff+=(s.points-s.projected);mgrLuck[k].n++;
+    });
+    const luckRank=Object.entries(mgrLuck).map(([k,d])=>({k,avg:d.diff/d.n})).sort((a,b)=>b.avg-a.avg);
+    if(luckRank[0])cards.push({type:'proj',label:'Biggest Projection Outperformer',
+      text:`<strong>${luckRank[0].k}</strong> beats their starters' projections by <strong>+${luckRank[0].avg.toFixed(1)} pts/start</strong> on average — best in the league.`});
+    if(luckRank[luckRank.length-1])cards.push({type:'proj',label:'Biggest Projection Under-performer',
+      text:`<strong>${luckRank[luckRank.length-1].k}</strong> falls short of projections by <strong>${luckRank[luckRank.length-1].avg.toFixed(1)} pts/start</strong> on average — most of any manager.`});
+    const playerDiff={};
+    withProj.forEach(s=>{
+      if(!playerDiff[s.pid])playerDiff[s.pid]={diff:0,n:0};
+      playerDiff[s.pid].diff+=(s.points-s.projected);playerDiff[s.pid].n++;
+    });
+    const topOP=Object.entries(playerDiff).filter(([,d])=>d.n>=4).map(([pid,d])=>{
+      const m=DB.playerMeta[pid];
+      return{name:m?`${m.first_name} ${m.last_name}`:'?',pos:m?.fantasy_positions?.[0]||'?',avg:d.diff/d.n,n:d.n};
+    }).sort((a,b)=>b.avg-a.avg)[0];
+    if(topOP)cards.push({type:'proj',label:'Most Reliable Over-performer',
+      text:`<strong>${topOP.name}</strong> (${topOP.pos}) beats projections by <strong>+${topOP.avg.toFixed(1)} pts</strong> per start across ${topOP.n} games.`});
+  }
+
+  const bestGame=DB.allStarters.filter(s=>s.points!=null).sort((a,b)=>b.points-a.points)[0];
+  if(bestGame){
+    const m=DB.playerMeta[bestGame.pid];
+    const name=m?`${m.first_name} ${m.last_name}`:'Unknown';
+    const pos=m?.fantasy_positions?.[0]||'?';
+    cards.push({type:'streak',label:'Highest Single-Game Score',
+      text:`<strong>${name}</strong> (${pos}) holds the all-time single-game record: <strong>${bestGame.points.toFixed(2)} pts</strong> in Week ${bestGame.week} of ${bestGame.year} for <strong>${bestGame.managerKey}</strong>.`});
+  }
+
+  const cc={};Object.values(CHAMPIONS).forEach(m=>cc[m]=(cc[m]||0)+1);
+  const mostChamps=Object.entries(cc).sort((a,b)=>b[1]-a[1])[0];
+  if(mostChamps&&mostChamps[1]>1){
+    const yrs=Object.entries(CHAMPIONS).filter(([,v])=>v===mostChamps[0]).map(([y])=>y).join(', ');
+    cards.push({type:'record',label:'Most Championships',
+      text:`<strong>${mostChamps[0]}</strong> leads all managers with <strong>${mostChamps[1]} championships</strong> (${yrs}).`});
+  }
+
+  el.innerHTML=cards.map(c=>`
+    <div class="insight-card type-${c.type}">
+      <div class="insight-label">${c.label}</div>
+      <div class="insight-text">${c.text}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// PROJECTIONS
+// ══════════════════════════════════════════════════════════════
+function initProjectionFilters(){
+  const years=[...new Set(DB.allStarters.filter(s=>s.projected!=null).map(s=>s.year))].sort((a,b)=>b-a);
+  const yrSel=document.getElementById('proj-yr-sel');
+  if(yrSel)yrSel.innerHTML='<option value="all">All seasons</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  const mgrs=[...new Set(DB.allStarters.filter(s=>s.projected!=null).map(s=>s.managerKey).filter(Boolean))].sort();
+  const mgrSel=document.getElementById('proj-mgr-sel');
+  if(mgrSel)mgrSel.innerHTML='<option value="all">All managers</option>'+mgrs.map(m=>`<option value="${m}">${m}</option>`).join('');
+}
+
+function renderProjections(){
+  initProjectionFilters();
+  const yrF=document.getElementById('proj-yr-sel')?.value||'all';
+  const mgrF=document.getElementById('proj-mgr-sel')?.value||'all';
+  const posF=document.getElementById('proj-pos-sel')?.value||'all';
+  const search=(document.getElementById('proj-search')?.value||'').toLowerCase();
+  const sortF=document.getElementById('proj-sort-sel')?.value||'diff';
+
+  let starters=DB.allStarters.filter(s=>s.projected!=null&&s.points!=null);
+  if(yrF!=='all')starters=starters.filter(s=>s.year==yrF);
+  if(mgrF!=='all')starters=starters.filter(s=>s.managerKey===mgrF);
+
+  renderLuckAnalysis(yrF,mgrF);
+
+  const pAgg={};
+  starters.forEach(s=>{
+    if(!pAgg[s.pid])pAgg[s.pid]={pts:0,proj:0,starts:0,beat:0};
+    pAgg[s.pid].pts+=(s.points||0);pAgg[s.pid].proj+=(s.projected||0);pAgg[s.pid].starts++;
+    if(s.points>=s.projected)pAgg[s.pid].beat++;
+  });
+  let rows=Object.entries(pAgg).map(([pid,d])=>{
+    const m=DB.playerMeta[pid];
+    const name=m?`${m.first_name} ${m.last_name}`:'PID:'+pid;
+    const pos=m?.fantasy_positions?.[0]||'?';
+    const diff=d.pts-d.proj;
+    return{pid,name,pos,pts:d.pts,proj:d.proj,starts:d.starts,diff,avgDiff:diff/d.starts,beat:d.beat};
+  });
+  if(search)rows=rows.filter(r=>r.name.toLowerCase().includes(search)||r.pos.toLowerCase().includes(search));
+  if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
+  const sf={diff:(a,b)=>b.diff-a.diff,underdiff:(a,b)=>a.diff-b.diff,starts:(a,b)=>b.starts-a.starts};
+  rows.sort(sf[sortF]||sf.diff);
+
+  const body=document.getElementById('proj-body');
+  if(!body)return;
+  if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">No projection data. Projections are available for 2020+ seasons.</td></tr>';return;}
+  body.innerHTML=rows.slice(0,150).map(r=>{
+    const dc=r.diff>0?'diff-pos':r.diff<0?'diff-neg':'diff-neu';
+    const beatPct=r.starts>0?Math.round(r.beat/r.starts*100):0;
+    return`<tr>
+      <td style="font-weight:500;cursor:pointer" onclick="openPlayerModal('${r.pid}')">${r.name}</td>
+      <td><span class="badge bg-dim">${r.pos}</span></td>
+      <td class="mono">${r.starts}</td>
+      <td class="mono">${r.pts.toFixed(1)}</td>
+      <td class="mono">${r.proj.toFixed(1)}</td>
+      <td class="mono ${dc}">${r.diff>0?'+':''}${r.diff.toFixed(1)}</td>
+      <td class="mono ${dc}">${r.avgDiff>0?'+':''}${r.avgDiff.toFixed(1)}</td>
+      <td class="mono">${beatPct}%</td>
+    </tr>`;
+  }).join('');
+
+  const mgrAgg={};
+  starters.forEach(s=>{
+    const k=s.managerKey;if(!k)return;
+    if(!mgrAgg[k])mgrAgg[k]={pts:0,proj:0,starts:0,beat:0};
+    mgrAgg[k].pts+=(s.points||0);mgrAgg[k].proj+=(s.projected||0);mgrAgg[k].starts++;
+    if(s.points>=s.projected)mgrAgg[k].beat++;
+  });
+  const mBody=document.getElementById('proj-mgr-body');
+  if(!mBody)return;
+  const mRows=Object.entries(mgrAgg).map(([k,d])=>({k,...d,diff:d.pts-d.proj,avgDiff:(d.pts-d.proj)/d.starts})).sort((a,b)=>b.diff-a.diff);
+  mBody.innerHTML=mRows.map(r=>{
+    const dc=r.diff>0?'diff-pos':r.diff<0?'diff-neg':'diff-neu';
+    const beatPct=r.starts>0?Math.round(r.beat/r.starts*100):0;
+    return`<tr>
+      <td style="font-weight:500">${r.k}</td>
+      <td class="mono">${r.starts}</td>
+      <td class="mono">${r.pts.toFixed(1)}</td>
+      <td class="mono">${r.proj.toFixed(1)}</td>
+      <td class="mono ${dc}">${r.diff>0?'+':''}${r.diff.toFixed(1)}</td>
+      <td class="mono ${dc}">${r.avgDiff>0?'+':''}${r.avgDiff.toFixed(1)}</td>
+      <td class="mono">${beatPct}%</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLuckAnalysis(yrF,mgrF){
+  const el=document.getElementById('luck-content');if(!el)return;
+  const lucky=[],unlucky=[];
+  DB.seasons.forEach(s=>{
+    if(yrF!=='all'&&s.year!=yrF)return;
+    const projBW=s.projByWeek||{};
+    Object.entries(s.matchupsByWeek).forEach(([w,mus])=>{
+      const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+      Object.values(byId).forEach(pair=>{
+        if(pair.length<2)return;
+        const[a,b]=pair;
+        const ta=s.teams.find(t=>t.rosterId===a.roster_id);
+        const tb=s.teams.find(t=>t.rosterId===b.roster_id);
+        if(!ta||!tb)return;
+        if(mgrF!=='all'&&ta.managerKey!==mgrF&&tb.managerKey!==mgrF)return;
+        const aAct=a.points||0,bAct=b.points||0;
+        const pw=projBW[w]||{};
+        const sumProj=(matchup)=>(matchup.starters||[]).reduce((sum,pid)=>{
+          const ps=pw[pid];if(!ps)return sum;
+          const p=calcPoints(ps,s.scoring);
+          return sum+(p??ps.pts_ppr??ps.pts_std??0);
+        },0);
+        const aProj=sumProj(a),bProj=sumProj(b);
+        if(aProj<5||bProj<5)return;
+        const aKa=ta.managerKey||ta.name,bKa=tb.managerKey||tb.name;
+        const aWon=aAct>bAct;
+        if(aWon&&aProj<bProj)lucky.push({winner:aKa,loser:bKa,year:s.year,week:parseInt(w),winAct:aAct,loseAct:bAct,winProj:aProj,loseProj:bProj});
+        if(!aWon&&bProj<aProj)lucky.push({winner:bKa,loser:aKa,year:s.year,week:parseInt(w),winAct:bAct,loseAct:aAct,winProj:bProj,loseProj:aProj});
+        if(!aWon&&aProj>bProj)unlucky.push({loser:aKa,winner:bKa,year:s.year,week:parseInt(w),loseAct:aAct,winAct:bAct,loseProj:aProj,winProj:bProj});
+        if(aWon&&bProj>aProj)unlucky.push({loser:bKa,winner:aKa,year:s.year,week:parseInt(w),loseAct:bAct,winAct:aAct,loseProj:bProj,winProj:aProj});
+      });
+    });
+  });
+  lucky.sort((a,b)=>(b.loseProj-b.winProj)-(a.loseProj-a.winProj));
+  unlucky.sort((a,b)=>(b.loseProj-b.winProj)-(a.loseProj-a.winProj));
+  const fmtLucky=g=>`<div class="luck-card lucky"><div class="luck-label">Lucky Win</div>
+    <div class="luck-game">${g.winner} def. ${g.loser} (${g.winAct.toFixed(1)}–${g.loseAct.toFixed(1)})</div>
+    <div class="luck-meta">${g.year} Wk${g.week} · Projected: ${g.winner} ${g.winProj.toFixed(1)} vs ${g.loser} ${g.loseProj.toFixed(1)}</div></div>`;
+  const fmtUnlucky=g=>`<div class="luck-card unlucky"><div class="luck-label">Unlucky Loss</div>
+    <div class="luck-game">${g.loser} lost to ${g.winner} (${g.loseAct.toFixed(1)}–${g.winAct.toFixed(1)})</div>
+    <div class="luck-meta">${g.year} Wk${g.week} · Projected: ${g.loser} ${g.loseProj.toFixed(1)} vs ${g.winner} ${g.winProj.toFixed(1)}</div></div>`;
+  el.innerHTML=`<div class="luck-cards">
+    <div>${lucky.slice(0,5).map(fmtLucky).join('')||'<div class="empty" style="padding:1rem">No data — load 2020+ seasons for projection data.</div>'}</div>
+    <div>${unlucky.slice(0,5).map(fmtUnlucky).join('')||'<div class="empty" style="padding:1rem">No data.</div>'}</div>
+  </div>`;
+}
+
+// ── SMART SEARCH CONFIG ──────────────────────────────────────
+// After deploying your Cloudflare Worker, paste its URL here:
+const CLAUDE_WORKER_URL = 'https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev';
+
+async function callClaude(systemPrompt, userMessage){
+  if(!CLAUDE_WORKER_URL||CLAUDE_WORKER_URL.includes('YOUR-WORKER')){
+    throw new Error('Smart Search not configured yet. See CLOUDFLARE-SETUP.md to deploy your worker, then paste the URL into CLAUDE_WORKER_URL in the archive.');
+  }
+  const resp = await fetch(CLAUDE_WORKER_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({system: systemPrompt, message: userMessage})
+  });
+  if(!resp.ok){
+    const err = await resp.json().catch(()=>({}));
+    throw new Error(err.error || `Worker error ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.content || data.text || JSON.stringify(data);
 }
 
 async function runSearch(){
   const q=(document.getElementById('search-input').value||'').trim();
   if(!q)return;
-
   const resultEl=document.getElementById('search-result');
   resultEl.innerHTML=`<div class="search-thinking"><div class="spin" style="border-top-color:var(--gold)"></div>Searching the archive…</div>`;
   document.getElementById('search-btn').disabled=true;
-
   try{
     const context=buildLeagueContext();
-    const systemPrompt=`You are the archivist for the Docile League, a private fantasy football league that has been running since 2014. You have access to detailed league data and answer questions about player performance, manager records, head-to-head matchups, awards, and history.
+    const systemPrompt=`You are the archivist for the Docile League, a private fantasy football league running since 2014. Answer questions about player performance, manager records, head-to-head matchups, awards, projections, and history using the data provided.
 
-Be precise and specific. Use actual numbers from the data. Keep answers concise but complete — 2-4 sentences for simple questions, a short structured list for complex ones. Use manager first names (Jon, Declan, David, etc.) not team names. When referencing players, include their position in parentheses.
+Be precise and specific — use actual numbers. Keep answers concise: 2-4 sentences for simple questions, a short list for complex ones. Use manager first names (Jon, Declan, David, etc.), not team names. Include position in parentheses when referencing players.
 
-If the data doesn't contain enough information to answer precisely, say so clearly and share what you do know.
+If the data is insufficient to answer precisely, say so and share what you do know.
 
 LEAGUE DATA:
 ${context}`;
-
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:1000,
-        system:systemPrompt,
-        messages:[{role:'user',content:q}]
-      })
-    });
-
-    if(!resp.ok){
-      const err=await resp.json().catch(()=>({}));
-      throw new Error(err.error?.message||`API error ${resp.status}`);
-    }
-
-    const data=await resp.json();
-    const answer=data.content?.find(c=>c.type==='text')?.text||'No response.';
-
-    // Format answer — bold numbers and names
-    const formatted=answer
+    const answer = await callClaude(systemPrompt, q);
+    const formatted = answer
       .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
       .replace(/\n\n/g,'</p><p>')
       .replace(/\n- /g,'<br>• ')
       .replace(/\n(\d+)\. /g,'<br>$1. ');
-
     resultEl.innerHTML=`<div class="search-result-card">
       <div class="q">❝ ${q} ❞</div>
       <p>${formatted}</p>
     </div>`;
-
-    // Add to history
     searchHistory.unshift({q,a:answer});
     renderSearchHistory();
     document.getElementById('search-input').value='';
-
   }catch(e){
     resultEl.innerHTML=`<div class="search-err">⚠ ${e.message}</div>`;
   }finally{
