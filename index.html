@@ -565,7 +565,13 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <div id="playoff-content"></div>
       <div class="sh" style="margin-top:2rem"><h2>All-Time Playoff Standings</h2></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>#</th><th>Manager</th><th>W–L</th><th>Win %</th><th>Avg Score</th><th>Total Pts</th></tr></thead>
+        <thead><tr>
+          <th>#</th><th>Manager</th>
+          <th class="sortable-th" onclick="sortPlayoffs('wl')" id="psth-wl">W–L <span class="sort-arrow">↓</span></th>
+          <th class="sortable-th" onclick="sortPlayoffs('pct')" id="psth-pct">Win % <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortPlayoffs('avg')" id="psth-avg">Avg Score <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortPlayoffs('total')" id="psth-total">Total Pts <span class="sort-arrow"></span></th>
+        </tr></thead>
         <tbody id="playoff-standings-body"></tbody>
       </table></div>
     </div>
@@ -598,7 +604,10 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <div id="probowl-content"></div>
       <div class="sh" style="margin-top:2rem"><h2>All-Time Pro Bowl Leaders</h2></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>#</th><th>Manager</th><th>Pro Bowl Selections</th></tr></thead>
+        <thead><tr>
+          <th>#</th><th>Manager</th>
+          <th class="sortable-th" onclick="sortProbowl('count')" id="pbth-count">Pro Bowl Selections <span class="sort-arrow">↓</span></th>
+        </tr></thead>
         <tbody id="pb-leaders-body"></tbody>
       </table></div>
     </div>
@@ -1057,10 +1066,18 @@ const PB_LEADERS = [
 // ══════════════════════════════════════════════════════════════
 const SLEEPER_API = 'https://api.sleeper.app/v1';
 
+// ── MANAGER INITIALS ─────────────────────────────────────────
+const INITIALS = {
+  Declan:'DF', David:'DT', Kyle:'KK', Brad:'BH', Jimmy:'JG',
+  Jared:'JL', Amol:'AD', Abhi:'AB', Lance:'LE', Boone:'BF',
+  Hinton:'HR', Jon:'JT', Colton:'CK'
+};
+function getInitials(name){return INITIALS[name]||name.substring(0,2).toUpperCase();}
+
 // ── SHARED DATA (Google Sheets) ──────────────────────────────
 // Paste your Google Sheet ID here after following SHEETS-SETUP.md
 // Sheet must be published to web (File → Share → Publish to web)
-const SHARED_SHEET_ID = '1IrO-sBFQOcpyGnejr_RaN6yHPIH2ptuQPXy6tQA1TZ0';  // e.g. '1E36DWBwHfjHH6U91qRn0EH51H0DhGgMd1zA1pBOHz_E'
+const SHARED_SHEET_ID = '';  // e.g. '1E36DWBwHfjHH6U91qRn0EH51H0DhGgMd1zA1pBOHz_E'
 
 async function fetchSharedData(){
   if(!SHARED_SHEET_ID)return;
@@ -1101,19 +1118,38 @@ let DB = {
   transactions:[],playerBios:{}
 };
 let activeYrs = new Set(), activeTeams = new Set();
-let standingsSort = {col:'wins', dir:-1}; // dir: -1=desc, 1=asc
+let standingsSort = {col:'wins', dir:-1};
+let playoffsSort = {col:'wl', dir:-1};
+let probowlSort  = {col:'count', dir:-1};
 
 function sortStandings(col){
   if(standingsSort.col===col){standingsSort.dir*=-1;}
   else{standingsSort={col,dir:-1};}
-  // Update header arrows
   ['wins','pct','pf','pa','titles'].forEach(c=>{
-    const th=document.getElementById('sth-'+c);
-    if(!th)return;
+    const th=document.getElementById('sth-'+c);if(!th)return;
     th.classList.toggle('active-sort',c===col);
     th.querySelector('.sort-arrow').textContent=c===col?(standingsSort.dir===-1?'↓':'↑'):'';
   });
   renderStandings();
+}
+
+function sortPlayoffs(col){
+  if(playoffsSort.col===col){playoffsSort.dir*=-1;}
+  else{playoffsSort={col,dir:-1};}
+  ['wl','pct','avg','total'].forEach(c=>{
+    const th=document.getElementById('psth-'+c);if(!th)return;
+    th.classList.toggle('active-sort',c===col);
+    th.querySelector('.sort-arrow').textContent=c===col?(playoffsSort.dir===-1?'↓':'↑'):'';
+  });
+  renderPlayoffStandings();
+}
+
+function sortProbowl(col){
+  if(probowlSort.col===col){probowlSort.dir*=-1;}
+  else{probowlSort={col,dir:-1};}
+  const th=document.getElementById('pbth-count');
+  if(th)th.querySelector('.sort-arrow').textContent=probowlSort.dir===-1?'↓':'↑';
+  renderProbowlLeaders();
 }
 // ── HARDCODED LEAGUE SEASONS ─────────────────────────────────
 const LEAGUE_SEASONS = [
@@ -1663,7 +1699,7 @@ function renderStandings(){
     const ct=champCt[r.managerKey]||0;
     return`<tr class="${r.isMe?'highlight':''}">
       <td><span class="rank">${i+1}</span></td>
-      <td><div class="tcell"><div class="av${r.isMe?' me':''}">${r.name.substring(0,2).toUpperCase()}</div>
+      <td><div class="tcell"><div class="av${r.isMe?' me':''}">${getInitials(r.name)}</div>
       <div><div class="tname${r.isMe?' me':''}">${r.name}${r.isMe?' ★':''}</div>
       <div class="tmgr">${r.latestTeamName&&r.latestTeamName!==r.name?r.latestTeamName:r.manager}</div></div></div></td>
       <td class="mono">${r.wins}–${r.losses}</td>
@@ -1861,6 +1897,13 @@ function openPlayerModal(pid){
   document.getElementById('modal-body').innerHTML=`
     <h3>${name}</h3>
     <div class="modal-pos">${pos}${nflTeam?' · '+nflTeam:''}</div>
+    <div style="font-size:0.68rem;color:var(--text3);font-family:var(--font-mono);margin-bottom:0.75rem;display:flex;align-items:center;gap:6px">
+      <span>Sleeper ID: <span style="color:var(--text2);user-select:all">${pid}</span></span>
+      <button onclick="navigator.clipboard.writeText('${pid}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})"
+        style="background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);font-size:0.65rem;padding:1px 6px;cursor:pointer;font-family:var(--font-body)">Copy</button>
+      <span style="color:var(--border2)">·</span>
+      <span style="color:var(--text3)">Use this ID in the PlayerBios sheet</span>
+    </div>
     <div class="modal-stats">
       <div class="mstat"><div class="ml">Total Pts</div><div class="mv">${total.toFixed(0)}</div></div>
       <div class="mstat"><div class="ml">Starts</div><div class="mv">${starts}</div></div>
@@ -1965,13 +2008,28 @@ function renderPlayoffs(){
         </div>`).join('')}
       </div>
     </div>`).join('');
-  // All-time standings
+  // All-time standings — sortable
+  renderPlayoffStandings();
+}
+
+function renderPlayoffStandings(){
   const body=document.getElementById('playoff-standings-body');
-  const sorted=[...PLAYOFF_STANDINGS].sort((a,b)=>b.w-a.w||(b.w/(b.w+b.l)||0)-(b.w/(b.w+b.l)||0));
+  if(!body)return;
+  const col=playoffsSort.col, dir=playoffsSort.dir;
+  const sorted=[...PLAYOFF_STANDINGS].sort((a,b)=>{
+    const g1=a.w+a.l, g2=b.w+b.l;
+    const pct1=g1?a.w/g1:0, pct2=g2?b.w/g2:0;
+    let v=0;
+    if(col==='wl') v=a.w-b.w;
+    else if(col==='pct') v=pct1-pct2;
+    else if(col==='avg') v=a.avg-b.avg;
+    else if(col==='total') v=a.total-b.total;
+    return v*dir*-1; // dir -1 = desc
+  });
   body.innerHTML=sorted.map((r,i)=>{
-    const g=r.w+r.l;const pct=g?(r.w/g*100).toFixed(0):0;
+    const g=r.w+r.l; const pct=g?(r.w/g*100).toFixed(0):0;
     return`<tr><td class="rank">${i+1}</td>
-      <td><div class="tcell"><div class="av">${r.mgr.substring(0,2).toUpperCase()}</div><span style="font-weight:500">${r.mgr}</span></div></td>
+      <td><div class="tcell"><div class="av">${getInitials(r.mgr)}</div><span style="font-weight:500">${r.mgr}</span></div></td>
       <td class="mono">${r.w}–${r.l}</td>
       <td class="mono">${pct}%</td>
       <td class="mono">${r.avg.toFixed(2)}</td>
@@ -2159,11 +2217,17 @@ function renderProbowl(){
       </div>
     </div>`;
   }).join('');
-  // Leaders
+  renderProbowlLeaders();
+}
+
+function renderProbowlLeaders(){
   const body=document.getElementById('pb-leaders-body');
-  body.innerHTML=PB_LEADERS.map((r,i)=>`<tr>
+  if(!body)return;
+  const dir=probowlSort.dir;
+  const sorted=[...PB_LEADERS].sort((a,b)=>(a.count-b.count)*dir*-1);
+  body.innerHTML=sorted.map((r,i)=>`<tr>
     <td class="rank">${i+1}</td>
-    <td><div class="tcell"><div class="av">${r.mgr.substring(0,2).toUpperCase()}</div><span style="font-weight:500">${r.mgr}</span></div></td>
+    <td><div class="tcell"><div class="av">${getInitials(r.mgr)}</div><span style="font-weight:500">${r.mgr}</span></div></td>
     <td class="mono">${r.count}</td>
   </tr>`).join('');
 }
