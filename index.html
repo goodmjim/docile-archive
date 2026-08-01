@@ -458,7 +458,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <button class="tab-btn active" onclick="switchTab('home')">Home</button>
       <button class="tab-btn" onclick="switchTab('standings')">Standings</button>
       <button class="tab-btn" onclick="switchTab('matchups')">Matchups</button>
-      <button class="tab-btn" onclick="switchTab('players')">Player Lineups</button>
+      <button class="tab-btn" onclick="switchTab('players')">Player Scoring</button>
       <button class="tab-btn" onclick="switchTab('h2h')">Head-to-Head</button>
       <button class="tab-btn" onclick="switchTab('playoffs')">Playoffs</button>
       <button class="tab-btn" onclick="switchTab('trades')">Trades</button>
@@ -517,7 +517,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
 
     <!-- PLAYERS -->
     <div class="panel" id="panel-players">
-      <div class="sh"><h2>Player Lineups</h2><span class="sh-sub">All starters across all loaded seasons</span></div>
+      <div class="sh"><h2>Player Scoring</h2><span class="sh-sub">All starters across all loaded seasons</span></div>
       <div style="margin-bottom:0.6rem">
         <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem">Seasons</div>
         <div class="yr-filter-row">
@@ -543,7 +543,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
         </select>
       </div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Player</th><th>Pos</th><th>NFL Team</th><th>Total Pts</th><th>Starts</th><th>Avg Pts</th><th>Best Game</th><th>Chart</th></tr></thead>
+        <thead><tr><th>Player</th><th>Pos</th><th>NFL Team</th><th>Total Pts</th><th>Starts</th><th>Avg Pts</th><th>Best Game</th><th>Trend</th></tr></thead>
         <tbody id="players-body"></tbody>
       </table></div>
     </div>
@@ -1056,6 +1056,45 @@ const PB_LEADERS = [
 // APP STATE
 // ══════════════════════════════════════════════════════════════
 const SLEEPER_API = 'https://api.sleeper.app/v1';
+
+// ── SHARED DATA (Google Sheets) ──────────────────────────────
+// Paste your Google Sheet ID here after following SHEETS-SETUP.md
+// Sheet must be published to web (File → Share → Publish to web)
+const SHARED_SHEET_ID = '';  // e.g. '1E36DWBwHfjHH6U91qRn0EH51H0DhGgMd1zA1pBOHz_E'
+
+async function fetchSharedData(){
+  if(!SHARED_SHEET_ID)return;
+  try{
+    // Fetch PlayerBios tab
+    const biosUrl=`https://docs.google.com/spreadsheets/d/${SHARED_SHEET_ID}/gviz/tq?tqx=out:json&sheet=PlayerBios`;
+    const biosR=await fetch(biosUrl);
+    if(biosR.ok){
+      const biosText=await biosR.text();
+      const biosJson=JSON.parse(biosText.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+      biosJson.table?.rows?.forEach(row=>{
+        const pid=row.c[0]?.v?.toString().trim();
+        const bio=row.c[1]?.v?.toString().trim();
+        if(pid&&bio)DB.playerBios[pid]=bio; // sheet wins over localStorage
+      });
+    }
+    // Fetch HofPhotos tab
+    const hofUrl=`https://docs.google.com/spreadsheets/d/${SHARED_SHEET_ID}/gviz/tq?tqx=out:json&sheet=HofPhotos`;
+    const hofR=await fetch(hofUrl);
+    if(hofR.ok){
+      const hofText=await hofR.text();
+      const hofJson=JSON.parse(hofText.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+      hofJson.table?.rows?.forEach(row=>{
+        const name=row.c[0]?.v?.toString().trim();
+        const url=row.c[1]?.v?.toString().trim();
+        if(name&&url){
+          const hof=HOF.find(h=>h.name.toLowerCase()===name.toLowerCase());
+          if(hof)hof._sheetPhoto=url; // URL from sheet (shown unless local upload exists)
+        }
+      });
+    }
+  }catch(e){console.warn('Shared sheet fetch failed (non-critical):', e);}
+}
+
 let DB = {
   username:'',myUserId:'',myTeamName:'',
   seasons:[],playerMeta:{},myStarters:[],allStarters:[],
@@ -1163,6 +1202,7 @@ async function startLoad(){
     DB.username=username;DB.myUserId=user.user_id;DB.myTeamName='';
     DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];
     try{const b=localStorage.getItem('dl_bios');if(b)DB.playerBios=JSON.parse(b);}catch{}
+    await fetchSharedData(); // overlay sheet data on top of local
     for(let i=0;i<rows.length;i++){
       const{year,lid}=rows[i];
       setSt(`Loading ${year} (${i+1}/${rows.length})…`);
@@ -1682,9 +1722,42 @@ function renderMatchups(){
 // ══════════════════════════════════════════════════════════════
 // RENDER: PLAYER LINEUPS
 // ══════════════════════════════════════════════════════════════
+function buildWeeklyRanks(starters, sortBy){
+  // Build per-week rank snapshots so we can compute movement
+  // Groups starters by week+year, aggregates cumulative stats up to that week,
+  // ranks them, returns map of pid -> rank for the most recent week and the one before
+  const byYearWeek={};
+  starters.forEach(s=>{
+    const key=`${s.year}|${s.week}`;
+    if(!byYearWeek[key])byYearWeek[key]={year:s.year,week:s.week,entries:[]};
+    byYearWeek[key].entries.push(s);
+  });
+  const sorted=Object.values(byYearWeek).sort((a,b)=>a.year-b.year||a.week-b.week);
+  if(sorted.length<2)return{current:null,prev:null};
+
+  // Cumulative totals up through each week
+  const cumulative={};
+  const snapshots=[];
+  sorted.forEach(({year,week,entries})=>{
+    entries.forEach(s=>{
+      if(!cumulative[s.pid])cumulative[s.pid]={pts:0,starts:0};
+      cumulative[s.pid].pts+=(s.points||0);cumulative[s.pid].starts++;
+    });
+    // Take a snapshot of rankings at this week
+    const ranked=Object.entries(cumulative)
+      .map(([pid,d])=>({pid,val:sortBy==='starts'?d.starts:sortBy==='avg'?d.pts/d.starts:d.pts}))
+      .sort((a,b)=>b.val-a.val);
+    const rankMap={};ranked.forEach((r,i)=>rankMap[r.pid]=i+1);
+    snapshots.push({year,week,rankMap});
+  });
+  return{current:snapshots[snapshots.length-1].rankMap, prev:snapshots[snapshots.length-2].rankMap,
+    currentLabel:`Wk ${snapshots[snapshots.length-1].week} ${snapshots[snapshots.length-1].year}`};
+}
+
 function renderPlayers(){
   const search=(document.getElementById('p-search').value||'').toLowerCase();
-  const posF=document.getElementById('p-pos').value;const sortBy=document.getElementById('p-sort').value;
+  const posF=document.getElementById('p-pos').value;
+  const sortBy=document.getElementById('p-sort').value;
   let starters=DB.allStarters.filter(s=>activeYrs.has(s.year)&&activeTeams.has(s.managerKey));
   const agg={};
   starters.forEach(s=>{
@@ -1703,19 +1776,43 @@ function renderPlayers(){
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
   const sf={total:(a,b)=>b.total-a.total,starts:(a,b)=>b.starts-a.starts,avg:(a,b)=>b.avg-a.avg,best:(a,b)=>b.best-a.best};
   rows.sort(sf[sortBy]||sf.total);
-  // Rank within position
-  const posRank={};
-  rows.forEach(r=>{
-    if(!posRank[r.pos])posRank[r.pos]=[];
-    posRank[r.pos].push(r.pid);
-  });
+
+  // Compute week-over-week rank movement
+  const {current:curRanks, prev:prevRanks, currentLabel} = buildWeeklyRanks(starters, sortBy);
+
   const maxTotal=rows.length?Math.max(...rows.map(r=>r.total)):1;
   const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
   const body=document.getElementById('players-body');
   if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">No players found.</td></tr>';return;}
+
+  // Update column header with context
+  const trendTh=document.querySelector('#panel-players thead th:last-child');
+  if(trendTh&&currentLabel)trendTh.textContent='vs prev wk';
+
   body.innerHTML=rows.slice(0,200).map((r,idx)=>{
-    const bp=maxTotal>0?Math.round(r.total/maxTotal*100):0;
-    const pRk=(posRank[r.pos]?.indexOf(r.pid)??-1)+1;
+    const overallRank=idx+1;
+    let trendCell='';
+    if(curRanks&&prevRanks){
+      const curRk=curRanks[r.pid];
+      const prevRk=prevRanks[r.pid];
+      if(!prevRk){
+        // Brand new to the rankings this week
+        trendCell=`<span style="font-size:0.72rem;color:var(--teal);font-family:var(--font-mono);font-weight:600">NEW</span>`;
+      } else if(curRk&&prevRk){
+        const delta=prevRk-curRk; // positive = rose in ranks (lower number = better)
+        if(delta===0){
+          trendCell=`<span style="font-size:0.72rem;color:var(--text3);font-family:var(--font-mono)">—</span>`;
+        } else if(delta>0){
+          trendCell=`<span style="font-size:0.78rem;color:var(--teal);font-family:var(--font-mono);font-weight:600">▲${delta}</span>`;
+        } else {
+          trendCell=`<span style="font-size:0.78rem;color:var(--crimson);font-family:var(--font-mono);font-weight:600">▼${Math.abs(delta)}</span>`;
+        }
+      }
+    } else {
+      // No week data — show points bar
+      const bp=maxTotal>0?Math.round(r.total/maxTotal*100):0;
+      trendCell=`<div class="pts-bar"><div class="pts-fill" style="width:${bp}%"></div></div>`;
+    }
     return`<tr>
       <td style="cursor:pointer;font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</td>
       <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
@@ -1724,7 +1821,7 @@ function renderPlayers(){
       <td class="mono">${r.starts}</td>
       <td class="mono">${r.avg.toFixed(1)}</td>
       <td class="mono">${r.best.toFixed(1)}</td>
-      <td><div class="pts-bar"><div class="pts-fill" style="width:${bp}%"></div></div></td>
+      <td>${trendCell}</td>
     </tr>`;
   }).join('');
 }
@@ -1776,6 +1873,7 @@ function openPlayerModal(pid){
       <textarea id="bio-ta" placeholder="Add a bio or notes for this player…" rows="3">${bio}</textarea>
     </div>
     <button class="modal-save-bio" onclick="saveBio('${pid}')">Save notes</button>
+    <div style="font-size:0.68rem;color:var(--text3);margin-top:4px">${SHARED_SHEET_ID?'Notes saved to your browser. To share with the league, add to the PlayerBios sheet.':'Notes saved locally to your browser only.'}</div>
     <div class="modal-seasons">
       <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;margin-top:0.75rem">Season breakdown</div>
       <div class="tbl-wrap" style="margin:0"><table style="min-width:unset">
@@ -2125,7 +2223,7 @@ function renderHof(){
     <div style="margin-bottom:2rem">
       <div style="font-size:0.72rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.75rem">${cls} Class</div>
       <div class="hof-grid">${members.map(h=>{
-        const photoSrc=h._photo||h.photo||'';
+        const photoSrc=h._photo||h._sheetPhoto||h.photo||'';
         const nameSlug=h.name.replace(/'/g,"\\'");
         return`<div class="hof-card">
           <div class="hof-card-img" style="position:relative">
@@ -2680,7 +2778,7 @@ function renderLuckAnalysis(yrF,mgrF){
 
 // ── SMART SEARCH CONFIG ──────────────────────────────────────
 // After deploying your Cloudflare Worker, paste its URL here:
-const CLAUDE_WORKER_URL = 'https://docile-league-claude.jimmygoodman52.workers.dev/';
+const CLAUDE_WORKER_URL = 'https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev';
 
 async function callClaude(systemPrompt, userMessage){
   if(!CLAUDE_WORKER_URL||CLAUDE_WORKER_URL.includes('YOUR-WORKER')){
