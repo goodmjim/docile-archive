@@ -432,21 +432,16 @@ tbody tr.highlight td{background:var(--gold-dim)}
 <div id="setup">
   <div class="setup-logo">
     <h1>The Docile<br><em>Archive</em></h1>
-    <p>Eleven seasons. One place. All the records.</p>
+    <p>Twelve seasons. One place. All the records.</p>
   </div>
   <div class="setup-box">
     <div class="fg">
       <label>Sleeper username</label>
       <input id="inp-user" placeholder="e.g. turkmommy" autocomplete="off">
     </div>
-    <div class="fg">
-      <label>Your team name in Sleeper</label>
-      <input id="inp-team" placeholder="Helps identify your roster">
-    </div>
-    <div>
-      <div class="slabel">League IDs by season</div>
-      <div id="srows"></div>
-      <button class="add-s" onclick="addRow()">+ Add season</button>
+    <div style="margin-bottom:1rem">
+      <div class="slabel" style="margin-bottom:0.5rem">Seasons — pre-loaded</div>
+      <div id="srows" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px"></div>
     </div>
     <button class="btn-load" id="btn-load" onclick="startLoad()">LOAD THE ARCHIVE →</button>
     <button class="btn-demo" onclick="loadDemo()">Preview with demo data</button>
@@ -1081,25 +1076,54 @@ function sortStandings(col){
   });
   renderStandings();
 }
-let rowCount = 0;
+// ── HARDCODED LEAGUE SEASONS ─────────────────────────────────
+const LEAGUE_SEASONS = [
+  {year:'2019', lid:'447618260255371264'},
+  {year:'2020', lid:'516059875544244224'},
+  {year:'2021', lid:'652200603757408256'},
+  {year:'2022', lid:'812785649806594048'},
+  {year:'2023', lid:'916403012137201664'},
+  {year:'2024', lid:'1078418325048332288'},
+  {year:'2025', lid:'1200669884959178752'},
+  {year:'2026', lid:'1327848073182855168'},
+];
+
+// Which seasons to load by default (all of them)
+let selectedSeasons = new Set(LEAGUE_SEASONS.map(s=>s.year));
+
+function buildSeasonPills(){
+  const el=document.getElementById('srows');
+  if(!el)return;
+  el.innerHTML=LEAGUE_SEASONS.map(s=>`
+    <div onclick="toggleSeason('${s.year}',this)" id="pill-${s.year}"
+      style="display:flex;align-items:center;justify-content:space-between;
+        background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--radius);
+        padding:6px 10px;cursor:pointer;transition:all 0.15s;user-select:none">
+      <span style="font-family:var(--font-display);font-size:1rem;letter-spacing:0.04em;color:var(--gold)">${s.year}</span>
+      <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text3);margin-left:8px">✓</span>
+    </div>`).join('');
+}
+
+function toggleSeason(year, el){
+  if(selectedSeasons.has(year)){
+    if(selectedSeasons.size<=1)return; // keep at least one
+    selectedSeasons.delete(year);
+    el.style.background='var(--surface2)';
+    el.style.borderColor='var(--border2)';
+    el.querySelector('span:last-child').textContent='';
+    el.querySelector('span:first-child').style.color='var(--text3)';
+  } else {
+    selectedSeasons.add(year);
+    el.style.background='var(--gold-dim)';
+    el.style.borderColor='var(--gold-border)';
+    el.querySelector('span:last-child').textContent='✓';
+    el.querySelector('span:first-child').style.color='var(--gold)';
+  }
+}
 
 // ══════════════════════════════════════════════════════════════
 // SETUP UI
 // ══════════════════════════════════════════════════════════════
-function addRow(yr='',lid=''){
-  const id='sr-'+rowCount++;
-  const d=document.createElement('div');
-  d.className='srow';d.id=id;
-  d.innerHTML=`<input class="yr" placeholder="Year" value="${yr}" style="width:78px;flex:none">
-    <input class="lid" placeholder="League ID" value="${lid}" style="flex:1;font-family:var(--font-mono);font-size:0.8rem">
-    <button class="rm" onclick="document.getElementById('${id}').remove()">✕</button>`;
-  document.getElementById('srows').appendChild(d);
-}
-function getRows(){
-  return Array.from(document.querySelectorAll('.srow')).map(el=>({
-    year:el.querySelector('.yr').value.trim(),lid:el.querySelector('.lid').value.trim()
-  })).filter(e=>e.year&&e.lid);
-}
 function setSt(msg,err=false){
   const el=document.getElementById('sstatus');
   if(!msg){el.innerHTML='';return;}
@@ -1129,17 +1153,15 @@ async function apiFetch(path){
 
 async function startLoad(){
   const username=document.getElementById('inp-user').value.trim();
-  const teamname=document.getElementById('inp-team').value.trim();
-  const rows=getRows();
   if(!username)return setSt('Enter your Sleeper username.',true);
-  if(!rows.length)return setSt('Add at least one season.',true);
+  const rows=LEAGUE_SEASONS.filter(s=>selectedSeasons.has(s.year));
+  if(!rows.length)return setSt('Select at least one season.',true);
   setSt('Looking up user…');setProg(5);
   try{
     const user=await apiFetch('/user/'+encodeURIComponent(username));
-    if(!user?.user_id)return setSt('User not found.',true);
-    DB.username=username;DB.myUserId=user.user_id;DB.myTeamName=teamname;
+    if(!user?.user_id)return setSt('User not found. Check your Sleeper username.',true);
+    DB.username=username;DB.myUserId=user.user_id;DB.myTeamName='';
     DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];
-    // Load saved bios
     try{const b=localStorage.getItem('dl_bios');if(b)DB.playerBios=JSON.parse(b);}catch{}
     for(let i=0;i<rows.length;i++){
       const{year,lid}=rows[i];
@@ -1149,8 +1171,7 @@ async function startLoad(){
     }
     setSt('Loading player names…');setProg(88);
     await loadPlayerMeta();
-    // Save config
-    try{localStorage.setItem('dl_config',JSON.stringify({username,teamname,rows}));}catch{}
+    try{localStorage.setItem('dl_config',JSON.stringify({username,selectedSeasons:[...selectedSeasons]}));}catch{}
     setProg(100);setSt('');
     buildApp();
     document.getElementById('setup').style.display='none';
@@ -1176,13 +1197,6 @@ async function loadSeason(year,lid){
   const userMap={};users.forEach(u=>userMap[u.user_id]=u);
   let myRosterId=null;
   rosters.forEach(r=>{if(r.owner_id===DB.myUserId)myRosterId=r.roster_id;});
-  if(!myRosterId&&DB.myTeamName){
-    rosters.forEach(r=>{
-      const u=userMap[r.owner_id]||{};
-      const tn=u.metadata?.team_name||u.display_name||'';
-      if(tn.toLowerCase().includes(DB.myTeamName.toLowerCase()))myRosterId=r.roster_id;
-    });
-  }
   const teams=rosters.map(r=>{
     const u=userMap[r.owner_id]||{};
     const sleeperName=u.display_name||'';
@@ -1287,14 +1301,24 @@ async function loadPlayerMeta(){
 async function doRefresh(){
   const saved=localStorage.getItem('dl_config');
   if(!saved)return;
-  const{username,teamname,rows}=JSON.parse(saved);
-  document.getElementById('inp-user').value=username;
-  document.getElementById('inp-team').value=teamname;
-  document.getElementById('srows').innerHTML='';rowCount=0;
-  rows.forEach(r=>addRow(r.year,r.lid));
-  document.getElementById('setup').style.display='flex';
-  document.getElementById('app').style.display='none';
-  startLoad();
+  try{
+    const{username,selectedSeasons:ss}=JSON.parse(saved);
+    document.getElementById('inp-user').value=username||'';
+    if(ss)selectedSeasons=new Set(ss);
+    // Re-highlight pills
+    LEAGUE_SEASONS.forEach(s=>{
+      const pill=document.getElementById('pill-'+s.year);
+      if(!pill)return;
+      const active=selectedSeasons.has(s.year);
+      pill.style.background=active?'var(--gold-dim)':'var(--surface2)';
+      pill.style.borderColor=active?'var(--gold-border)':'var(--border2)';
+      pill.querySelector('span:last-child').textContent=active?'✓':'';
+      pill.querySelector('span:first-child').style.color=active?'var(--gold)':'var(--text3)';
+    });
+    document.getElementById('setup').style.display='flex';
+    document.getElementById('app').style.display='none';
+    startLoad();
+  }catch(e){console.warn('Refresh error:',e);}
 }
 
 function goBack(){
@@ -2656,7 +2680,7 @@ function renderLuckAnalysis(yrF,mgrF){
 
 // ── SMART SEARCH CONFIG ──────────────────────────────────────
 // After deploying your Cloudflare Worker, paste its URL here:
-const CLAUDE_WORKER_URL = 'https://docile-league-claude.jimmygoodman52.workers.dev/';
+const CLAUDE_WORKER_URL = 'https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev';
 
 async function callClaude(systemPrompt, userMessage){
   if(!CLAUDE_WORKER_URL||CLAUDE_WORKER_URL.includes('YOUR-WORKER')){
@@ -2725,17 +2749,26 @@ function renderSearchHistory(){
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
-addRow('2019','');addRow('2020','');addRow('2021','');
-addRow('2022','');addRow('2023','');addRow('2024','');addRow('2025','');
-// Try to restore saved config
+buildSeasonPills();
+// Try to restore saved username
 try{
   const saved=localStorage.getItem('dl_config');
   if(saved){
-    const{username,teamname,rows}=JSON.parse(saved);
-    document.getElementById('inp-user').value=username;
-    document.getElementById('inp-team').value=teamname;
-    document.getElementById('srows').innerHTML='';rowCount=0;
-    rows.forEach(r=>addRow(r.year,r.lid));
+    const{username,selectedSeasons:ss}=JSON.parse(saved);
+    if(username)document.getElementById('inp-user').value=username;
+    if(ss){
+      selectedSeasons=new Set(ss);
+      // Re-apply pill states
+      LEAGUE_SEASONS.forEach(s=>{
+        const pill=document.getElementById('pill-'+s.year);
+        if(!pill)return;
+        const active=selectedSeasons.has(s.year);
+        pill.style.background=active?'var(--gold-dim)':'var(--surface2)';
+        pill.style.borderColor=active?'var(--gold-border)':'var(--border2)';
+        pill.querySelector('span:last-child').textContent=active?'✓':'';
+        pill.querySelector('span:first-child').style.color=active?'var(--gold)':'var(--text3)';
+      });
+    }
   }
 }catch{}
 </script>
