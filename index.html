@@ -1077,7 +1077,7 @@ function getInitials(name){return INITIALS[name]||name.substring(0,2).toUpperCas
 // ── SHARED DATA (Google Sheets) ──────────────────────────────
 // Paste your Google Sheet ID here after following SHEETS-SETUP.md
 // Sheet must be published to web (File → Share → Publish to web)
-const SHARED_SHEET_ID = '';  // e.g. '1E36DWBwHfjHH6U91qRn0EH51H0DhGgMd1zA1pBOHz_E'
+const SHARED_SHEET_ID = '1IrO-sBFQOcpyGnejr_RaN6yHPIH2ptuQPXy6tQA1TZ0';
 
 async function fetchSharedData(){
   if(!SHARED_SHEET_ID)return;
@@ -1289,17 +1289,27 @@ async function loadSeason(year,lid){
   const weekNums=Array.from({length:weekCount},(_,i)=>i+1);
   // Only fetch projections for 2020+ (data reliability)
   const fetchProj=parseInt(year)>=2020;
-  const [weekResults,txResults,statResults,projResults]=await Promise.all([
+  const [weekResults,txResults,statResults,projResults,bracketData]=await Promise.all([
     Promise.all(weekNums.map(w=>apiFetch(`/league/${lid}/matchups/${w}`).then(mu=>({w,mu})).catch(()=>({w,mu:[]})))),
     Promise.all(weekNums.map(w=>apiFetch(`/league/${lid}/transactions/${w}`).then(tx=>tx.map(t=>({...t,week:w,year:parseInt(year)}))).catch(()=>[]))),
     Promise.all(weekNums.map(w=>apiFetch(`/stats/nfl/regular/${year}/${w}`).then(s=>({w,s})).catch(()=>({w,s:{}})))),
     fetchProj
       ? Promise.all(weekNums.map(w=>apiFetch(`/projections/nfl/regular/${year}/${w}`).then(s=>({w,s})).catch(()=>({w,s:{}}))))
-      : Promise.resolve(weekNums.map(w=>({w,s:{}})))
+      : Promise.resolve(weekNums.map(w=>({w,s:{}}))),
+    apiFetch(`/league/${lid}/winners_bracket`).catch(()=>[])
   ]);
   const matchupsByWeek={};weekResults.forEach(({w,mu})=>matchupsByWeek[w]=mu);
   const statByWeek={};statResults.forEach(({w,s})=>statByWeek[w]=s);
   const projByWeek={};projResults.forEach(({w,s})=>projByWeek[w]=s);
+
+  // Build seed map: rosterId -> seed from bracket data
+  const seedMap={};
+  if(Array.isArray(bracketData)){
+    bracketData.forEach(match=>{
+      if(match.t1&&match.t1_seed)seedMap[match.t1]=match.t1_seed;
+      if(match.t2&&match.t2_seed)seedMap[match.t2]=match.t2_seed;
+    });
+  }
   const trades=txResults.flat().filter(t=>t.type==='trade'&&t.status==='complete');
   DB.transactions.push(...trades);
   // Collect all starters for all teams
@@ -1341,7 +1351,9 @@ async function loadSeason(year,lid){
       });
     });
   });
-  DB.seasons.push({year:parseInt(year),lid,league,teams,myRosterId,matchupsByWeek,scoring,projByWeek});
+  // Attach seeds to teams
+  teams.forEach(t=>{if(seedMap[t.rosterId])t.seed=seedMap[t.rosterId];});
+  DB.seasons.push({year:parseInt(year),lid,league,teams,myRosterId,matchupsByWeek,scoring,projByWeek,seedMap});
 }
 
 function calcPoints(stats,scoring){
@@ -1995,20 +2007,46 @@ function renderPlayoffs(){
   const v=document.getElementById('s-sel').value;
   const results=v==='all'?PLAYOFF_RESULTS:PLAYOFF_RESULTS.filter(p=>p.year==v);
   const el=document.getElementById('playoff-content');
-  el.innerHTML=results.map(pr=>`
-    <div style="margin-bottom:2rem">
+
+  // Build seed lookup: year -> managerKey -> seed (from loaded Sleeper data)
+  const seedsByYear={};
+  DB.seasons.forEach(s=>{
+    if(!s.seedMap||!Object.keys(s.seedMap).length)return;
+    seedsByYear[s.year]={};
+    s.teams.forEach(t=>{
+      if(t.seed&&t.managerKey)seedsByYear[s.year][t.managerKey]=t.seed;
+    });
+  });
+
+  function seedBadge(mgrName, year){
+    const seed=seedsByYear[year]?.[mgrName];
+    if(!seed)return '';
+    return `<span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text3);
+      background:var(--surface2);border:1px solid var(--border2);border-radius:3px;
+      padding:0 5px;margin-right:5px;flex-shrink:0">${seed}</span>`;
+  }
+
+  el.innerHTML=results.map(pr=>{
+    return`<div style="margin-bottom:2.5rem">
       <div style="font-family:var(--font-display);font-size:1.2rem;letter-spacing:0.06em;color:var(--gold);margin-bottom:0.75rem;text-transform:uppercase">${pr.year} · Docile Cup</div>
       <div class="playoff-bracket">
         ${pr.rounds.map(round=>`<div>
           <div class="bracket-col-title">${round.round}</div>
           ${round.games.map(g=>`<div class="bracket-game${round.round==='Docile Cup'?' final':''}">
-            <div class="bracket-team winner"><span>${g.w}</span><span class="bracket-score">${g.ws.toFixed(2)}</span></div>
-            <div class="bracket-team"><span>${g.l}</span><span class="bracket-score">${g.ls.toFixed(2)}</span></div>
+            <div class="bracket-team winner" style="display:flex;align-items:center;justify-content:space-between">
+              <span style="display:flex;align-items:center">${seedBadge(g.w,pr.year)}<span>${g.w}</span></span>
+              <span class="bracket-score">${g.ws.toFixed(2)}</span>
+            </div>
+            <div class="bracket-team" style="display:flex;align-items:center;justify-content:space-between">
+              <span style="display:flex;align-items:center">${seedBadge(g.l,pr.year)}<span>${g.l}</span></span>
+              <span class="bracket-score">${g.ls.toFixed(2)}</span>
+            </div>
           </div>`).join('')}
         </div>`).join('')}
       </div>
-    </div>`).join('');
-  // All-time standings — sortable
+    </div>`;
+  }).join('');
+
   renderPlayoffStandings();
 }
 
