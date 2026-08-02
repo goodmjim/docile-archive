@@ -579,6 +579,20 @@ tbody tr.highlight td{background:var(--gold-dim)}
     <!-- TRADES -->
     <div class="panel" id="panel-trades">
       <div class="sh"><h2>Trades</h2><span class="sh-sub">Post-trade value extracted (pts scored after trade)</span></div>
+      <div class="filters" style="margin-bottom:1rem">
+        <select class="f-sel" id="trade-yr-sel" onchange="renderTrades()">
+          <option value="all">All seasons</option>
+        </select>
+        <select class="f-sel" id="trade-mgr-sel" onchange="renderTrades()">
+          <option value="all">All managers</option>
+        </select>
+        <select class="f-sel" id="trade-sort-sel" onchange="renderTrades()">
+          <option value="date">Most recent</option>
+          <option value="combined">Most combined pts</option>
+          <option value="winner">Most pts (winning side)</option>
+          <option value="loser">Most pts (losing side)</option>
+        </select>
+      </div>
       <div id="trades-content"></div>
     </div>
 
@@ -1115,7 +1129,8 @@ async function fetchSharedData(){
 let DB = {
   username:'',myUserId:'',myTeamName:'',
   seasons:[],playerMeta:{},myStarters:[],allStarters:[],
-  transactions:[],playerBios:{}
+  transactions:[],playerBios:{},
+  draftPickMap:{} // year -> round -> originalRosterId -> {playerId, playerName, pts}
 };
 let activeYrs = new Set(), activeTeams = new Set();
 let standingsSort = {col:'wins', dir:-1};
@@ -1236,7 +1251,7 @@ async function startLoad(){
     const user=await apiFetch('/user/'+encodeURIComponent(username));
     if(!user?.user_id)return setSt('User not found. Check your Sleeper username.',true);
     DB.username=username;DB.myUserId=user.user_id;DB.myTeamName='';
-    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];
+    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];DB.draftPickMap={};
     try{const b=localStorage.getItem('dl_bios');if(b)DB.playerBios=JSON.parse(b);}catch{}
     await fetchSharedData(); // overlay sheet data on top of local
     for(let i=0;i<rows.length;i++){
@@ -1289,14 +1304,15 @@ async function loadSeason(year,lid){
   const weekNums=Array.from({length:weekCount},(_,i)=>i+1);
   // Only fetch projections for 2020+ (data reliability)
   const fetchProj=parseInt(year)>=2020;
-  const [weekResults,txResults,statResults,projResults,bracketData]=await Promise.all([
+  const [weekResults,txResults,statResults,projResults,bracketData,draftList]=await Promise.all([
     Promise.all(weekNums.map(w=>apiFetch(`/league/${lid}/matchups/${w}`).then(mu=>({w,mu})).catch(()=>({w,mu:[]})))),
     Promise.all(weekNums.map(w=>apiFetch(`/league/${lid}/transactions/${w}`).then(tx=>tx.map(t=>({...t,week:w,year:parseInt(year)}))).catch(()=>[]))),
     Promise.all(weekNums.map(w=>apiFetch(`/stats/nfl/regular/${year}/${w}`).then(s=>({w,s})).catch(()=>({w,s:{}})))),
     fetchProj
       ? Promise.all(weekNums.map(w=>apiFetch(`/projections/nfl/regular/${year}/${w}`).then(s=>({w,s})).catch(()=>({w,s:{}}))))
       : Promise.resolve(weekNums.map(w=>({w,s:{}}))),
-    apiFetch(`/league/${lid}/winners_bracket`).catch(()=>[])
+    apiFetch(`/league/${lid}/winners_bracket`).catch(()=>[]),
+    apiFetch(`/league/${lid}/drafts`).catch(()=>[])
   ]);
   const matchupsByWeek={};weekResults.forEach(({w,mu})=>matchupsByWeek[w]=mu);
   const statByWeek={};statResults.forEach(({w,s})=>statByWeek[w]=s);
@@ -1353,6 +1369,27 @@ async function loadSeason(year,lid){
   });
   // Attach seeds to teams
   teams.forEach(t=>{if(seedMap[t.rosterId])t.seed=seedMap[t.rosterId];});
+
+  // Load draft pick resolutions: for each draft in this season, map
+  // (season, round, originalRosterId) -> player picked
+  if(Array.isArray(draftList)&&draftList.length){
+    await Promise.all(draftList.map(async draft=>{
+      try{
+        const picks=await apiFetch(`/draft/${draft.draft_id}/picks`);
+        if(!Array.isArray(picks))return;
+        picks.forEach(pick=>{
+          const draftSeason=draft.season||year;
+          const key=`${draftSeason}|${pick.round}|${pick.roster_id}`;
+          const m=DB.playerMeta[pick.player_id];
+          const playerName=m?`${m.first_name} ${m.last_name}`:(pick.metadata?.first_name&&pick.metadata?.last_name?`${pick.metadata.first_name} ${pick.metadata.last_name}`:null);
+          if(playerName){
+            DB.draftPickMap[key]={playerId:pick.player_id,playerName,round:pick.round,pickNo:pick.pick_no};
+          }
+        });
+      }catch(e){console.warn(`Draft picks load failed for ${draft.draft_id}:`,e);}
+    }));
+  }
+
   DB.seasons.push({year:parseInt(year),lid,league,teams,myRosterId,matchupsByWeek,scoring,projByWeek,seedMap});
 }
 
@@ -2078,48 +2115,134 @@ function renderPlayoffStandings(){
 // ══════════════════════════════════════════════════════════════
 // RENDER: TRADES
 // ══════════════════════════════════════════════════════════════
+function initTradeFilters(){
+  const years=[...new Set(DB.transactions.filter(t=>t.type==='trade').map(t=>t.year))].sort((a,b)=>b-a);
+  const yrSel=document.getElementById('trade-yr-sel');
+  if(yrSel)yrSel.innerHTML='<option value="all">All seasons</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  const mgrs=[...new Set(DB.seasons.flatMap(s=>s.teams.map(t=>t.managerKey)).filter(Boolean))].sort();
+  const mgrSel=document.getElementById('trade-mgr-sel');
+  if(mgrSel)mgrSel.innerHTML='<option value="all">All managers</option>'+mgrs.map(m=>`<option value="${m}">${m}</option>`).join('');
+}
+
+function resolvePickName(pick, tradeYear){
+  // Format: "2025 1st Round Pick (Quinshon Judkins)"
+  const ordinals=['','1st','2nd','3rd','4th','5th'];
+  const roundLabel=ordinals[pick.round]||`Rd ${pick.round}`;
+  const season=pick.season||tradeYear;
+  // Look up in draftPickMap: the original_roster_id on the pick tells us
+  // which team's pick slot it was (who originally owned it before it was traded)
+  const key=`${season}|${pick.round}|${pick.roster_id}`;
+  const resolved=DB.draftPickMap[key];
+  if(resolved){
+    return`${season} ${roundLabel} Pick (<strong>${resolved.playerName}</strong>)`;
+  }
+  // Try without roster_id specificity — some seasons may not track original owner
+  const altResolved=Object.entries(DB.draftPickMap).find(([k])=>k.startsWith(`${season}|${pick.round}|`));
+  return`${season} ${roundLabel} Pick`;
+}
+
+function getManagerKey(season, rosterId){
+  if(!season)return'Roster '+rosterId;
+  return season.teams.find(t=>t.rosterId===rosterId)?.managerKey||
+         season.teams.find(t=>t.rosterId===rosterId)?.name||
+         'Team '+rosterId;
+}
+
 function renderTrades(){
-  const v=document.getElementById('s-sel').value;
+  initTradeFilters();
+  const yrF=document.getElementById('trade-yr-sel')?.value||'all';
+  const mgrF=document.getElementById('trade-mgr-sel')?.value||'all';
+  const sortF=document.getElementById('trade-sort-sel')?.value||'date';
+
   let trades=DB.transactions.filter(t=>t.type==='trade');
-  if(v!=='all')trades=trades.filter(t=>t.year==v);
-  trades.sort((a,b)=>b.year-a.year||b.week-a.week);
-  const el=document.getElementById('trades-content');
-  if(!trades.length){el.innerHTML='<div class="empty"><span class="ebig">↔</span>No trades in loaded seasons.</div>';return;}
-  el.innerHTML=trades.map(t=>{
+  if(yrF!=='all')trades=trades.filter(t=>t.year==yrF);
+
+  // Build trade data with totals so we can filter by manager and sort
+  const tradeData=trades.map(t=>{
     const season=DB.seasons.find(s=>s.year===t.year);
-    const gn=rid=>{if(!season)return'Roster '+rid;return season.teams.find(tm=>tm.rosterId===rid)?.name||'Team '+rid;};
     const[r1,r2]=t.roster_ids||[0,0];
-    const adds=t.adds||{};const picks=(t.draft_picks||[]).map(p=>`${p.season} Rd${p.round}`);
+    const mk1=getManagerKey(season,r1);
+    const mk2=getManagerKey(season,r2);
+    const adds=t.adds||{};
+    const draftPicks=t.draft_picks||[];
+
+    // Picks going to each side
+    const picksToR1=draftPicks.filter(p=>p.owner_id===r1);
+    const picksToR2=draftPicks.filter(p=>p.owner_id===r2);
+
     const toR1=Object.entries(adds).filter(([,r])=>r===r1).map(([pid])=>{
-      const m=DB.playerMeta[pid];const name=m?`${m.first_name} ${m.last_name}`:pid;
+      const m=DB.playerMeta[pid];
+      const name=m?`${m.first_name} ${m.last_name}`:pid;
       const pts=DB.allStarters.filter(s=>s.pid===pid&&s.year>=t.year&&s.teamRosterId===r1).reduce((a,b)=>a+(b.points||0),0);
-      return{name,pts};
+      return{name,pts,isPick:false};
     });
     const toR2=Object.entries(adds).filter(([,r])=>r===r2).map(([pid])=>{
-      const m=DB.playerMeta[pid];const name=m?`${m.first_name} ${m.last_name}`:pid;
+      const m=DB.playerMeta[pid];
+      const name=m?`${m.first_name} ${m.last_name}`:pid;
       const pts=DB.allStarters.filter(s=>s.pid===pid&&s.year>=t.year&&s.teamRosterId===r2).reduce((a,b)=>a+(b.points||0),0);
-      return{name,pts};
+      return{name,pts,isPick:false};
     });
+
+    // Resolve pick pts: look up the player drafted with the pick, then sum their starts
+    picksToR1.forEach(pick=>{
+      const key=`${pick.season||t.year}|${pick.round}|${pick.roster_id}`;
+      const res=DB.draftPickMap[key];
+      const pts=res?DB.allStarters.filter(s=>s.pid===res.playerId&&s.year>=parseInt(pick.season||t.year)&&s.teamRosterId===r1).reduce((a,b)=>a+(b.points||0),0):0;
+      toR1.push({name:resolvePickName(pick,t.year),pts,isPick:true,raw:pick});
+    });
+    picksToR2.forEach(pick=>{
+      const key=`${pick.season||t.year}|${pick.round}|${pick.roster_id}`;
+      const res=DB.draftPickMap[key];
+      const pts=res?DB.allStarters.filter(s=>s.pid===res.playerId&&s.year>=parseInt(pick.season||t.year)&&s.teamRosterId===r2).reduce((a,b)=>a+(b.points||0),0):0;
+      toR2.push({name:resolvePickName(pick,t.year),pts,isPick:true,raw:pick});
+    });
+
     const r1Total=toR1.reduce((a,b)=>a+b.pts,0);
     const r2Total=toR2.reduce((a,b)=>a+b.pts,0);
+    const combined=r1Total+r2Total;
+    const winnerTotal=Math.max(r1Total,r2Total);
+    const loserTotal=Math.min(r1Total,r2Total);
+    return{t,season,r1,r2,mk1,mk2,toR1,toR2,r1Total,r2Total,combined,winnerTotal,loserTotal};
+  });
+
+  // Filter by manager
+  const filtered=mgrF==='all'?tradeData:tradeData.filter(d=>d.mk1===mgrF||d.mk2===mgrF);
+
+  // Sort
+  const sortFns={
+    date:(a,b)=>b.t.year-a.t.year||b.t.week-a.t.week,
+    combined:(a,b)=>b.combined-a.combined,
+    winner:(a,b)=>b.winnerTotal-a.winnerTotal,
+    loser:(a,b)=>b.loserTotal-a.loserTotal
+  };
+  filtered.sort(sortFns[sortF]||sortFns.date);
+
+  const el=document.getElementById('trades-content');
+  if(!filtered.length){el.innerHTML='<div class="empty"><span class="ebig">↔</span>No trades found.</div>';return;}
+
+  el.innerHTML=filtered.map(({t,season,r1,r2,mk1,mk2,toR1,toR2,r1Total,r2Total})=>{
     const r1Wins=r1Total>=r2Total;
+    const renderSide=(items,total,mgrKey,wins)=>{
+      const rows=items.map(p=>`
+        <div class="trade-player">
+          <span>${p.isPick?`<span style="font-size:0.78rem">${p.name}</span>`:p.name}</span>
+          <span class="trade-player-pts">${p.pts>0?p.pts.toFixed(1)+' pts':'—'}</span>
+        </div>`).join('');
+      return`<div class="trade-side">
+        <div class="trade-side-hdr">${mgrKey} received</div>
+        ${rows||'<div style="font-size:0.78rem;color:var(--text3);padding:4px 0">Draft picks only</div>'}
+        <div class="trade-total ${wins?'winner':'loser'}">${total.toFixed(1)} pts total${wins?' ✓':''}</div>
+      </div>`;
+    };
     return`<div class="trade-card">
       <div class="trade-card-hdr">
         <span class="trade-card-meta">${t.year} · Week ${t.week}</span>
-        <span class="trade-card-meta">${gn(r1)} ↔ ${gn(r2)}</span>
+        <span class="trade-card-meta">${mk1} ↔ ${mk2}</span>
+        <span class="trade-card-meta" style="color:var(--text3)">${(r1Total+r2Total).toFixed(1)} combined pts</span>
       </div>
       <div class="trade-card-body">
-        <div class="trade-side">
-          <div class="trade-side-hdr">${gn(r1)} received</div>
-          ${toR1.map(p=>`<div class="trade-player"><span>${p.name}</span><span class="trade-player-pts">${p.pts.toFixed(1)} pts</span></div>`).join('')}
-          ${picks.length?`<div style="font-size:0.72rem;color:var(--text3);margin-top:4px">${picks.join(', ')}</div>`:''}
-          <div class="trade-total ${r1Wins?'winner':'loser'}">${gn(r1)}: ${r1Total.toFixed(1)} pts total${r1Wins?' ✓':''}</div>
-        </div>
-        <div class="trade-side">
-          <div class="trade-side-hdr">${gn(r2)} received</div>
-          ${toR2.map(p=>`<div class="trade-player"><span>${p.name}</span><span class="trade-player-pts">${p.pts.toFixed(1)} pts</span></div>`).join('')}
-          <div class="trade-total ${!r1Wins?'winner':'loser'}">${gn(r2)}: ${r2Total.toFixed(1)} pts total${!r1Wins?' ✓':''}</div>
-        </div>
+        ${renderSide(toR1,r1Total,mk1,r1Wins)}
+        ${renderSide(toR2,r2Total,mk2,!r1Wins)}
       </div>
     </div>`;
   }).join('');
