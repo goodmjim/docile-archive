@@ -1598,13 +1598,14 @@ function renderMetrics(){
   const isAllTime=seasonV==='all';
 
   // My record + PF from loaded Sleeper seasons
-  let wins=0,losses=0,pf=0,totalGames=0;
+  let wins=0,losses=0,pf=0,pa=0,totalGames=0;
   seasons.forEach(s=>{
     const me=s.teams.find(t=>t.isMe);
-    if(me){wins+=me.wins;losses+=me.losses;pf+=me.pf;}
+    if(me){wins+=me.wins;losses+=me.losses;pf+=me.pf;pa+=me.pa;}
     totalGames+=s.teams.reduce((a,t)=>a+t.wins+t.losses,0)/2;
   });
   const ppg=wins+losses>0?(pf/(wins+losses)).toFixed(1):0;
+  const papg=wins+losses>0?(pa/(wins+losses)).toFixed(1):0;
 
   // Starters filtered by season selection
   const seasonStarters=isAllTime
@@ -1646,6 +1647,11 @@ function renderMetrics(){
       <div class="ml">My points for</div>
       <div class="mv">${pf.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
       <div class="ms">${ppg} PPG</div>
+    </div>
+    <div class="metric">
+      <div class="ml">My points against</div>
+      <div class="mv">${pa.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+      <div class="ms">${papg} PPG against</div>
     </div>
     <div class="metric">
       <div class="ml">League starts</div>
