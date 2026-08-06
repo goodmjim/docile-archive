@@ -1,0 +1,103 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0d0d0f"/>
+      <stop offset="100%" stop-color="#141417"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines -->
+  <line x1="0" y1="210" x2="1200" y2="210" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+  <line x1="0" y1="420" x2="1200" y2="420" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+  <line x1="400" y1="0" x2="400" y2="630" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+  <line x1="800" y1="0" x2="800" y2="630" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+
+  <!-- Gold accent bar top -->
+  <rect x="0" y="0" width="1200" height="4" fill="#d4a843"/>
+
+  <!-- Trophy icon area -->
+  <text x="96" y="290" font-family="serif" font-size="120" fill="#d4a843" opacity="0.18">🏆</text>
+
+  <!-- THE DOCILE -->
+  <text x="96" y="258"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="80"
+    font-weight="bold"
+    letter-spacing="8"
+    fill="#e8dfc8">THE DOCILE</text>
+
+  <!-- ARCHIVE -->
+  <text x="96" y="348"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="96"
+    font-weight="bold"
+    letter-spacing="6"
+    fill="#d4a843">ARCHIVE</text>
+
+  <!-- Divider line -->
+  <rect x="96" y="378" width="420" height="2" fill="#d4a843" opacity="0.4"/>
+
+  <!-- Subtitle -->
+  <text x="96" y="420"
+    font-family="'Helvetica Neue', Arial, sans-serif"
+    font-size="26"
+    letter-spacing="3"
+    fill="#a09880">TWELVE SEASONS · 2014–2025</text>
+
+  <!-- Stats row -->
+  <g transform="translate(96, 490)">
+    <rect width="130" height="68" rx="8" fill="#1c1c21" stroke="#d4a843" stroke-opacity="0.25" stroke-width="1"/>
+    <text x="65" y="28" font-family="Georgia, serif" font-size="28" font-weight="bold" fill="#d4a843" text-anchor="middle">12</text>
+    <text x="65" y="52" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#5a5445" text-anchor="middle" letter-spacing="1">SEASONS</text>
+  </g>
+  <g transform="translate(242, 490)">
+    <rect width="130" height="68" rx="8" fill="#1c1c21" stroke="#d4a843" stroke-opacity="0.25" stroke-width="1"/>
+    <text x="65" y="28" font-family="Georgia, serif" font-size="28" font-weight="bold" fill="#d4a843" text-anchor="middle">20+</text>
+    <text x="65" y="52" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#5a5445" text-anchor="middle" letter-spacing="1">MANAGERS</text>
+  </g>
+  <g transform="translate(388, 490)">
+    <rect width="130" height="68" rx="8" fill="#1c1c21" stroke="#d4a843" stroke-opacity="0.25" stroke-width="1"/>
+    <text x="65" y="28" font-family="Georgia, serif" font-size="28" font-weight="bold" fill="#d4a843" text-anchor="middle">4</text>
+    <text x="65" y="52" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#5a5445" text-anchor="middle" letter-spacing="1">HOF MEMBERS</text>
+  </g>
+
+  <!-- Right side — recent champs vertical list -->
+  <text x="820" y="175"
+    font-family="'Helvetica Neue', Arial, sans-serif"
+    font-size="11" letter-spacing="2" fill="#5a5445">RECENT CHAMPIONS</text>
+  <rect x="820" y="185" width="280" height="1" fill="#d4a843" opacity="0.2"/>
+
+  <text x="820" y="225" font-family="Georgia, serif" font-size="22" fill="#e8dfc8">2025</text>
+  <text x="920" y="225" font-family="Georgia, serif" font-size="22" fill="#d4a843">Jared</text>
+
+  <text x="820" y="265" font-family="Georgia, serif" font-size="22" fill="#e8dfc8">2024</text>
+  <text x="920" y="265" font-family="Georgia, serif" font-size="22" fill="#d4a843">David</text>
+
+  <text x="820" y="305" font-family="Georgia, serif" font-size="22" fill="#e8dfc8">2023</text>
+  <text x="920" y="305" font-family="Georgia, serif" font-size="22" fill="#d4a843">David</text>
+
+  <text x="820" y="345" font-family="Georgia, serif" font-size="22" fill="#e8dfc8">2022</text>
+  <text x="920" y="345" font-family="Georgia, serif" font-size="22" fill="#d4a843">Kyle</text>
+
+  <text x="820" y="385" font-family="Georgia, serif" font-size="22" fill="#e8dfc8">2021</text>
+  <text x="920" y="385" font-family="Georgia, serif" font-size="22" fill="#d4a843">David</text>
+
+  <text x="820" y="425" font-family="Georgia, serif" font-size="22" fill="#a09880">2020</text>
+  <text x="920" y="425" font-family="Georgia, serif" font-size="22" fill="#a09880">Jon</text>
+
+  <text x="820" y="465" font-family="Georgia, serif" font-size="22" fill="#a09880">2019</text>
+  <text x="920" y="465" font-family="Georgia, serif" font-size="22" fill="#a09880">Jared</text>
+
+  <!-- URL -->
+  <text x="96" y="605"
+    font-family="'Helvetica Neue', Arial, sans-serif"
+    font-size="16"
+    fill="#3a3530"
+    letter-spacing="1">goodmjim.github.io/docile-archive</text>
+
+  <!-- Bottom gold bar -->
+  <rect x="0" y="626" width="1200" height="4" fill="#d4a843" opacity="0.4"/>
+</svg>
