@@ -1113,35 +1113,57 @@ const SHARED_SHEET_ID = '1IrO-sBFQOcpyGnejr_RaN6yHPIH2ptuQPXy6tQA1TZ0';
 
 async function fetchSharedData(){
   if(!SHARED_SHEET_ID)return;
-  try{
-    // Fetch PlayerBios tab
-    const biosUrl=`https://docs.google.com/spreadsheets/d/${SHARED_SHEET_ID}/gviz/tq?tqx=out:json&sheet=PlayerBios`;
-    const biosR=await fetch(biosUrl);
-    if(biosR.ok){
-      const biosText=await biosR.text();
-      const biosJson=JSON.parse(biosText.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-      biosJson.table?.rows?.forEach(row=>{
-        const pid=row.c[0]?.v?.toString().trim();
-        const bio=row.c[1]?.v?.toString().trim();
-        if(pid&&bio)DB.playerBios[pid]=bio; // sheet wins over localStorage
-      });
-    }
-    // Fetch HofPhotos tab
-    const hofUrl=`https://docs.google.com/spreadsheets/d/${SHARED_SHEET_ID}/gviz/tq?tqx=out:json&sheet=HofPhotos`;
-    const hofR=await fetch(hofUrl);
-    if(hofR.ok){
-      const hofText=await hofR.text();
-      const hofJson=JSON.parse(hofText.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-      hofJson.table?.rows?.forEach(row=>{
-        const name=row.c[0]?.v?.toString().trim();
-        const url=row.c[1]?.v?.toString().trim();
-        if(name&&url){
-          const hof=HOF.find(h=>h.name.toLowerCase()===name.toLowerCase());
-          if(hof)hof._sheetPhoto=url; // URL from sheet (shown unless local upload exists)
-        }
-      });
-    }
-  }catch(e){console.warn('Shared sheet fetch failed (non-critical):', e);}
+
+  async function fetchTab(tabName){
+    const url=`https://docs.google.com/spreadsheets/d/${SHARED_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}&headers=1`;
+    let r;
+    try{ r=await fetch(url); }
+    catch(e){ console.warn(`[Archive] Sheet fetch network error (${tabName}):`,e.message); return null; }
+    if(!r.ok){ console.warn(`[Archive] Sheet fetch HTTP ${r.status} for tab "${tabName}"`); return null; }
+    const text=await r.text();
+    // Google wraps the JSON in a callback — strip it
+    // Handles both google.visualization.Query.setResponse(...) and /*O_o*/ variants
+    const match=text.match(/[^(]+\((\{[\s\S]*\})\)/);
+    if(!match){ console.warn(`[Archive] Sheet tab "${tabName}" — unexpected response format:`, text.substring(0,200)); return null; }
+    try{ return JSON.parse(match[1]); }
+    catch(e){ console.warn(`[Archive] Sheet tab "${tabName}" — JSON parse error:`,e.message); return null; }
+  }
+
+  // ── PlayerBios tab ─────────────────────────────────────────
+  // Expected columns: A=PlayerID (Sleeper pid), B=Bio text
+  const biosData=await fetchTab('PlayerBios');
+  if(biosData){
+    const rows=biosData.table?.rows||[];
+    let loaded=0;
+    rows.forEach(row=>{
+      const pid=row.c?.[0]?.v?.toString().trim();
+      const bio=row.c?.[1]?.v?.toString().trim();
+      if(pid&&bio){DB.playerBios[pid]=bio;loaded++;}
+    });
+    console.log(`[Archive] PlayerBios: loaded ${loaded} bios from sheet`);
+  } else {
+    console.warn('[Archive] PlayerBios tab could not be loaded. Check sheet is published (File → Share → Publish to web) and tab is named exactly "PlayerBios".');
+  }
+
+  // ── HofPhotos tab ──────────────────────────────────────────
+  // Expected columns: A=Player full name (must match HOF array exactly), B=Direct image URL
+  const hofData=await fetchTab('HofPhotos');
+  if(hofData){
+    const rows=hofData.table?.rows||[];
+    let loaded=0;
+    rows.forEach(row=>{
+      const name=row.c?.[0]?.v?.toString().trim();
+      const url=row.c?.[1]?.v?.toString().trim();
+      if(name&&url){
+        const hof=HOF.find(h=>h.name.toLowerCase()===name.toLowerCase());
+        if(hof){hof._sheetPhoto=url;loaded++;}
+        else console.warn(`[Archive] HofPhotos: no HOF member matched name "${name}"`);
+      }
+    });
+    console.log(`[Archive] HofPhotos: loaded ${loaded} photos from sheet`);
+  } else {
+    console.warn('[Archive] HofPhotos tab could not be loaded. Check tab is named exactly "HofPhotos".');
+  }
 }
 
 let DB = {
