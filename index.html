@@ -1365,8 +1365,7 @@ function applySnapshot(snap){
   Object.assign(DB.draftPickMap, snap.draftPicks||{});
   if(added>0)console.log(`[Archive] Snapshot ${snap.year}: restored ${added} starter entries from GitHub backup`);
 }
-  const username=document.getElementById('inp-user').value.trim();
-  if(!username)return setSt('Enter your Sleeper username.',true);
+
 async function startLoad(){
   const username=document.getElementById('inp-user').value.trim();
   if(!username)return setSt('Enter your Sleeper username.',true);
