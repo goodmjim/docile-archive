@@ -743,20 +743,30 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <div class="sh"><h2>Player of the Game / Week</h2>
         <span class="sh-sub">2019–present · from loaded season data</span>
       </div>
+      <!-- Season chips (mirrors Player Scoring) -->
+      <div style="margin-bottom:0.6rem">
+        <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem">Seasons</div>
+        <div class="yr-filter-row">
+          <button class="yr-chip active" id="potg-all-btn" onclick="togglePotgAllYrs(this)">All seasons</button>
+          <div class="yr-filter-row" id="potg-yr-chips" style="display:contents"></div>
+        </div>
+      </div>
       <div class="filters" style="margin-bottom:1.2rem">
-        <select class="f-sel" id="potg-yr-sel" onchange="renderPotg()"><option value="all">All seasons</option></select>
+        <select class="f-sel" id="potg-pos-sel" onchange="renderPotg()">
+          <option value="all">All positions</option>
+          <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
+        </select>
         <select class="f-sel" id="potg-sort-sel" onchange="renderPotg()">
-          <option value="potw">Most POTWs</option>
           <option value="potg">Most POTGs</option>
-          <option value="combined">Most combined</option>
+          <option value="potw">Most POTWs</option>
         </select>
       </div>
       <!-- Summary stats row -->
       <div id="potg-metrics" class="metrics" style="margin-bottom:1.5rem"></div>
-      <!-- POTW Leaderboard -->
-      <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">Player of the Week Leaders</h2></div>
+      <!-- Leaderboard -->
+      <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">POTG / POTW Leaderboard</h2></div>
       <div class="tbl-wrap" style="margin-bottom:1.5rem"><table>
-        <thead><tr><th>#</th><th>Player</th><th>Pos</th><th>POTWs</th><th>POTGs</th><th>Combined</th><th>Best score</th></tr></thead>
+        <thead><tr><th>#</th><th>Player</th><th>Pos</th><th>POTGs</th><th>POTWs</th><th>Best score</th></tr></thead>
         <tbody id="potw-body"></tbody>
       </table></div>
       <!-- Full POTG log -->
@@ -2759,7 +2769,7 @@ function switchTab(name){
   TABS.forEach(t=>document.getElementById('panel-'+t).classList.toggle('active',t===name));
   if(name==='search')initSearch();
   if(name==='projections')renderProjections();
-  if(name==='potg')renderPotg();
+  if(name==='potg'){activePotgYrs=new Set(DB.seasons.map(s=>String(s.year)));initPotgChips();renderPotg();}
   if(name==='recap')initRecap();
 }
 
@@ -3373,59 +3383,92 @@ function computePotgData(yearFilter='all'){
   return potgLog;
 }
 
-function renderPotg(){
-  const yrF=document.getElementById('potg-yr-sel')?.value||'all';
-  const sortF=document.getElementById('potg-sort-sel')?.value||'potw';
+let activePotgYrs=new Set();
 
-  // Populate year selector
+function initPotgChips(){
   const years=DB.seasons.map(s=>s.year).sort((a,b)=>b-a);
-  const yrSel=document.getElementById('potg-yr-sel');
-  if(yrSel&&yrSel.options.length<=1)
-    yrSel.innerHTML='<option value="all">All seasons</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  if(!activePotgYrs.size)activePotgYrs=new Set(years.map(String));
+  const chips=document.getElementById('potg-yr-chips');
+  if(chips&&chips.children.length===0){
+    chips.innerHTML=years.map(y=>`<button class="yr-chip active" onclick="togglePotgYr('${y}',this)">${y}</button>`).join('');
+  }
+  // Populate log year selector
   const logYrSel=document.getElementById('potg-log-yr');
   if(logYrSel&&logYrSel.options.length<=1)
     logYrSel.innerHTML='<option value="all">All seasons</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+}
 
-  const log=computePotgData(yrF);
+function togglePotgYr(yr,btn){
+  if(activePotgYrs.has(String(yr))){activePotgYrs.delete(String(yr));btn.classList.remove('active');}
+  else{activePotgYrs.add(String(yr));btn.classList.add('active');}
+  syncPotgAllBtn();renderPotg();
+}
+function togglePotgAllYrs(btn){
+  const years=DB.seasons.map(s=>String(s.year));
+  const allActive=years.every(y=>activePotgYrs.has(y));
+  if(allActive){activePotgYrs.clear();btn.classList.remove('active');
+    document.querySelectorAll('#potg-yr-chips .yr-chip').forEach(b=>b.classList.remove('active'));}
+  else{years.forEach(y=>activePotgYrs.add(y));btn.classList.add('active');
+    document.querySelectorAll('#potg-yr-chips .yr-chip').forEach(b=>b.classList.add('active'));}
+  renderPotg();
+}
+function syncPotgAllBtn(){
+  const years=DB.seasons.map(s=>String(s.year));
+  const btn=document.getElementById('potg-all-btn');
+  if(btn)btn.classList.toggle('active',years.every(y=>activePotgYrs.has(y)));
+}
 
-  // Aggregate by player
+function renderPotg(){
+  initPotgChips();
+  const posF=document.getElementById('potg-pos-sel')?.value||'all';
+  const sortF=document.getElementById('potg-sort-sel')?.value||'potg';
+
+  // Filter log to selected seasons
+  const allLog=computePotgData('all');
+  const log=allLog.filter(e=>activePotgYrs.has(String(e.year)));
+
+  // Aggregate by player — POTW is always also a POTG
+  // potg = total times named POTG (includes weeks they won POTW too)
+  // potw = subset of those where they also won POTW
   const byPlayer={};
   log.forEach(e=>{
     if(!byPlayer[e.pid])byPlayer[e.pid]={pid:e.pid,potg:0,potw:0,best:0};
-    if(e.type==='POTW')byPlayer[e.pid].potw++;
-    else byPlayer[e.pid].potg++;
+    byPlayer[e.pid].potg++;                    // every entry counts as a POTG
+    if(e.type==='POTW')byPlayer[e.pid].potw++; // subset that are also POTW
     if(e.pts>byPlayer[e.pid].best)byPlayer[e.pid].best=e.pts;
   });
 
-  const rows=Object.values(byPlayer).map(p=>{
+  let rows=Object.values(byPlayer).map(p=>{
     const m=DB.playerMeta[p.pid];
-    return{...p,name:m?`${m.first_name} ${m.last_name}`:'PID:'+p.pid,
-      pos:m?.fantasy_positions?.[0]||'?',combined:p.potg+p.potw};
+    const pos=m?.fantasy_positions?.[0]||m?.position||'?';
+    return{...p,name:m?`${m.first_name} ${m.last_name}`:'PID:'+p.pid,pos};
   });
-  const sf={potw:(a,b)=>b.potw-a.potw||b.potg-a.potg,
-    potg:(a,b)=>(b.potg+b.potw)-(a.potg+a.potw)||b.potw-a.potw,
-    combined:(a,b)=>b.combined-a.combined};
-  rows.sort(sf[sortF]||sf.potw);
+
+  // Position filter
+  if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
+
+  // Sort — "Most POTGs" = total appearances (POTG+POTW); "Most POTWs" = POTW count then POTG
+  if(sortF==='potg') rows.sort((a,b)=>b.potg-a.potg||b.potw-a.potw||b.best-a.best);
+  else               rows.sort((a,b)=>b.potw-a.potw||b.potg-a.potg||b.best-a.best);
 
   // Metrics
-  const totalPotg=log.filter(e=>e.type==='POTG').length;
+  const totalPotg=log.length;
   const totalPotw=log.filter(e=>e.type==='POTW').length;
   const uniquePlayers=new Set(log.map(e=>e.pid)).size;
   document.getElementById('potg-metrics').innerHTML=`
+    <div class="metric gold"><div class="ml">Total POTGs</div><div class="mv">${totalPotg}</div></div>
     <div class="metric gold"><div class="ml">Total POTWs</div><div class="mv">${totalPotw}</div></div>
-    <div class="metric"><div class="ml">Total POTGs</div><div class="mv">${totalPotg+totalPotw}</div></div>
     <div class="metric teal"><div class="ml">Unique players</div><div class="mv">${uniquePlayers}</div></div>`;
 
-  // Leaderboard
   const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
   const body=document.getElementById('potw-body');
+  if(!rows.length){body.innerHTML='<tr><td colspan="6" class="empty">No data for this filter.</td></tr>';return;}
   body.innerHTML=rows.slice(0,50).map((r,i)=>`<tr>
     <td class="rank">${i+1}</td>
     <td style="font-weight:500;cursor:pointer" onclick="openPlayerModal('${r.pid}')">${r.name}</td>
     <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
-    <td class="mono">${r.potw}</td>
     <td class="mono">${r.potg}</td>
-    <td class="mono">${r.combined}</td>
+    <td class="mono">${r.potw}</td>
     <td class="mono">${r.best.toFixed(1)}</td>
   </tr>`).join('');
 
@@ -3663,20 +3706,23 @@ async function generateRecapBlurb(){
   const blurbEl=document.getElementById('recap-blurb-text');
   blurbEl.style.color='var(--text3)';blurbEl.textContent='Thinking…';
 
-  // Pull this week's data for context
+  // ── Build rich context for the blurb ─────────────────────────
   const season=DB.seasons.find(s=>s.year==yr);
   const mus=season?.matchupsByWeek[wk]||[];
   const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
   const pairs=Object.values(byId).filter(p=>p.length>=2);
-  const results=pairs.map(([a,b])=>{
+
+  // Results this week
+  const weekResults=pairs.map(([a,b])=>{
     const ta=season.teams.find(t=>t.rosterId===a.roster_id)||{managerKey:'?'};
     const tb=season.teams.find(t=>t.rosterId===b.roster_id)||{managerKey:'?'};
     const pa=a.points||0,pb=b.points||0;
-    return`${pa>=pb?ta.managerKey:tb.managerKey} def ${pa>=pb?tb.managerKey:ta.managerKey} ${Math.max(pa,pb).toFixed(2)}-${Math.min(pa,pb).toFixed(2)}`;
+    const w=pa>=pb?ta.managerKey:tb.managerKey,l=pa>=pb?tb.managerKey:ta.managerKey;
+    return`${w} def ${l} ${Math.max(pa,pb).toFixed(2)}-${Math.min(pa,pb).toFixed(2)}`;
   }).join('; ');
 
+  // POTW
   const allLog=computePotgData('all');
-  let potwLine='';
   let potw=null;
   pairs.forEach(([a,b])=>{
     [a,b].forEach(matchup=>{
@@ -3690,19 +3736,79 @@ async function generateRecapBlurb(){
       });
     });
   });
-  if(potw){
-    const cnt=allLog.filter(e=>e.pid===potw.pid&&e.type==='POTW').length+1;
-    potwLine=`POTW is ${getPlayerName(potw.pid)} with ${potw.pts.toFixed(1)} pts (${cnt}${ordinal(cnt)} career POTW).`;
-  }
+  const potwLine=potw?`POTW: ${getPlayerName(potw.pid)} (${potw.mk}) with ${potw.pts.toFixed(1)} pts.`:'';
 
-  const prompt=`Write a short, punchy 1-2 sentence opening blurb for a fantasy football weekly recap. 
-Season: ${yr}, Week: ${wk}. 
-Results: ${results}. 
+  // Standings at this point in the season
+  const standingsSummary=[...season.teams]
+    .sort((a,b)=>b.wins-a.wins||b.pf-a.pf)
+    .map((t,i)=>`${i+1}. ${t.managerKey||t.name} (${t.wins}-${t.losses}, ${t.pf.toFixed(0)} pts)`)
+    .join('; ');
+
+  // Win/loss streaks (from matchups up to this week)
+  const streaks={};
+  const weekNum=parseInt(wk);
+  for(let w2=1;w2<=weekNum;w2++){
+    const wmus=season.matchupsByWeek[w2]||[];
+    const wById={};wmus.forEach(m=>{wById[m.matchup_id]=wById[m.matchup_id]||[];wById[m.matchup_id].push(m);});
+    Object.values(wById).forEach(pair=>{
+      if(pair.length<2)return;
+      const[a,b]=pair;
+      const ta=season.teams.find(t=>t.rosterId===a.roster_id);
+      const tb=season.teams.find(t=>t.rosterId===b.roster_id);
+      if(!ta||!tb)return;
+      const aWon=(a.points||0)>=(b.points||0);
+      const ka=ta.managerKey||ta.name,kb=tb.managerKey||tb.name;
+      [ka,kb].forEach((k,i)=>{
+        const won=(i===0&&aWon)||(i===1&&!aWon);
+        if(!streaks[k])streaks[k]={cur:0,type:null};
+        if(won){streaks[k]={cur:streaks[k].type==='W'?streaks[k].cur+1:1,type:'W'};}
+        else{streaks[k]={cur:streaks[k].type==='L'?streaks[k].cur+1:1,type:'L'};}
+      });
+    });
+  }
+  const streakLines=Object.entries(streaks)
+    .filter(([,s])=>s.cur>=2)
+    .map(([k,s])=>`${k} is on a ${s.cur}-game ${s.type==='W'?'winning':'losing'} streak`)
+    .join('; ');
+
+  // High/low scores this week
+  const allScores=pairs.flatMap(([a,b])=>[
+    {mk:season.teams.find(t=>t.rosterId===a.roster_id)?.managerKey||'?',pts:a.points||0},
+    {mk:season.teams.find(t=>t.rosterId===b.roster_id)?.managerKey||'?',pts:b.points||0}
+  ]).sort((a,b)=>b.pts-a.pts);
+  const highScore=allScores[0];
+  const lowScore=allScores[allScores.length-1];
+
+  // All-time H2H context for close games
+  const closeGames=pairs.filter(([a,b])=>Math.abs((a.points||0)-(b.points||0))<10)
+    .map(([a,b])=>{
+      const ta=season.teams.find(t=>t.rosterId===a.roster_id)||{managerKey:'?'};
+      const tb=season.teams.find(t=>t.rosterId===b.roster_id)||{managerKey:'?'};
+      const margin=Math.abs((a.points||0)-(b.points||0)).toFixed(2);
+      return`${ta.managerKey} vs ${tb.managerKey} decided by ${margin} pts`;
+    }).join('; ');
+
+  const prompt=`Write a punchy, engaging 2-3 sentence opening blurb for the Docile League weekly recap.
+
+Week ${wk} of the ${yr} season.
+
+RESULTS: ${weekResults}
+
+STANDINGS: ${standingsSummary}
+
+${streakLines?`STREAKS: ${streakLines}`:''}
+HIGH SCORE THIS WEEK: ${highScore?.mk} with ${highScore?.pts.toFixed(2)} pts
+LOW SCORE THIS WEEK: ${lowScore?.mk} with ${lowScore?.pts.toFixed(2)} pts
+${closeGames?`CLOSE GAMES: ${closeGames}`:''}
 ${potwLine}
-Keep it conversational and fun — like a fantasy commissioner writing to their league. Highlight something notable or interesting. No hashtags, no emojis, plain text only.`;
+
+Write like a witty, knowledgeable commissioner addressing their league — reference specific scores, records, streaks, or storylines from the data above. Pick the most compelling angle. Be specific and concrete, not generic. No hashtags, no emojis, plain text only. Don't start with "Week N" — dive straight into the narrative.`;
 
   try{
-    const answer=await callClaude('You are a witty fantasy football commissioner writing weekly recaps for the Docile League, a 12-manager league running since 2014.',prompt);
+    const answer=await callClaude(
+      `You are the commissioner of the Docile League, a fantasy football league running since 2014 with passionate managers who follow stats closely. Write sharp, specific weekly recaps that reference actual numbers and storylines from the data provided. Your tone is witty but authoritative — like a good sportswriter, not a hype man.`,
+      prompt
+    );
     blurbEl.textContent=answer.replace(/\*\*/g,'');
     blurbEl.style.color='var(--text2)';
     // Rebuild plain text with new blurb
