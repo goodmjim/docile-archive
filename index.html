@@ -421,6 +421,37 @@ tbody tr.highlight td{background:var(--gold-dim)}
 .luck-game{font-size:0.82rem;color:var(--text);margin-bottom:2px}
 .luck-meta{font-size:0.72rem;color:var(--text3)}
 
+/* ─── RECAP CARD ─── */
+.recap-card{background:var(--surface);border:1px solid var(--gold-border);border-radius:var(--radius-lg);overflow:hidden}
+.recap-hdr{background:linear-gradient(135deg,#1a1808,#0d0d0f);padding:1.25rem 1.5rem;border-bottom:1px solid var(--gold-border)}
+.recap-title{font-family:var(--font-display);font-size:1.5rem;letter-spacing:0.06em;color:var(--gold);text-transform:uppercase}
+.recap-sub{font-size:0.78rem;color:var(--text3);font-family:var(--font-mono);margin-top:2px}
+.recap-blurb{padding:1rem 1.5rem;font-family:var(--font-serif);font-style:italic;font-size:0.92rem;
+  color:var(--text2);line-height:1.7;border-bottom:1px solid var(--border);background:var(--surface2)}
+.recap-section{padding:1rem 1.5rem;border-bottom:1px solid var(--border)}
+.recap-section:last-child{border-bottom:none}
+.recap-section-title{font-size:0.68rem;font-weight:600;color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.12em;margin-bottom:0.6rem}
+.recap-result{display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0;
+  border-bottom:0.5px solid var(--border);font-size:0.85rem}
+.recap-result:last-child{border-bottom:none}
+.recap-winner{font-weight:600;color:var(--text)}
+.recap-loser{color:var(--text2)}
+.recap-score{font-family:var(--font-mono);font-size:0.78rem;color:var(--gold)}
+.recap-h2h{font-family:var(--font-mono);font-size:0.68rem;color:var(--text3)}
+.recap-potw{display:flex;align-items:center;gap:10px;padding:0.5rem 0;border-bottom:0.5px solid var(--border)}
+.recap-potw:last-child{border-bottom:none}
+.recap-potw-badge{font-size:0.65rem;font-weight:600;padding:2px 7px;border-radius:3px;
+  background:var(--gold-dim);color:var(--gold);font-family:var(--font-mono);white-space:nowrap}
+.recap-potw-badge.potw{background:rgba(212,168,67,0.25);color:var(--gold)}
+.recap-potw-name{font-weight:500;font-size:0.85rem;flex:1}
+.recap-potw-pts{font-family:var(--font-display);font-size:1.1rem;color:var(--gold);letter-spacing:0.04em}
+.recap-potw-mgr{font-size:0.72rem;color:var(--text3)}
+.recap-standings-row{display:flex;align-items:center;gap:8px;padding:0.35rem 0;
+  border-bottom:0.5px solid var(--border);font-size:0.82rem}
+.recap-standings-row:last-child{border-bottom:none}
+.recap-standings-rank{font-family:var(--font-mono);font-size:0.72rem;color:var(--text3);width:20px}
+
 /* ─── SMART SEARCH ─── */
 .search-bubble{background:var(--surface);border:1px solid var(--border2);border-radius:20px;
   padding:4px 12px;font-size:0.78rem;color:var(--text2);cursor:pointer;transition:all 0.15s;
@@ -484,6 +515,8 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <button class="tab-btn" onclick="switchTab('probowl')">Pro Bowl</button>
       <button class="tab-btn" onclick="switchTab('hof')">Hall of Fame</button>
       <button class="tab-btn" onclick="switchTab('projections')">Projections</button>
+      <button class="tab-btn" onclick="switchTab('potg')">POTG / POTW</button>
+      <button class="tab-btn" onclick="switchTab('recap')">Weekly Recap</button>
       <button class="tab-btn" onclick="switchTab('search')">🔍 Smart Search</button>
     </div>
     <div class="topbar-right">
@@ -703,6 +736,66 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <thead><tr><th>Manager</th><th>Starts w/ proj</th><th>Actual</th><th>Projected</th><th>Diff</th><th>Avg diff/start</th><th>Beat proj %</th></tr></thead>
         <tbody id="proj-mgr-body"></tbody>
       </table></div>
+    </div>
+
+    <!-- POTG / POTW -->
+    <div class="panel" id="panel-potg">
+      <div class="sh"><h2>Player of the Game / Week</h2>
+        <span class="sh-sub">2019–present · from loaded season data</span>
+      </div>
+      <div class="filters" style="margin-bottom:1.2rem">
+        <select class="f-sel" id="potg-yr-sel" onchange="renderPotg()"><option value="all">All seasons</option></select>
+        <select class="f-sel" id="potg-sort-sel" onchange="renderPotg()">
+          <option value="potw">Most POTWs</option>
+          <option value="potg">Most POTGs</option>
+          <option value="combined">Most combined</option>
+        </select>
+      </div>
+      <!-- Summary stats row -->
+      <div id="potg-metrics" class="metrics" style="margin-bottom:1.5rem"></div>
+      <!-- POTW Leaderboard -->
+      <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">Player of the Week Leaders</h2></div>
+      <div class="tbl-wrap" style="margin-bottom:1.5rem"><table>
+        <thead><tr><th>#</th><th>Player</th><th>Pos</th><th>POTWs</th><th>POTGs</th><th>Combined</th><th>Best score</th></tr></thead>
+        <tbody id="potw-body"></tbody>
+      </table></div>
+      <!-- Full POTG log -->
+      <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">Full POTG Log</h2>
+        <div class="sh-right"><select class="f-sel" id="potg-log-yr" onchange="renderPotgLog()"><option value="all">All seasons</option></select></div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Season</th><th>Week</th><th>Player</th><th>Pos</th><th>Manager</th><th>Score</th><th>Type</th></tr></thead>
+        <tbody id="potg-log-body"></tbody>
+      </table></div>
+    </div>
+
+    <!-- WEEKLY RECAP -->
+    <div class="panel" id="panel-recap">
+      <div class="sh"><h2>Weekly Recap</h2><span class="sh-sub">Auto-generated · ready to send</span></div>
+      <div class="filters" style="margin-bottom:1.2rem">
+        <select class="f-sel" id="recap-yr-sel" onchange="onRecapYearChange()"><option value="">Season…</option></select>
+        <select class="f-sel" id="recap-wk-sel" onchange="renderRecap()"><option value="">Week…</option></select>
+        <button onclick="generateRecapBlurb()" id="recap-blurb-btn"
+          style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--radius);
+          color:var(--gold);font-family:var(--font-body);font-size:0.82rem;padding:0.4rem 0.9rem;cursor:pointer">
+          ✨ Generate blurb
+        </button>
+        <button onclick="copyRecap()"
+          style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);
+          color:var(--text2);font-family:var(--font-body);font-size:0.82rem;padding:0.4rem 0.9rem;cursor:pointer">
+          Copy text
+        </button>
+      </div>
+      <!-- Styled card -->
+      <div id="recap-card" style="margin-bottom:1.5rem"></div>
+      <!-- Plain text output -->
+      <div id="recap-plaintext-wrap" style="display:none">
+        <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem">Plain text (for iMessage)</div>
+        <textarea id="recap-plaintext" readonly
+          style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);
+          color:var(--text2);font-family:var(--font-mono);font-size:0.78rem;padding:0.75rem;
+          resize:vertical;min-height:200px;outline:none;line-height:1.6"></textarea>
+      </div>
     </div>
 
     <!-- SMART SEARCH -->
@@ -2660,12 +2753,14 @@ function renderHof(){
 // ══════════════════════════════════════════════════════════════
 // TAB SWITCHING
 // ══════════════════════════════════════════════════════════════
-const TABS=['home','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','projections','search'];
+const TABS=['home','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','projections','potg','recap','search'];
 function switchTab(name){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',TABS[i]===name));
   TABS.forEach(t=>document.getElementById('panel-'+t).classList.toggle('active',t===name));
   if(name==='search')initSearch();
   if(name==='projections')renderProjections();
+  if(name==='potg')renderPotg();
+  if(name==='recap')initRecap();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3226,6 +3321,421 @@ function renderSearchHistory(){
         <div class="history-q" onclick="setSearchQ(this.textContent)">${h.q}</div>
         <div class="history-a">${h.a.replace(/\*\*/g,'').substring(0,140)}…</div>
       </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// POTG / POTW
+// ══════════════════════════════════════════════════════════════
+function computePotgData(yearFilter='all'){
+  // For each week in each season, find:
+  // - POTW: highest individual starter score across the whole league
+  // - POTG: highest individual starter score in each matchup
+  const potgLog=[];  // {pid,week,year,pts,type:'POTG'|'POTW',managerKey}
+  const seasons=yearFilter==='all'?DB.seasons:DB.seasons.filter(s=>s.year==yearFilter);
+
+  seasons.forEach(s=>{
+    Object.entries(s.matchupsByWeek).forEach(([w,mus])=>{
+      const week=parseInt(w);
+      const byId={};
+      mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+
+      let weekBest={pts:-1,pid:null,managerKey:null};
+
+      Object.values(byId).forEach(pair=>{
+        if(pair.length<2)return;
+        let matchupBest={pts:-1,pid:null,managerKey:null};
+        pair.forEach(matchup=>{
+          const team=s.teams.find(t=>t.rosterId===matchup.roster_id);
+          const mk=team?.managerKey||team?.name||'?';
+          const ppts=matchup.players_points||{};
+          (matchup.starters||[]).forEach(pid=>{
+            if(!pid||pid==='0')return;
+            const pts=ppts[pid]??DB.allStarters.find(e=>e.pid===pid&&e.week===week&&e.year===s.year)?.points??null;
+            if(pts===null)return;
+            if(pts>matchupBest.pts)matchupBest={pts,pid,managerKey:mk};
+            if(pts>weekBest.pts)weekBest={pts,pid,managerKey:mk};
+          });
+        });
+        if(matchupBest.pid){
+          potgLog.push({pid:matchupBest.pid,week,year:s.year,pts:matchupBest.pts,
+            type:'POTG',managerKey:matchupBest.managerKey});
+        }
+      });
+      if(weekBest.pid){
+        // Mark the POTG entry for this player this week as also POTW
+        const existing=potgLog.find(e=>e.pid===weekBest.pid&&e.week===week&&e.year===s.year);
+        if(existing)existing.type='POTW';
+        else potgLog.push({pid:weekBest.pid,week,year:s.year,pts:weekBest.pts,
+          type:'POTW',managerKey:weekBest.managerKey});
+      }
+    });
+  });
+  return potgLog;
+}
+
+function renderPotg(){
+  const yrF=document.getElementById('potg-yr-sel')?.value||'all';
+  const sortF=document.getElementById('potg-sort-sel')?.value||'potw';
+
+  // Populate year selector
+  const years=DB.seasons.map(s=>s.year).sort((a,b)=>b-a);
+  const yrSel=document.getElementById('potg-yr-sel');
+  if(yrSel&&yrSel.options.length<=1)
+    yrSel.innerHTML='<option value="all">All seasons</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  const logYrSel=document.getElementById('potg-log-yr');
+  if(logYrSel&&logYrSel.options.length<=1)
+    logYrSel.innerHTML='<option value="all">All seasons</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+
+  const log=computePotgData(yrF);
+
+  // Aggregate by player
+  const byPlayer={};
+  log.forEach(e=>{
+    if(!byPlayer[e.pid])byPlayer[e.pid]={pid:e.pid,potg:0,potw:0,best:0};
+    if(e.type==='POTW')byPlayer[e.pid].potw++;
+    else byPlayer[e.pid].potg++;
+    if(e.pts>byPlayer[e.pid].best)byPlayer[e.pid].best=e.pts;
+  });
+
+  const rows=Object.values(byPlayer).map(p=>{
+    const m=DB.playerMeta[p.pid];
+    return{...p,name:m?`${m.first_name} ${m.last_name}`:'PID:'+p.pid,
+      pos:m?.fantasy_positions?.[0]||'?',combined:p.potg+p.potw};
+  });
+  const sf={potw:(a,b)=>b.potw-a.potw||b.potg-a.potg,
+    potg:(a,b)=>(b.potg+b.potw)-(a.potg+a.potw)||b.potw-a.potw,
+    combined:(a,b)=>b.combined-a.combined};
+  rows.sort(sf[sortF]||sf.potw);
+
+  // Metrics
+  const totalPotg=log.filter(e=>e.type==='POTG').length;
+  const totalPotw=log.filter(e=>e.type==='POTW').length;
+  const uniquePlayers=new Set(log.map(e=>e.pid)).size;
+  document.getElementById('potg-metrics').innerHTML=`
+    <div class="metric gold"><div class="ml">Total POTWs</div><div class="mv">${totalPotw}</div></div>
+    <div class="metric"><div class="ml">Total POTGs</div><div class="mv">${totalPotg+totalPotw}</div></div>
+    <div class="metric teal"><div class="ml">Unique players</div><div class="mv">${uniquePlayers}</div></div>`;
+
+  // Leaderboard
+  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
+  const body=document.getElementById('potw-body');
+  body.innerHTML=rows.slice(0,50).map((r,i)=>`<tr>
+    <td class="rank">${i+1}</td>
+    <td style="font-weight:500;cursor:pointer" onclick="openPlayerModal('${r.pid}')">${r.name}</td>
+    <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
+    <td class="mono">${r.potw}</td>
+    <td class="mono">${r.potg}</td>
+    <td class="mono">${r.combined}</td>
+    <td class="mono">${r.best.toFixed(1)}</td>
+  </tr>`).join('');
+
+  renderPotgLog();
+}
+
+function renderPotgLog(){
+  const yrF=document.getElementById('potg-log-yr')?.value||'all';
+  const log=computePotgData(yrF).sort((a,b)=>b.year-a.year||b.week-a.week);
+  const body=document.getElementById('potg-log-body');
+  if(!log.length){body.innerHTML='<tr><td colspan="7" class="empty">No data. Load 2019+ seasons.</td></tr>';return;}
+  body.innerHTML=log.map(e=>{
+    const m=DB.playerMeta[e.pid];
+    const name=m?`${m.first_name} ${m.last_name}`:'PID:'+e.pid;
+    const pos=m?.fantasy_positions?.[0]||'?';
+    const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
+    return`<tr>
+      <td class="mono">${e.year}</td>
+      <td class="mono">Wk ${e.week}</td>
+      <td style="font-weight:500;cursor:pointer" onclick="openPlayerModal('${e.pid}')">${name}</td>
+      <td><span class="badge ${pc[pos]||'bg-dim'}">${pos}</span></td>
+      <td style="font-size:0.82rem;color:var(--text2)">${e.managerKey||'—'}</td>
+      <td class="mono" style="color:var(--gold)">${e.pts.toFixed(1)}</td>
+      <td><span class="badge ${e.type==='POTW'?'bg-gold':'bg-dim'}">${e.type}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// WEEKLY RECAP
+// ══════════════════════════════════════════════════════════════
+function initRecap(){
+  const yrSel=document.getElementById('recap-yr-sel');
+  if(!yrSel)return;
+  const years=DB.seasons.map(s=>s.year).sort((a,b)=>b-a);
+  yrSel.innerHTML='<option value="">Season…</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+}
+
+function onRecapYearChange(){
+  const yr=document.getElementById('recap-yr-sel').value;
+  const wkSel=document.getElementById('recap-wk-sel');
+  if(!yr){wkSel.innerHTML='<option value="">Week…</option>';return;}
+  const season=DB.seasons.find(s=>s.year==yr);
+  if(!season){return;}
+  const weeks=Object.keys(season.matchupsByWeek).map(Number).sort((a,b)=>a-b);
+  wkSel.innerHTML='<option value="">Week…</option>'+weeks.map(w=>`<option value="${w}">Week ${w}</option>`).join('');
+  renderRecap();
+}
+
+function getH2HRecord(mk1, mk2){
+  let w1=0,w2=0;
+  DB.seasons.forEach(s=>{
+    Object.values(s.matchupsByWeek).forEach(mus=>{
+      const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+      Object.values(byId).forEach(pair=>{
+        if(pair.length<2)return;
+        const[a,b]=pair;
+        const ta=s.teams.find(t=>t.rosterId===a.roster_id);
+        const tb=s.teams.find(t=>t.rosterId===b.roster_id);
+        if(!ta||!tb)return;
+        const isA1=ta.managerKey===mk1,isB1=tb.managerKey===mk1;
+        const isA2=ta.managerKey===mk2,isB2=tb.managerKey===mk2;
+        if(!((isA1&&isB2)||(isB1&&isA2)))return;
+        const pa=a.points||0,pb=b.points||0;
+        if(isA1&&pa>pb)w1++;else if(isA1&&pb>pa)w2++;
+        else if(isB1&&pb>pa)w1++;else if(isB1&&pa>pb)w2++;
+      });
+    });
+  });
+  return{w1,w2};
+}
+
+function renderRecap(){
+  const yr=document.getElementById('recap-yr-sel')?.value;
+  const wk=document.getElementById('recap-wk-sel')?.value;
+  const card=document.getElementById('recap-card');
+  const ptWrap=document.getElementById('recap-plaintext-wrap');
+  if(!yr||!wk){card.innerHTML='<div class="empty">Select a season and week above.</div>';return;}
+
+  const season=DB.seasons.find(s=>s.year==yr);
+  if(!season){card.innerHTML='<div class="empty">Season not loaded.</div>';return;}
+  const mus=season.matchupsByWeek[wk]||[];
+  if(!mus.length){card.innerHTML='<div class="empty">No matchup data for this week.</div>';return;}
+
+  // Build matchup pairs
+  const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+  const pairs=Object.values(byId).filter(p=>p.length>=2);
+
+  // Results with H2H
+  const results=pairs.map(([a,b])=>{
+    const ta=season.teams.find(t=>t.rosterId===a.roster_id)||{managerKey:'?',name:'?'};
+    const tb=season.teams.find(t=>t.rosterId===b.roster_id)||{managerKey:'?',name:'?'};
+    const pa=a.points||0,pb=b.points||0;
+    const aWon=pa>=pb;
+    const winner=aWon?ta:tb,loser=aWon?tb:ta,wPts=aWon?pa:pb,lPts=aWon?pb:pa;
+    const h2h=getH2HRecord(winner.managerKey,loser.managerKey);
+    const wWins=winner.managerKey===ta.managerKey?h2h.w1:h2h.w2;
+    const lWins=winner.managerKey===ta.managerKey?h2h.w2:h2h.w1;
+    return{winner,loser,wPts,lPts,wWins,lWins,total:wPts+lPts};
+  }).sort((a,b)=>b.total-a.total);
+
+  // POTG per matchup + POTW overall
+  const potgList=[];
+  let potwEntry=null;
+  pairs.forEach(([a,b])=>{
+    let best={pts:-1,pid:null,mk:null};
+    [a,b].forEach(matchup=>{
+      const team=season.teams.find(t=>t.rosterId===matchup.roster_id);
+      const mk=team?.managerKey||'?';
+      const ppts=matchup.players_points||{};
+      (matchup.starters||[]).forEach(pid=>{
+        if(!pid||pid==='0')return;
+        const pts=ppts[pid]??null;
+        if(pts===null)return;
+        if(pts>best.pts)best={pts,pid,mk};
+        if(!potwEntry||pts>potwEntry.pts)potwEntry={pts,pid,mk};
+      });
+    });
+    if(best.pid)potgList.push(best);
+  });
+  // Get POTG counts for display (all-time)
+  const allLog=computePotgData('all');
+  function getPotgCount(pid){return allLog.filter(e=>e.pid===pid).length;}
+  function getPotwCount(pid){return allLog.filter(e=>e.pid===pid&&e.type==='POTW').length;}
+
+  // Current standings after this week (approximate from season totals)
+  const standingRows=[...season.teams].sort((a,b)=>b.wins-a.wins||b.pf-a.pf);
+
+  // ── Build styled card ──────────────────────────────────────
+  const potwName=potwEntry?getPlayerName(potwEntry.pid):'—';
+  const potwPts=potwEntry?potwEntry.pts.toFixed(1):'—';
+
+  card.innerHTML=`<div class="recap-card">
+    <div class="recap-hdr">
+      <div class="recap-title">Docile Archive Weekly</div>
+      <div class="recap-sub">Season ${yr} · Week ${wk}</div>
+    </div>
+    <div class="recap-blurb" id="recap-blurb-text" style="font-style:italic;color:var(--text3)">
+      Click "✨ Generate blurb" to add a narrative introduction…
+    </div>
+    <div class="recap-section">
+      <div class="recap-section-title">Results</div>
+      ${results.map(r=>`<div class="recap-result">
+        <span><span class="recap-winner">${r.winner.managerKey}</span> def. <span class="recap-loser">${r.loser.managerKey}</span></span>
+        <span style="display:flex;align-items:center;gap:10px">
+          <span class="recap-score">${r.wPts.toFixed(2)}–${r.lPts.toFixed(2)}</span>
+          <span class="recap-h2h">(${r.wWins}–${r.lWins} all-time)</span>
+        </span>
+      </div>`).join('')}
+    </div>
+    <div class="recap-section">
+      <div class="recap-section-title">Player of the Week</div>
+      ${potwEntry?`<div class="recap-potw">
+        <span class="recap-potw-badge potw">POTW</span>
+        <div><div class="recap-potw-name">${potwName}</div>
+        <div class="recap-potw-mgr">${potwEntry.mk} · ${getPotwCount(potwEntry.pid)+1}${ordinal(getPotwCount(potwEntry.pid)+1)} career POTW · ${getPotgCount(potwEntry.pid)+1}${ordinal(getPotgCount(potwEntry.pid)+1)} POTG</div></div>
+        <span class="recap-potw-pts">${potwPts}</span>
+      </div>`:'<div class="empty" style="padding:0.5rem">No data</div>'}
+    </div>
+    <div class="recap-section">
+      <div class="recap-section-title">Players of the Game</div>
+      ${potgList.map(e=>{
+        const name=getPlayerName(e.pid);
+        const isPotw=potwEntry&&e.pid===potwEntry.pid;
+        const cnt=getPotgCount(e.pid)+(isPotw?0:1);
+        return`<div class="recap-potw">
+          <span class="recap-potw-badge ${isPotw?'potw':''}">POTG</span>
+          <div><div class="recap-potw-name">${name}</div>
+          <div class="recap-potw-mgr">${e.mk} · ${cnt}${ordinal(cnt)} career POTG</div></div>
+          <span class="recap-potw-pts">${e.pts.toFixed(1)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="recap-section">
+      <div class="recap-section-title">Standings after Week ${wk}</div>
+      ${standingRows.map((t,i)=>`<div class="recap-standings-row">
+        <span class="recap-standings-rank">${i+1}</span>
+        <span style="flex:1;font-weight:${t.isMe?600:400}">${t.managerKey||t.name}</span>
+        <span class="mono" style="font-size:0.78rem;color:var(--text2)">${t.wins}–${t.losses}</span>
+        <span class="mono" style="font-size:0.75rem;color:var(--text3);margin-left:8px">${t.pf.toFixed(1)} pts</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  // Build and show plain text
+  buildPlainText(yr,wk,results,potwEntry,potgList,allLog);
+  ptWrap.style.display='block';
+}
+
+function getPlayerName(pid){
+  const m=DB.playerMeta[pid];
+  return m?`${m.first_name} ${m.last_name}`:'PID:'+pid;
+}
+
+function ordinal(n){
+  const s=['th','st','nd','rd'];
+  const v=n%100;
+  return s[(v-20)%10]||s[v]||s[0];
+}
+
+function buildPlainText(yr,wk,results,potw,potgList,allLog){
+  const blurb=document.getElementById('recap-blurb-text')?.textContent?.trim();
+  const blurbLine=blurb&&!blurb.startsWith('Click')?blurb+'\n\n':'';
+  const potwName=potw?getPlayerName(potw.pid):'—';
+  const getPotgCount=pid=>allLog.filter(e=>e.pid===pid).length;
+  const getPotwCount=pid=>allLog.filter(e=>e.pid===pid&&e.type==='POTW').length;
+
+  let txt=`Docile Archive Weekly - Week ${wk}\n\n`;
+  if(blurbLine)txt+=blurbLine;
+  txt+=`Results\n`;
+  results.forEach(r=>{
+    txt+=`${r.winner.managerKey} def. ${r.loser.managerKey} (${r.wWins}-${r.lWins} All Time)\n`;
+  });
+  txt+=`\nPlayer of the Week\nPOTW: ${potwName}`;
+  if(potw){
+    const pc=getPotwCount(potw.pid)+1;
+    const pg=getPotgCount(potw.pid)+1;
+    txt+=` (${pc}${ordinal(pc)} career POTW/${pg}${ordinal(pg)} POTG)`;
+  }
+  txt+=`\n\nPlayers of the Game\n`;
+  potgList.forEach(e=>{
+    const isPotw=potw&&e.pid===potw.pid;
+    const cnt=getPotgCount(e.pid)+(isPotw?0:1);
+    txt+=`POTG: ${getPlayerName(e.pid)} (${cnt}${ordinal(cnt)} career POTG)\n`;
+  });
+  document.getElementById('recap-plaintext').value=txt;
+}
+
+async function generateRecapBlurb(){
+  const yr=document.getElementById('recap-yr-sel')?.value;
+  const wk=document.getElementById('recap-wk-sel')?.value;
+  if(!yr||!wk)return;
+  const btn=document.getElementById('recap-blurb-btn');
+  btn.textContent='Generating…';btn.disabled=true;
+  const blurbEl=document.getElementById('recap-blurb-text');
+  blurbEl.style.color='var(--text3)';blurbEl.textContent='Thinking…';
+
+  // Pull this week's data for context
+  const season=DB.seasons.find(s=>s.year==yr);
+  const mus=season?.matchupsByWeek[wk]||[];
+  const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+  const pairs=Object.values(byId).filter(p=>p.length>=2);
+  const results=pairs.map(([a,b])=>{
+    const ta=season.teams.find(t=>t.rosterId===a.roster_id)||{managerKey:'?'};
+    const tb=season.teams.find(t=>t.rosterId===b.roster_id)||{managerKey:'?'};
+    const pa=a.points||0,pb=b.points||0;
+    return`${pa>=pb?ta.managerKey:tb.managerKey} def ${pa>=pb?tb.managerKey:ta.managerKey} ${Math.max(pa,pb).toFixed(2)}-${Math.min(pa,pb).toFixed(2)}`;
+  }).join('; ');
+
+  const allLog=computePotgData('all');
+  let potwLine='';
+  let potw=null;
+  pairs.forEach(([a,b])=>{
+    [a,b].forEach(matchup=>{
+      const ppts=matchup.players_points||{};
+      (matchup.starters||[]).forEach(pid=>{
+        const pts=ppts[pid]??null;
+        if(pts!==null&&(!potw||pts>potw.pts)){
+          const team=season.teams.find(t=>t.rosterId===matchup.roster_id);
+          potw={pts,pid,mk:team?.managerKey||'?'};
+        }
+      });
+    });
+  });
+  if(potw){
+    const cnt=allLog.filter(e=>e.pid===potw.pid&&e.type==='POTW').length+1;
+    potwLine=`POTW is ${getPlayerName(potw.pid)} with ${potw.pts.toFixed(1)} pts (${cnt}${ordinal(cnt)} career POTW).`;
+  }
+
+  const prompt=`Write a short, punchy 1-2 sentence opening blurb for a fantasy football weekly recap. 
+Season: ${yr}, Week: ${wk}. 
+Results: ${results}. 
+${potwLine}
+Keep it conversational and fun — like a fantasy commissioner writing to their league. Highlight something notable or interesting. No hashtags, no emojis, plain text only.`;
+
+  try{
+    const answer=await callClaude('You are a witty fantasy football commissioner writing weekly recaps for the Docile League, a 12-manager league running since 2014.',prompt);
+    blurbEl.textContent=answer.replace(/\*\*/g,'');
+    blurbEl.style.color='var(--text2)';
+    // Rebuild plain text with new blurb
+    const season2=DB.seasons.find(s=>s.year==yr);
+    const mus2=season2?.matchupsByWeek[wk]||[];
+    const byId2={};mus2.forEach(m=>{byId2[m.matchup_id]=byId2[m.matchup_id]||[];byId2[m.matchup_id].push(m);});
+    const pairs2=Object.values(byId2).filter(p=>p.length>=2);
+    const results2=pairs2.map(([a,b])=>{
+      const ta=season2.teams.find(t=>t.rosterId===a.roster_id)||{managerKey:'?'};
+      const tb=season2.teams.find(t=>t.rosterId===b.roster_id)||{managerKey:'?'};
+      const pa=a.points||0,pb=b.points||0;
+      const aWon=pa>=pb;
+      const winner=aWon?ta:tb,loser=aWon?tb:ta,wPts=aWon?pa:pb,lPts=aWon?pb:pa;
+      const h2h=getH2HRecord(winner.managerKey,loser.managerKey);
+      const wW=winner.managerKey===ta.managerKey?h2h.w1:h2h.w2;
+      const lW=winner.managerKey===ta.managerKey?h2h.w2:h2h.w1;
+      return{winner,loser,wPts,lPts,wWins:wW,lWins:lW};
+    }).sort((a,b)=>(b.wPts+b.lPts)-(a.wPts+a.lPts));
+    buildPlainText(yr,wk,results2,potw,[],allLog);
+  }catch(e){
+    blurbEl.textContent='Could not generate blurb: '+e.message;
+    blurbEl.style.color='var(--crimson)';
+  }finally{btn.textContent='✨ Generate blurb';btn.disabled=false;}
+}
+
+function copyRecap(){
+  const txt=document.getElementById('recap-plaintext')?.value;
+  if(!txt)return;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=event.target;
+    btn.textContent='Copied!';
+    setTimeout(()=>btn.textContent='Copy text',1500);
+  });
 }
 
 // ══════════════════════════════════════════════════════════════
