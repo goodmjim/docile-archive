@@ -628,6 +628,22 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         My Trades
       </button>
+      <button class="sb-item" onclick="switchTab('mydraft')" data-tab="mydraft">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        My Draft
+      </button>
+      <button class="sb-item" onclick="switchTab('myprobowl')" data-tab="myprobowl">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        My Pro Bowlers
+      </button>
+      <button class="sb-item" onclick="switchTab('mytimeline')" data-tab="mytimeline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        My Timeline
+      </button>
+      <button class="sb-item" onclick="switchTab('mynfl')" data-tab="mynfl">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        My NFL Breakdown
+      </button>
 
       <div class="sb-section-label">League</div>
       <button class="sb-item" onclick="switchTab('timeline')" data-tab="timeline">
@@ -677,6 +693,14 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <button class="sb-item" onclick="switchTab('projections')" data-tab="projections">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Projections
+      </button>
+      <button class="sb-item" onclick="switchTab('draft')" data-tab="draft">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Draft
+      </button>
+      <button class="sb-item" onclick="switchTab('udfa')" data-tab="udfa">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        UDFA Auction
       </button>
 
       <div class="sb-divider"></div>
@@ -1035,6 +1059,53 @@ tbody tr.highlight td{background:var(--gold-dim)}
     <div class="panel" id="panel-mytrades">
       <div class="sh"><h2>My Trades</h2><span class="sh-sub">All trades involving your roster</span></div>
       <div id="mytrades-content"></div>
+    </div>
+
+    <!-- LEAGUE: DRAFT -->
+    <div class="panel" id="panel-draft">
+      <div class="sh"><h2>League Draft</h2><span class="sh-sub">Annual rookie drafts · 2019–present</span></div>
+      <div id="draft-yr-chips" class="yr-filter-row" style="margin-bottom:1rem"></div>
+      <div id="draft-content"></div>
+    </div>
+
+    <!-- LEAGUE: UDFA AUCTION -->
+    <div class="panel" id="panel-udfa">
+      <div class="sh"><h2>UDFA Auction</h2><span class="sh-sub">Undrafted rookie auction · offline bids · 24-man pool</span></div>
+      <div id="udfa-yr-chips" class="yr-filter-row" style="margin-bottom:1rem"></div>
+      <div id="udfa-content"></div>
+    </div>
+
+    <!-- MY TEAM: MY DRAFT HISTORY -->
+    <div class="panel" id="panel-mydraft">
+      <div class="sh"><h2>My Draft History</h2><span class="sh-sub">All picks and UDFA acquisitions · pts scored for your team</span></div>
+      <div id="mydraft-yr-chips" class="yr-filter-row" style="margin-bottom:1rem"></div>
+      <div id="mydraft-content"></div>
+    </div>
+
+    <!-- MY TEAM: MY PRO BOWLERS -->
+    <div class="panel" id="panel-myprobowl">
+      <div class="sh"><h2>My Pro Bowlers</h2><span class="sh-sub">Players from your teams selected to the Pro Bowl</span></div>
+      <div id="myprobowl-content"></div>
+    </div>
+
+    <!-- MY TEAM: MY TIMELINE -->
+    <div class="panel" id="panel-mytimeline">
+      <div class="sh"><h2>My Timeline</h2><span class="sh-sub">Year-by-year franchise history</span></div>
+      <div id="mytimeline-content"></div>
+    </div>
+
+    <!-- MY TEAM: MY NFL BREAKDOWN -->
+    <div class="panel" id="panel-mynfl">
+      <div class="sh"><h2>My NFL Breakdown</h2><span class="sh-sub">NFL teams represented in your starting lineups</span></div>
+      <div class="filters" style="margin-bottom:1rem">
+        <input class="s-input" id="mynfl-search" placeholder="Search NFL team…" oninput="renderMyNfl()">
+        <select class="f-sel" id="mynfl-sort" onchange="renderMyNfl()">
+          <option value="appearances">Most appearances</option>
+          <option value="unique">Most unique players</option>
+          <option value="alpha">Alphabetical</option>
+        </select>
+      </div>
+      <div id="mynfl-content"></div>
     </div>
 
     <!-- SMART SEARCH -->
@@ -1451,6 +1522,232 @@ const PB_LEADERS = [
   {mgr:'Hinton',count:16},{mgr:'Abhi',count:15},{mgr:'Kyle',count:15},
   {mgr:'Boone',count:13},{mgr:'Amol',count:12},{mgr:'Jon',count:10}
 ];
+
+
+// ══════════════════════════════════════════════════════════════
+// UDFA AUCTION DATA
+// ══════════════════════════════════════════════════════════════
+const UDFA_AUCTION={
+  2020:[
+    {mgr:'Abhi',player:'Adam Trautman',team:'NO',pos:'TE',bid:46},
+    {mgr:'Amol',player:'Rico Dowdle',team:'DAL',pos:'RB',bid:15},
+    {mgr:'Boone',player:'Eno Benjamin',team:'ARI',pos:'RB',bid:51},
+    {mgr:'Boone',player:'Dalton Keene',team:'NE',pos:'TE',bid:35},
+    {mgr:'Boone',player:'Tyler Johnson',team:'TB',pos:'WR',bid:13},
+    {mgr:'Boone',player:'Thaddeus Moss',team:'WAS',pos:'TE',bid:11},
+    {mgr:'David',player:'Gabriel Davis',team:'BUF',pos:'WR',bid:50},
+    {mgr:'David',player:'Quintez Cephus',team:'DET',pos:'WR',bid:50},
+    {mgr:'Declan',player:'DeeJay Dallas',team:'SEA',pos:'RB',bid:80},
+    {mgr:'Declan',player:'Isaiah Coulter',team:'HOU',pos:'WR',bid:13},
+    {mgr:'Declan',player:'Sam Sloman',team:'LAR',pos:'K',bid:10},
+    {mgr:'Jared',player:'Isaiah Hodgins',team:'BUF',pos:'WR',bid:16},
+    {mgr:'Jon',player:'Donovan Peoples-Jones',team:'CLE',pos:'WR',bid:64},
+    {mgr:'Jon',player:'Devin Asiasi',team:'NE',pos:'TE',bid:60},
+    {mgr:'Jon',player:'James Proche',team:'BAL',pos:'WR',bid:47},
+    {mgr:'Jon',player:'Jacob Eason',team:'IND',pos:'QB',bid:28},
+    {mgr:'Jon',player:'JaMychal Hasty',team:'SF',pos:'RB',bid:11},
+    {mgr:'Jimmy',player:'James Robinson',team:'JAX',pos:'RB',bid:70},
+    {mgr:'Jimmy',player:'John Hightower',team:'PHI',pos:'WR',bid:40},
+    {mgr:'Lance',player:'Joe Reed',team:'LAC',pos:'WR',bid:45},
+  ],
+  2021:[
+    {mgr:'Abhi',player:'Jacob Harris',team:'LAR',pos:'TE',bid:60},
+    {mgr:'Amol',player:'Kylen Granson',team:'IND',pos:'TE',bid:25},
+    {mgr:'Boone',player:'Elijah Mitchell',team:'SF',pos:'RB',bid:102},
+    {mgr:'Boone',player:'Cornell Powell',team:'KC',pos:'WR',bid:10},
+    {mgr:'Boone',player:'Gary Brightwell',team:'NYG',pos:'RB',bid:2},
+    {mgr:'Brad',player:'Anthony Schwartz',team:'CLE',pos:'WR',bid:83},
+    {mgr:'Brad',player:'Demetric Felton',team:'CLE',pos:'RB',bid:15},
+    {mgr:'David',player:'Mekhi Sargent',team:'TEN',pos:'RB',bid:68},
+    {mgr:'David',player:'Dez Fitzpatrick',team:'TEN',pos:'WR',bid:11},
+    {mgr:'Declan',player:'Mike Strachan',team:'IND',pos:'WR',bid:69},
+    {mgr:'Declan',player:'Jake Funk',team:'LAR',pos:'RB',bid:56},
+    {mgr:'Declan',player:'Ihmir Smith-Marsette',team:'MIN',pos:'WR',bid:45},
+    {mgr:'Declan',player:'Kellen Mond',team:'MIN',pos:'QB',bid:31},
+    {mgr:'Jared',player:'Hunter Long',team:'MIA',pos:'TE',bid:56},
+    {mgr:'Jared',player:'Javian Hawkins',team:'ATL',pos:'RB',bid:3},
+    {mgr:'Jon',player:'Devon Johnson',team:null,pos:'RB',bid:1},
+    {mgr:'Jimmy',player:'Khalil Herbert',team:'CHI',pos:'RB',bid:107},
+    {mgr:'Jimmy',player:'Jaret Patterson',team:'WAS',pos:'RB',bid:90},
+    {mgr:'Kyle',player:'Brevin Jordan',team:'HOU',pos:'TE',bid:60},
+    {mgr:'Kyle',player:'Shi Smith',team:'CAR',pos:'WR',bid:44},
+    {mgr:'Kyle',player:'Jaelon Darden',team:'TB',pos:'WR',bid:33},
+    {mgr:'Kyle',player:'Frank Darby',team:'ATL',pos:'WR',bid:14},
+    {mgr:'Lance',player:'Jermar Jefferson',team:'DET',pos:'RB',bid:69},
+    {mgr:'Lance',player:'Tre McKitty',team:'LAC',pos:'TE',bid:41},
+  ],
+  2022:[
+    {mgr:'Abhi',player:'Kyren Williams',team:'LAR',pos:'RB',bid:100},
+    {mgr:'Abhi',player:'Charlie Kolar',team:'BAL',pos:'TE',bid:25},
+    {mgr:'Amol',player:'Trestan Ebner',team:'CHI',pos:'RB',bid:33},
+    {mgr:'Amol',player:'Daniel Bellinger',team:'NYG',pos:'TE',bid:10},
+    {mgr:'Boone',player:'Danny Gray',team:'SF',pos:'WR',bid:73},
+    {mgr:'Boone',player:'Cade Otton',team:'TB',pos:'TE',bid:47},
+    {mgr:'Boone',player:'Justyn Ross',team:'KC',pos:'WR',bid:32},
+    {mgr:'Boone',player:'Zonovan Knight',team:'NYJ',pos:'RB',bid:5},
+    {mgr:'Boone',player:'Kyric McGowan',team:'WAS',pos:'WR',bid:4},
+    {mgr:'Brad',player:'Hassan Haskins',team:'TEN',pos:'RB',bid:79},
+    {mgr:'Brad',player:'Jeremy Ruckert',team:'NYJ',pos:'TE',bid:37},
+    {mgr:'Brad',player:'Calvin Austin',team:'PIT',pos:'WR',bid:33},
+    {mgr:'David',player:'Jerome Ford',team:'CLE',pos:'RB',bid:145},
+    {mgr:'Declan',player:'Lance McCutcheon',team:'LAR',pos:'WR',bid:40},
+    {mgr:'Declan',player:'Matt Corral',team:'CAR',pos:'QB',bid:15},
+    {mgr:'Hinton',player:'Tyler Badie',team:'BAL',pos:'RB',bid:30},
+    {mgr:'Hinton',player:'Cade York',team:'CLE',pos:'K',bid:19},
+    {mgr:'Jared',player:'Kyle Phillips',team:'TEN',pos:'WR',bid:64},
+    {mgr:'Jon',player:'Isaiah Likely',team:'BAL',pos:'TE',bid:162},
+    {mgr:'Jon',player:'Kalil Pimpelton',team:'DET',pos:'WR',bid:9},
+    {mgr:'Jon',player:'Cole Turner',team:'WAS',pos:'TE',bid:1},
+    {mgr:'Jimmy',player:'Velus Jones Jr.',team:'CHI',pos:'WR',bid:92},
+    {mgr:'Kyle',player:'Desmond Ridder',team:'ATL',pos:'QB',bid:27},
+    {mgr:'Kyle',player:'Snoop Conner',team:'JAX',pos:'RB',bid:16},
+  ],
+  2023:[
+    {mgr:'Abhi',player:'DeWayne McBride',team:'MIN',pos:'RB',bid:85},
+    {mgr:'Abhi',player:'Deneric Prince',team:'KC',pos:'RB',bid:1},
+    {mgr:'Amol',player:'Xavier Hutchinson',team:'HOU',pos:'WR',bid:77},
+    {mgr:'Amol',player:'Dontayvion Wicks',team:'GB',pos:'WR',bid:22},
+    {mgr:'Boone',player:'Tyler Scott',team:'CHI',pos:'WR',bid:120},
+    {mgr:'Boone',player:'Justin Shorter',team:'BUF',pos:'WR',bid:24},
+    {mgr:'Brad',player:'Monte Pottebaum',team:null,pos:'FB',bid:1},
+    {mgr:'David',player:'Eric Gray',team:'NYG',pos:'RB',bid:85},
+    {mgr:'David',player:'Kenny McIntosh',team:'SEA',pos:'RB',bid:32},
+    {mgr:'Declan',player:'Will Levis',team:'TEN',pos:'QB',bid:23},
+    {mgr:'Hinton',player:'Tucker Kraft',team:'GB',pos:'TE',bid:46},
+    {mgr:'Jared',player:'Puka Nacua',team:'LAR',pos:'WR',bid:150},
+    {mgr:'Jared',player:'Stetson Bennett',team:'LAR',pos:'QB',bid:6},
+    {mgr:'Jared',player:'Bryce Ford-Wheaton',team:'NYG',pos:'WR',bid:3},
+    {mgr:'Jimmy',player:'AT Perry',team:'NO',pos:'WR',bid:138},
+    {mgr:'Jimmy',player:'Rakim Jarrett',team:'TB',pos:'WR',bid:26},
+    {mgr:'Jimmy',player:'Hendon Hooker',team:'DET',pos:'QB',bid:10},
+    {mgr:'Jon',player:'Evan Hull',team:'IND',pos:'RB',bid:155},
+    {mgr:'Jon',player:'Mo Ibrahim',team:null,pos:'RB',bid:1},
+    {mgr:'Kyle',player:'Kayshon Boutte',team:'NE',pos:'WR',bid:105},
+    {mgr:'Kyle',player:'Charlie Jones',team:'CIN',pos:'WR',bid:60},
+    {mgr:'Kyle',player:'Brenton Strange',team:'JAX',pos:'TE',bid:15},
+    {mgr:'Kyle',player:'Jake Moody',team:'SF',pos:'K',bid:12},
+    {mgr:'Lance',player:'Chris Rodriguez',team:'WAS',pos:'RB',bid:18},
+  ],
+  2024:[
+    {mgr:'Abhi',player:'Devontez Walker',team:'BAL',pos:'WR',bid:30},
+    {mgr:'Amol',player:'Brenden Rice',team:'LAC',pos:'WR',bid:9},
+    {mgr:'Amol',player:'Jared Wiley',team:'KC',pos:'TE',bid:9},
+    {mgr:'Boone',player:'Erick All',team:'CIN',pos:'TE',bid:8},
+    {mgr:'David',player:'Tyrone Tracy Jr.',team:'NYG',pos:'RB',bid:14},
+    {mgr:'David',player:'Cade Stover',team:'HOU',pos:'TE',bid:4},
+    {mgr:'David',player:'Jacob Cowing',team:'SF',pos:'WR',bid:2},
+    {mgr:'Declan',player:'Spencer Rattler',team:'NO',pos:'QB',bid:41},
+    {mgr:'Declan',player:'Dylan Laube',team:'LV',pos:'RB',bid:17},
+    {mgr:'Declan',player:'Jameis Winston',team:'CLE',pos:'QB',bid:12},
+    {mgr:'Hinton',player:'Will Shipley',team:'PHI',pos:'RB',bid:37},
+    {mgr:'Hinton',player:'Joe Milton III',team:'NE',pos:'QB',bid:28},
+    {mgr:'Jared',player:'Theo Johnson',team:'NYG',pos:'TE',bid:12},
+    {mgr:'Jared',player:'Jamari Thrash',team:'CLE',pos:'WR',bid:2},
+    {mgr:'Jared',player:'Michael Pratt',team:'GB',pos:'QB',bid:1},
+    {mgr:'Jimmy',player:'Bub Means',team:'NO',pos:'WR',bid:10},
+    {mgr:'Jimmy',player:'Tahj Washington',team:'MIA',pos:'WR',bid:5},
+    {mgr:'Jon',player:'Ray Davis',team:'BUF',pos:'RB',bid:42},
+    {mgr:'Jon',player:'Malik Washington',team:'MIA',pos:'WR',bid:14},
+    {mgr:'Kyle',player:'Johnny Wilson',team:'PHI',pos:'WR',bid:19},
+    {mgr:'Kyle',player:'Isaac Guerendo',team:'SF',pos:'RB',bid:12},
+    {mgr:'Kyle',player:'Jordan Travis',team:'NYJ',pos:'QB',bid:5},
+    {mgr:'Kyle',player:'Frank Gore Jr.',team:'BUF',pos:'RB',bid:3},
+    {mgr:'Lance',player:'Rasheen Ali',team:'BAL',pos:'RB',bid:19},
+  ],
+  2025:[
+    {mgr:'Abhi',player:'Tyler Shough',team:'NO',pos:'QB',bid:201},
+    {mgr:'Abhi',player:'Jean Sifrin',team:null,pos:'TE',bid:1},
+    {mgr:'Amol',player:'DJ Giddens',team:'IND',pos:'RB',bid:150},
+    {mgr:'Boone',player:'Jarquez Hunter',team:'LAR',pos:'RB',bid:170},
+    {mgr:'Brad',player:'Elic Ayomanor',team:'TEN',pos:'WR',bid:151},
+    {mgr:'David',player:"Dont'e Thornton",team:'LV',pos:'WR',bid:150},
+    {mgr:'Declan',player:'Tahj Brooks',team:'CIN',pos:'RB',bid:116},
+    {mgr:'Declan',player:'Quinn Ewers',team:'MIA',pos:'QB',bid:22},
+    {mgr:'Hinton',player:'Will Howard',team:'PIT',pos:'QB',bid:56},
+    {mgr:'Hinton',player:'Jalen Royals',team:'KC',pos:'WR',bid:140},
+    {mgr:'Jared',player:'Kyle Monangai',team:'CHI',pos:'RB',bid:155},
+    {mgr:'Jared',player:'Xavier Restrepo',team:'TEN',pos:'WR',bid:31},
+    {mgr:'Jimmy',player:'Woody Marks',team:'HOU',pos:'RB',bid:127},
+    {mgr:'Jimmy',player:'Tyler Loop',team:'BAL',pos:'K',bid:23},
+    {mgr:'Jon',player:'Trevor Etienne',team:'CAR',pos:'RB',bid:55},
+    {mgr:'Jon',player:'Tez Johnson',team:'TB',pos:'WR',bid:85},
+    {mgr:'Jon',player:'Tai Felton',team:'MIN',pos:'WR',bid:45},
+    {mgr:'Kyle',player:'Devin Neal',team:'NO',pos:'RB',bid:65},
+    {mgr:'Kyle',player:'Oronde Gadsden',team:'LAC',pos:'TE',bid:50},
+    {mgr:'Kyle',player:'KeAndre Lambert-Smith',team:'LAC',pos:'WR',bid:50},
+    {mgr:'Lance',player:'Chimere Dike',team:'TEN',pos:'WR',bid:20},
+    {mgr:'Lance',player:'Gunnar Helm',team:'TEN',pos:'TE',bid:20},
+    {mgr:'Lance',player:'Jordan James',team:'SF',pos:'RB',bid:49},
+    {mgr:'Lance',player:'Brashard Smith',team:'KC',pos:'RB',bid:75},
+  ]
+};
+
+// ── TEAM CAPTAINS ─────────────────────────────────────────────
+const TEAM_CAPTAINS={
+  Amol:[
+    {year:2024,captains:[{role:'C',player:'Nick Chubb',team:'CLE',tenure:7}]},
+    {year:2025,captains:[{role:'C',player:'Nick Chubb',team:'HOU',tenure:8}]},
+  ],
+  Boone:[
+    {year:2024,captains:[
+      {role:'C',player:'Jalen Hurts',team:'PHI'},
+      {role:'A',player:'Kyle Pitts',team:'ATL'},
+      {role:'A',player:'Green Bay Packers DEF',team:'GB'},
+    ]},
+    {year:2025,captains:[
+      {role:'C',player:'Jalen Hurts',team:'PHI'},
+      {role:'A',player:'Kyle Pitts',team:'ATL'},
+      {role:'A',player:'Micah Parsons',team:'GB'},
+    ]},
+  ],
+  David:{
+    deerslayers:[
+      {num:'I',player:'Najee Harris',team:'PIT'},
+      {num:'II',player:'Jaylen Warren',team:'PIT'},
+      {num:'III',player:'Sam Howell',team:'WAS'},
+      {num:'IV',player:'Daniel Jones',team:'NYG'},
+      {num:'V',player:'Sam Darnold',team:'MIN'},
+    ]
+  },
+  Declan:[
+    {year:2024,captains:[
+      {role:'C',player:'Anthony Richardson',team:'IND'},
+      {role:'A',player:'Davante Adams',team:'NYJ'},
+      {role:'A',player:'Tyler Boyd',team:'TEN'},
+    ]},
+    {year:2025,captains:[
+      {role:'C',player:'Jameis Winston',team:'NYG'},
+      {role:'A',player:'Davante Adams',team:'LAR'},
+      {role:'A',player:'Jakobi Meyers',team:'JAX'},
+    ]},
+  ],
+  Hinton:[
+    {year:2025,captains:[{role:'C',player:'Will Shipley',team:'PHI'}]},
+  ],
+  Jared:[
+    {year:2024,captains:[
+      {role:'C',player:'CJ Stroud',team:'HOU'},
+      {role:'A',player:"Ja'Marr Chase",team:'CIN'},
+    ]},
+    {year:2025,captains:[
+      {role:'C',player:"Ja'Marr Chase",team:'CIN'},
+      {role:'C',player:'Baker Mayfield',team:'TB'},
+      {role:'T',player:'Theo Johnson',team:'NYG'},
+    ]},
+  ],
+  Jimmy:[
+    {year:2024,captains:[
+      {role:'C',player:'Mark Andrews',team:'BAL'},
+      {role:'A',player:'Lamar Jackson',team:'BAL'},
+      {role:'A',player:'AJ Brown',team:'PHI'},
+    ]},
+    {year:2025,captains:[
+      {role:'C',player:'Lamar Jackson',team:'BAL'},
+      {role:'A',player:'David Montgomery',team:'DET'},
+      {role:'T',player:'Harold Fannin',team:'CLE'},
+    ]},
+  ],
+};
 
 // ══════════════════════════════════════════════════════════════
 // APP STATE
@@ -2226,11 +2523,42 @@ function renderMetrics(){
     </div>`;
 
   // Determine context from active tab
-  const isMyTeam=['mylineup','myscoring','myh2h','mytrades'].includes(activeTab);
-  const isLeague=['timeline','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','potg','projections'].includes(activeTab);
+  const isMyTeam=['mylineup','myscoring','myh2h','mytrades','mydraft','myprobowl','mytimeline','mynfl'].includes(activeTab);
+  const isLeague=['timeline','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','potg','projections','draft','udfa'].includes(activeTab);
+
+  // Team captain for current season (My Team pages only)
+  let captainChip='';
+  if(isMyTeam){
+    const myKey=sleeperToManagerKey(DB.username)||DB.username;
+    const captainData=TEAM_CAPTAINS[myKey];
+    if(captainData){
+      const seasonV=document.getElementById('s-sel').value;
+      const yr=seasonV==='all'?(DB.seasons.map(s=>s.year).sort((a,b)=>b-a)[0]):parseInt(seasonV);
+      if(myKey==='David'&&captainData.deerslayers){
+        // David's deerslayers — show as sequential list
+        captainChip=`<div class="metric" style="grid-column:1/-1">
+          <div class="ml">Deerslayers</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+            ${captainData.deerslayers.map(d=>`<span style="font-size:0.75rem;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 8px;color:var(--text2)"><span style="color:var(--text3);font-family:var(--font-mono)">${d.num}</span> ${d.player} <span style="color:var(--text3)">${d.team}</span></span>`).join('')}
+          </div>
+        </div>`;
+      } else if(Array.isArray(captainData)){
+        const yearData=captainData.find(y=>y.year===yr)||captainData[captainData.length-1];
+        if(yearData){
+          const roleLabel={C:'Captain',A:'Alt',T:'Taxi'};
+          captainChip=`<div class="metric" style="grid-column:1/-1">
+            <div class="ml">Team captains · ${yearData.year}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+              ${yearData.captains.map(c=>`<span style="font-size:0.75rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:5px;padding:2px 8px;color:var(--gold)"><span style="opacity:0.7">${roleLabel[c.role]||c.role}</span> ${c.player}${c.tenure?` <span style="opacity:0.6">(${c.tenure}yr)</span>`:''}</span>`).join('')}
+            </div>
+          </div>`;
+        }
+      }
+    }
+  }
 
   let extra='';
-  if(isMyTeam)extra=myTeamMetrics;
+  if(isMyTeam)extra=myTeamMetrics+captainChip;
   else if(isLeague)extra=leagueMetrics;
 
   document.getElementById('metrics').innerHTML=always+extra;
@@ -3205,18 +3533,19 @@ function renderHof(){
 // ══════════════════════════════════════════════════════════════
 const TABS=['home','standings','matchups','players','h2h','playoffs','trades','awards',
   'probowl','hof','projections','potg','recap','search',
-  'mylineup','myscoring','myh2h','mytrades','timeline'];
+  'mylineup','myscoring','myh2h','mytrades','timeline',
+  'draft','udfa','mydraft','myprobowl','mytimeline','mynfl'];
 
 const SECTIONS={
   now:['home','recap'],
-  myteam:['mylineup','myscoring','myh2h','mytrades'],
-  league:['timeline','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','potg','projections'],
+  myteam:['mylineup','myscoring','myh2h','mytrades','mydraft','myprobowl','mytimeline','mynfl'],
+  league:['timeline','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','potg','projections','draft','udfa'],
   search:['search']
 };
 const SECTION_LABELS={
   now:['Home','Weekly Recap'],
-  myteam:['All-Time Lineup','My Scoring','My H2H','My Trades'],
-  league:['Timeline','Standings','Matchups','Player Scoring','Head-to-Head','Playoffs','Trades','Awards','Pro Bowl','Hall of Fame','POTG/POTW','Projections'],
+  myteam:['All-Time Lineup','My Scoring','My H2H','My Trades','My Draft','My Pro Bowlers','My Timeline','My NFL Breakdown'],
+  league:['Timeline','Standings','Matchups','Player Scoring','Head-to-Head','Playoffs','Trades','Awards','Pro Bowl','Hall of Fame','POTG/POTW','Projections','Draft','UDFA Auction'],
   search:['Smart Search']
 };
 
@@ -3270,6 +3599,12 @@ function switchTab(name){
   if(name==='myh2h')renderMyH2H();
   if(name==='mytrades')renderMyTrades();
   if(name==='timeline')renderTimeline();
+  if(name==='draft')renderDraft();
+  if(name==='udfa')renderUdfa();
+  if(name==='mydraft')renderMyDraft();
+  if(name==='myprobowl')renderMyProbowl();
+  if(name==='mytimeline')renderMyTimeline();
+  if(name==='mynfl')renderMyNfl();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -4749,6 +5084,415 @@ function renderMyTrades(){
       </div>
     </div>`;
   }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// LEAGUE DRAFT
+// ══════════════════════════════════════════════════════════════
+// Draft pick data comes from DB.draftPickMap: "year|round|rosterId" → {playerId,playerName,round,pickNo}
+// We also have UDFA_AUCTION for UDFA picks.
+
+function initDraftChips(elId, years, activeSet, onToggle){
+  const el=document.getElementById(elId);
+  if(!el||el.children.length)return;
+  el.innerHTML=years.map(y=>`<button class="yr-chip${activeSet.has(y)?' active':''}" onclick="${onToggle}(${y},this)">${y}</button>`).join('');
+}
+
+let activeDraftYrs=new Set();
+function toggleDraftYr(yr,btn){
+  activeDraftYrs.has(yr)?activeDraftYrs.delete(yr):activeDraftYrs.add(yr);
+  btn.classList.toggle('active',activeDraftYrs.has(yr));
+  renderDraft();
+}
+
+function renderDraft(){
+  const el=document.getElementById('draft-content');
+  // Years where we have draft pick data (2019+)
+  const years=DB.seasons.map(s=>s.year).filter(y=>y>=2019).sort((a,b)=>b-a);
+  if(!activeDraftYrs.size)activeDraftYrs=new Set(years);
+  initDraftChips('draft-yr-chips',years,activeDraftYrs,'toggleDraftYr');
+
+  const filtered=years.filter(y=>activeDraftYrs.has(y));
+  if(!filtered.length){el.innerHTML='<div class="empty">No draft seasons loaded.</div>';return;}
+
+  // Build pick objects from draftPickMap for each selected year
+  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red',FB:'bg-dim'};
+
+  const html=filtered.map(yr=>{
+    const season=DB.seasons.find(s=>s.year===yr);
+    if(!season)return'';
+    const isStarterYear=yr>2019;
+
+    // Gather all picks for this year
+    const picks=Object.entries(DB.draftPickMap)
+      .filter(([k])=>k.startsWith(`${yr}|`))
+      .map(([k,v])=>{
+        const[,round,rosterId]=k.split('|');
+        const team=season.teams.find(t=>t.rosterId==rosterId);
+        const mgr=team?.managerKey||team?.name||'Team '+rosterId;
+        const m=DB.playerMeta[v.playerId];
+        const pos=m?.fantasy_positions?.[0]||'?';
+        // Points scored in any season by this player across all teams
+        const ptsAllTime=DB.allStarters.filter(s=>s.pid===v.playerId&&s.year>=yr).reduce((a,b)=>a+(b.points||0),0);
+        // Expected value: average pts for top pick in that round (rough baseline)
+        return{round:parseInt(round),pickNo:v.pickNo,mgr,pid:v.playerId,name:v.playerName,pos,pts:ptsAllTime};
+      })
+      .sort((a,b)=>a.pickNo-b.pickNo);
+
+    if(!picks.length)return`<div class="empty" style="margin-bottom:1rem">${yr}: No draft pick data loaded yet. Export a snapshot after loading this season.</div>`;
+
+    // Positional breakdown
+    const posCounts={};
+    picks.forEach(p=>{if(!posCounts[p.pos])posCounts[p.pos]=0;posCounts[p.pos]++;});
+
+    // Grade only if 2020+
+    let gradeHtml='';
+    if(isStarterYear){
+      const maxPts=Math.max(...picks.map(p=>p.pts),1);
+      // Expected pts curve: 1st pick = maxPts, falls off by round
+      const expected=(pickNo,total)=>maxPts*(1-(pickNo-1)/(total*1.5));
+      const total=picks.length;
+      const surplusMap={};
+      picks.forEach(p=>{
+        const exp=expected(p.pickNo,total);
+        const surplus=p.pts-exp;
+        surplusMap[p.mgr]=(surplusMap[p.mgr]||0)+surplus;
+      });
+      const mgrsSorted=Object.entries(surplusMap).sort((a,b)=>b[1]-a[1]);
+      const maxSurplus=Math.max(...mgrsSorted.map(([,v])=>Math.abs(v)),1);
+      gradeHtml=`<div class="sh" style="margin-top:1.25rem;margin-bottom:0.5rem"><h2 style="font-size:1rem">Manager Draft Grades</h2></div>
+      <div class="tbl-wrap" style="margin-bottom:1.25rem"><table>
+        <thead><tr><th>Manager</th><th>Surplus value</th><th>Grade</th></tr></thead>
+        <tbody>${mgrsSorted.map(([mgr,surplus])=>{
+          const pct=surplus/maxSurplus;
+          const grade=pct>0.6?'A':pct>0.3?'B+':pct>0.05?'B':pct>-0.1?'C':pct>-0.3?'D+':'D';
+          const col=surplus>0?'var(--teal)':'var(--crimson)';
+          return`<tr><td style="font-weight:500">${mgr}</td>
+            <td><span style="color:${col};font-family:var(--font-mono)">${surplus>0?'+':''}${surplus.toFixed(0)}</span></td>
+            <td style="font-weight:600;color:${col}">${grade}</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+    }
+
+    return`<div style="margin-bottom:2rem">
+      <div class="sh" style="margin-bottom:0.5rem">
+        <h2 style="font-size:1.1rem">${yr} Draft${yr===2019?' <span style="font-size:0.72rem;color:var(--text3);font-family:var(--font-body);font-weight:400">(startup — ungraded)</span>':''}</h2>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.75rem">
+        ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'bg-dim'}">${pos}: ${cnt}</span>`).join('')}
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Pick</th><th>Player</th><th>Pos</th><th>Manager</th>${isStarterYear?'<th>Pts scored</th><th>Surplus</th>':''}</tr></thead>
+          <tbody>${picks.map(p=>{
+            const surplus=isStarterYear?(p.pts-picks.reduce((a,b)=>a+b.pts,0)/picks.length).toFixed(0):null;
+            const sCol=surplus>0?'var(--teal)':'var(--crimson)';
+            return`<tr>
+              <td class="mono" style="color:var(--text3)">${Math.ceil(p.pickNo/12)}.${String(((p.pickNo-1)%12)+1).padStart(2,'0')}</td>
+              <td><span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.name}</span></td>
+              <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
+              <td style="font-size:0.82rem">${p.mgr}</td>
+              ${isStarterYear?`<td class="mono">${p.pts>0?p.pts.toFixed(1):'—'}</td><td class="mono" style="color:${sCol}">${surplus>0?'+':''}${surplus}</td>`:''}
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
+      ${gradeHtml}
+    </div>`;
+  }).join('');
+
+  el.innerHTML=html||'<div class="empty">No data available.</div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// UDFA AUCTION
+// ══════════════════════════════════════════════════════════════
+let activeUdfaYrs=new Set();
+function toggleUdfaYr(yr,btn){
+  activeUdfaYrs.has(yr)?activeUdfaYrs.delete(yr):activeUdfaYrs.add(yr);
+  btn.classList.toggle('active',activeUdfaYrs.has(yr));
+  renderUdfa();
+}
+
+function renderUdfa(){
+  const el=document.getElementById('udfa-content');
+  const years=Object.keys(UDFA_AUCTION).map(Number).sort((a,b)=>b-a);
+  if(!activeUdfaYrs.size)activeUdfaYrs=new Set(years);
+  initDraftChips('udfa-yr-chips',years,activeUdfaYrs,'toggleUdfaYr');
+
+  const filtered=years.filter(y=>activeUdfaYrs.has(y));
+  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',FB:'bg-dim'};
+
+  const html=filtered.map(yr=>{
+    const picks=UDFA_AUCTION[yr]||[];
+    const totalSpend=picks.reduce((a,b)=>a+b.bid,0);
+    const topSpender=Object.entries(picks.reduce((a,p)=>{a[p.mgr]=(a[p.mgr]||0)+p.bid;return a;},{})).sort((a,b)=>b[1]-a[1])[0];
+    const posCounts={};picks.forEach(p=>{if(!posCounts[p.pos])posCounts[p.pos]=0;posCounts[p.pos]++;});
+
+    // Match players to allStarters by name (best effort)
+    const ptsForPlayer=(name,mgr,year)=>{
+      const nameLower=name.toLowerCase();
+      // Find pid by name match in playerMeta
+      const pid=Object.entries(DB.playerMeta).find(([,m])=>
+        `${m.first_name} ${m.last_name}`.toLowerCase()===nameLower
+      )?.[0];
+      if(!pid)return 0;
+      // Find rosterId for this mgr in this season
+      const season=DB.seasons.find(s=>s.year===year);
+      const team=season?.teams.find(t=>t.managerKey===mgr);
+      if(!team)return 0;
+      return DB.allStarters.filter(s=>s.pid===pid&&s.year>=year&&s.teamRosterId===team.rosterId).reduce((a,b)=>a+(b.points||0),0);
+    };
+
+    const picksWithPts=picks.map(p=>({...p,pts:ptsForPlayer(p.player,p.mgr,yr)}))
+      .sort((a,b)=>b.bid-a.bid);
+
+    return`<div style="margin-bottom:2rem">
+      <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">${yr} UDFA Auction</h2></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0.75rem">
+        <div class="metric" style="flex:0 1 auto;padding:8px 14px"><div class="ml">Total spend</div><div class="mv" style="font-size:1.2rem">$${totalSpend.toLocaleString()}</div></div>
+        <div class="metric" style="flex:0 1 auto;padding:8px 14px"><div class="ml">Top spender</div><div class="mv" style="font-size:1.2rem">${topSpender?.[0]||'—'}</div><div class="ms">$${topSpender?.[1]||0}</div></div>
+        <div class="metric" style="flex:0 1 auto;padding:8px 14px"><div class="ml">Players</div><div class="mv" style="font-size:1.2rem">${picks.length}</div></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.75rem">
+        ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'bg-dim'}">${pos}: ${cnt}</span>`).join('')}
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Player</th><th>Pos</th><th>NFL Team</th><th>Manager</th><th>Bid</th><th>Pts scored</th></tr></thead>
+        <tbody>${picksWithPts.map(p=>`<tr>
+          <td style="font-weight:500">${p.player}</td>
+          <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
+          <td style="font-size:0.78rem;color:var(--text3)">${p.team||'—'}</td>
+          <td style="font-size:0.82rem">${p.mgr}</td>
+          <td class="mono" style="color:var(--gold)">$${p.bid}</td>
+          <td class="mono" style="color:${p.pts>50?'var(--teal)':p.pts>0?'var(--text2)':'var(--text3)'}">${p.pts>0?p.pts.toFixed(1):'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=html;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MY DRAFT HISTORY
+// ══════════════════════════════════════════════════════════════
+let activeMyDraftYrs=new Set();
+function toggleMyDraftYr(yr,btn){
+  activeMyDraftYrs.has(yr)?activeMyDraftYrs.delete(yr):activeMyDraftYrs.add(yr);
+  btn.classList.toggle('active',activeMyDraftYrs.has(yr));
+  renderMyDraft();
+}
+
+function renderMyDraft(){
+  const el=document.getElementById('mydraft-content');
+  const myKey=sleeperToManagerKey(DB.username)||DB.username;
+  const draftYears=DB.seasons.map(s=>s.year).filter(y=>y>=2019).sort((a,b)=>b-a);
+  const udfaYears=Object.keys(UDFA_AUCTION).map(Number).sort((a,b)=>b-a);
+  const allYears=[...new Set([...draftYears,...udfaYears])].sort((a,b)=>b-a);
+  if(!activeMyDraftYrs.size)activeMyDraftYrs=new Set(allYears);
+  initDraftChips('mydraft-yr-chips',allYears,activeMyDraftYrs,'toggleMyDraftYr');
+
+  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',FB:'bg-dim'};
+  const filtered=allYears.filter(y=>activeMyDraftYrs.has(y));
+
+  // Build combined pick list
+  const allPicks=[];
+
+  // Sleeper draft picks
+  Object.entries(DB.draftPickMap).forEach(([k,v])=>{
+    const[yr,round,rosterId]=k.split('|');
+    const year=parseInt(yr);
+    if(!filtered.includes(year))return;
+    const season=DB.seasons.find(s=>s.year===year);
+    if(!season)return;
+    const team=season.teams.find(t=>t.rosterId==rosterId);
+    if(team?.managerKey!==myKey)return;
+    const m=DB.playerMeta[v.playerId];
+    const pos=m?.fantasy_positions?.[0]||'?';
+    const myStarts=DB.myStarters.filter(s=>s.pid===v.playerId);
+    const pts=myStarts.reduce((a,b)=>a+(b.points||0),0);
+    const played=myStarts.length>0;
+    allPicks.push({year,round:parseInt(round),pickNo:v.pickNo,pid:v.playerId,name:v.playerName,pos,pts,starts:myStarts.length,played,source:'Draft',bid:null});
+  });
+
+  // UDFA picks for this manager
+  filtered.forEach(yr=>{
+    (UDFA_AUCTION[yr]||[]).filter(p=>p.mgr===myKey).forEach(p=>{
+      const nameLower=p.player.toLowerCase();
+      const pid=Object.entries(DB.playerMeta).find(([,m])=>`${m.first_name} ${m.last_name}`.toLowerCase()===nameLower)?.[0];
+      const myStarts=pid?DB.myStarters.filter(s=>s.pid===pid):[];
+      const pts=myStarts.reduce((a,b)=>a+(b.points||0),0);
+      const played=myStarts.length>0;
+      allPicks.push({year:yr,round:null,pickNo:null,pid:pid||null,name:p.player,pos:p.pos,pts,starts:myStarts.length,played,source:'UDFA',bid:p.bid,team:p.team});
+    });
+  });
+
+  allPicks.sort((a,b)=>b.pts-a.pts);
+
+  const total=allPicks.length;
+  const played=allPicks.filter(p=>p.played).length;
+  const posCounts={};allPicks.forEach(p=>{if(!posCounts[p.pos])posCounts[p.pos]=0;posCounts[p.pos]++;});
+
+  // Steals/busts (picks with most/least pts)
+  const graded=allPicks.filter(p=>p.pts>0);
+  const steals=graded.slice(0,3);
+  const busts=allPicks.filter(p=>p.pts===0&&p.source==='Draft').slice(-3);
+
+  el.innerHTML=`
+    <div class="metrics" style="margin-bottom:1rem">
+      <div class="metric gold"><div class="ml">Picks + UDFA</div><div class="mv">${total}</div></div>
+      <div class="metric teal"><div class="ml">Played for you</div><div class="mv">${played} <span style="font-size:0.8rem;color:var(--text3)">/ ${total}</span></div></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem">
+      ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'bg-dim'}">${pos}: ${cnt}</span>`).join('')}
+    </div>
+    ${steals.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
+      <div class="riser-card"><div class="rf-label">Top picks by pts</div>${steals.map(p=>`<div class="rf-item"><span>${p.name} <span style="font-size:0.68rem;color:var(--text3)">${p.year}</span></span><span class="rf-delta">${p.pts.toFixed(0)}</span></div>`).join('')}</div>
+      <div class="faller-card"><div class="rf-label">No pts scored</div>${busts.map(p=>`<div class="rf-item"><span>${p.name} <span style="font-size:0.68rem;color:var(--text3)">${p.year}</span></span><span class="rf-delta">0</span></div>`).join('')||'<div style="font-size:0.78rem;color:var(--text3)">None!</div>'}</div>
+    </div>`:''}
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Year</th><th>Player</th><th>Pos</th><th>Acq.</th><th>Pts for you</th><th>Starts</th><th>Played</th></tr></thead>
+      <tbody>${allPicks.map(p=>`<tr>
+        <td class="mono" style="color:var(--text3)">${p.year}</td>
+        <td>${p.pid?`<span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.name}</span>`:p.name}</td>
+        <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
+        <td style="font-size:0.75rem">${p.source==='UDFA'?`<span style="color:var(--gold)">UDFA $${p.bid}</span>`:`<span style="color:var(--text3)">Rd ${p.round}</span>`}</td>
+        <td class="mono">${p.pts>0?p.pts.toFixed(1):'—'}</td>
+        <td class="mono">${p.starts||'—'}</td>
+        <td style="text-align:center">${p.played?'✓':''}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MY PRO BOWLERS
+// ══════════════════════════════════════════════════════════════
+function renderMyProbowl(){
+  const el=document.getElementById('myprobowl-content');
+  const myKey=sleeperToManagerKey(DB.username)||DB.username;
+  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red'};
+  const rows=[];
+  Object.entries(PRO_BOWL).forEach(([yr,pb])=>{
+    pb.teams.forEach(team=>{
+      team.players.forEach(p=>{
+        const pname=p.player.replace(/^\[[^\]]+\]\s*/,'').trim();
+        const pid=Object.entries(DB.playerMeta).find(([,m])=>`${m.first_name} ${m.last_name}`.toLowerCase()===pname.toLowerCase())?.[0];
+        if(!pid)return;
+        // Check if this player was on my roster that year
+        const season=DB.seasons.find(s=>s.year===parseInt(yr));
+        const myTeam=season?.teams.find(t=>t.isMe);
+        if(!myTeam)return;
+        const wasOnMyTeam=DB.allStarters.some(s=>s.pid===pid&&s.year===parseInt(yr)&&s.teamRosterId===myTeam.rosterId);
+        if(!wasOnMyTeam)return;
+        const m=DB.playerMeta[pid];
+        const pos=m?.fantasy_positions?.[0]||'?';
+        rows.push({year:parseInt(yr),name:pname,pid,pos,teamName:team.name,score:p.pts||0,mvp:!!p.mvp,winner:!!team.winner});
+      });
+    });
+  });
+  rows.sort((a,b)=>b.year-a.year||b.score-a.score);
+  if(!rows.length){el.innerHTML='<div class="empty">No Pro Bowl selections found for your loaded seasons.</div>';return;}
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>Year</th><th>Player</th><th>Pos</th><th>Team</th><th>Score</th><th>Award</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td class="mono" style="color:var(--text3)">${r.year}</td>
+      <td><span class="player-link" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
+      <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
+      <td style="font-size:0.82rem;color:var(--text2)">${r.teamName}</td>
+      <td class="mono">${r.score>0?r.score.toFixed(1):'—'}</td>
+      <td style="font-size:0.9rem">${r.mvp?'🦸‍♂️ MVP':''}${r.winner?'🏆':''}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MY TIMELINE
+// ══════════════════════════════════════════════════════════════
+function renderMyTimeline(){
+  const el=document.getElementById('mytimeline-content');
+  const myKey=sleeperToManagerKey(DB.username)||DB.username;
+  // Build timeline from hardcoded data + loaded seasons
+  const YEARS=[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+  const champYears=Object.entries(CHAMPIONS).filter(([,m])=>m===myKey).map(([y])=>parseInt(y));
+  const amolYears=Object.entries(AMOL_DHALIWAL).filter(([,m])=>m===myKey).map(([y])=>parseInt(y));
+  const binaYears=Object.entries(BINA_TURD).filter(([,m])=>m===myKey).map(([y])=>parseInt(y));
+
+  const rows=YEARS.map(yr=>{
+    const season=DB.seasons.find(s=>s.year===yr);
+    const me=season?.teams.find(t=>t.isMe);
+    const trophies=[
+      ...(champYears.includes(yr)?['🏆']:[]),
+      ...(amolYears.includes(yr)?['😬']:[]),
+      ...(binaYears.includes(yr)?['💩']:[]),
+    ].join(' ');
+    // Finish: rank among all teams by wins then pf
+    let finish='—';
+    if(season){
+      const ranked=[...season.teams].sort((a,b)=>b.wins-a.wins||b.pf-a.pf);
+      const idx=ranked.findIndex(t=>t.isMe);
+      if(idx>=0)finish=`#${idx+1} of ${ranked.length}`;
+    }
+    return{yr,name:me?.name||'—',w:me?.wins??'—',l:me?.losses??'—',pf:me?.pf??null,pa:me?.pa??null,finish,trophies,loaded:!!me};
+  }).filter(r=>r.loaded||r.yr<2019);
+
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>Year</th><th>Team name</th><th>Record</th><th>PF</th><th>PA</th><th>Finish</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr class="${r.loaded?'':'dim-row'}">
+      <td class="mono" style="color:var(--text3);font-weight:600">${r.yr}</td>
+      <td style="font-weight:500;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</td>
+      <td class="mono">${r.loaded?`${r.w}–${r.l}`:'—'}</td>
+      <td class="mono">${r.pf!=null?r.pf.toFixed(0):'—'}</td>
+      <td class="mono">${r.pa!=null?r.pa.toFixed(0):'—'}</td>
+      <td style="font-size:0.82rem">${r.finish}</td>
+      <td style="font-size:1rem">${r.trophies}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>
+  <div style="font-size:0.75rem;color:var(--text3);margin-top:0.75rem">🏆 Champion · 😬 Amol Dhaliwal Award (2nd place) · 💩 Bina Turd (last place) · Pre-2019 seasons show trophies only</div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MY NFL BREAKDOWN
+// ══════════════════════════════════════════════════════════════
+function renderMyNfl(){
+  const el=document.getElementById('mynfl-content');
+  const search=(document.getElementById('mynfl-search')?.value||'').toLowerCase();
+  const sortBy=document.getElementById('mynfl-sort')?.value||'appearances';
+  if(!DB.myStarters.length){el.innerHTML='<div class="empty">Load your data first.</div>';return;}
+
+  // Build NFL team breakdown from playerMeta
+  const byTeam={};
+  DB.myStarters.forEach(s=>{
+    const m=DB.playerMeta[s.pid];
+    if(!m||!m.team)return;
+    const nfl=m.team;
+    if(!byTeam[nfl])byTeam[nfl]={team:nfl,appearances:0,players:new Set()};
+    byTeam[nfl].appearances++;
+    byTeam[nfl].players.add(s.pid);
+  });
+
+  let rows=Object.values(byTeam).map(r=>({...r,unique:r.players.size}));
+  if(search)rows=rows.filter(r=>r.team.toLowerCase().includes(search));
+  if(sortBy==='appearances')rows.sort((a,b)=>b.appearances-a.appearances);
+  else if(sortBy==='unique')rows.sort((a,b)=>b.unique-a.unique);
+  else rows.sort((a,b)=>a.team.localeCompare(b.team));
+
+  const maxApp=rows.length?Math.max(...rows.map(r=>r.appearances)):1;
+  if(!rows.length){el.innerHTML='<div class="empty">No data found.</div>';return;}
+
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>NFL Team</th><th>Appearances</th><th>Unique players</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td style="font-weight:500">${r.team}</td>
+      <td class="mono">${r.appearances}</td>
+      <td class="mono">${r.unique}</td>
+      <td style="width:120px;padding-right:1rem">
+        <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${(r.appearances/maxApp*100).toFixed(0)}%;background:var(--gold);border-radius:3px"></div>
+        </div>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
