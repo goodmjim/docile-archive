@@ -601,12 +601,8 @@ tbody tr.highlight td{background:var(--gold-dim)}
         Home
       </button>
       <button class="sb-item" onclick="switchTab('recap')" data-tab="recap">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
         Weekly Recap
-      </button>
-      <button class="sb-item" onclick="switchTab('projections')" data-tab="projections">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Projections
       </button>
 
       <div class="sb-section-label">My Team</div>
@@ -628,6 +624,10 @@ tbody tr.highlight td{background:var(--gold-dim)}
       </button>
 
       <div class="sb-section-label">League</div>
+      <button class="sb-item" onclick="switchTab('timeline')" data-tab="timeline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Timeline
+      </button>
       <button class="sb-item" onclick="switchTab('standings')" data-tab="standings">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         Standings
@@ -668,6 +668,10 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
         POTG / POTW
       </button>
+      <button class="sb-item" onclick="switchTab('projections')" data-tab="projections">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Projections
+      </button>
 
       <div class="sb-divider"></div>
       <button class="sb-item sb-search" onclick="switchTab('search')" data-tab="search">
@@ -689,15 +693,28 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <div class="app-body">
         <div class="metrics" id="metrics"></div>
 
-    <!-- HOME -->
+    <!-- HOME (Now dashboard) -->
     <div class="panel active" id="panel-home">
-      <div class="sh"><h2>Season Timeline</h2><span class="sh-sub">Docile League · 2014–2025</span></div>
-      <div id="timeline-content"></div>
-      <div class="sh" style="margin-top:2rem"><h2>Automated Insights</h2>
-        <span class="sh-sub">Generated from loaded season data</span>
-        <div class="sh-right"><button onclick="generateInsights()" class="add-btn-sm">↻ Regenerate</button></div>
+      <div class="sh"><h2>Now</h2><span class="sh-sub" id="home-sub">Season at a glance</span></div>
+      <!-- Live matchup hero -->
+      <div id="home-matchup"></div>
+      <!-- Season stats row -->
+      <div id="home-stats" class="home-grid"></div>
+      <!-- Risers + fallers -->
+      <div id="home-risers" class="riser-faller-row"></div>
+      <!-- Automated insights -->
+      <div class="sh" style="margin-top:1.5rem;margin-bottom:0.75rem">
+        <h2 style="font-size:1.1rem">Automated Insights</h2>
+        <span class="sh-sub">Generated from loaded data</span>
+        <div class="sh-right"><button onclick="generateInsights(true)" class="add-btn-sm" style="background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text2);font-size:0.75rem;padding:3px 10px;cursor:pointer">↻ Refresh</button></div>
       </div>
       <div id="insights-grid" class="insights-grid"></div>
+    </div>
+
+    <!-- TIMELINE (League section) -->
+    <div class="panel" id="panel-timeline">
+      <div class="sh"><h2>Season Timeline</h2><span class="sh-sub">Docile League · 2014–2025</span></div>
+      <div id="timeline-content"></div>
     </div>
 
     <!-- STANDINGS -->
@@ -747,15 +764,16 @@ tbody tr.highlight td{background:var(--gold-dim)}
           <option value="all">All positions</option>
           <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
         </select>
-        <select class="f-sel" id="p-sort" onchange="renderPlayers()">
-          <option value="total">Total pts</option>
-          <option value="starts">Starts</option>
-          <option value="avg">Avg pts</option>
-          <option value="best">Best game</option>
-        </select>
       </div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Player</th><th>Pos</th><th>NFL Team</th><th>Total Pts</th><th>Starts</th><th>Avg Pts</th><th>Best Game</th><th>Trend</th></tr></thead>
+        <thead><tr>
+          <th>Player</th><th>Pos</th><th>NFL Team</th>
+          <th class="sortable-th" onclick="sortPlayers('total')" id="pth-total">Total Pts <span class="sort-arrow">↓</span></th>
+          <th class="sortable-th" onclick="sortPlayers('starts')" id="pth-starts">Starts <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortPlayers('avg')" id="pth-avg">Avg Pts <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortPlayers('best')" id="pth-best">Best Game <span class="sort-arrow"></span></th>
+          <th>Trend</th>
+        </tr></thead>
         <tbody id="players-body"></tbody>
       </table></div>
     </div>
@@ -916,17 +934,18 @@ tbody tr.highlight td{background:var(--gold-dim)}
           <option value="all">All positions</option>
           <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
         </select>
-        <select class="f-sel" id="potg-sort-sel" onchange="renderPotg()">
-          <option value="potg">Most POTGs</option>
-          <option value="potw">Most POTWs</option>
-        </select>
       </div>
       <!-- Summary stats row -->
       <div id="potg-metrics" class="metrics" style="margin-bottom:1.5rem"></div>
       <!-- Leaderboard -->
       <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">POTG / POTW Leaderboard</h2></div>
       <div class="tbl-wrap" style="margin-bottom:1.5rem"><table>
-        <thead><tr><th>#</th><th>Player</th><th>Pos</th><th>POTGs</th><th>POTWs</th><th>Best score</th></tr></thead>
+        <thead><tr>
+          <th>#</th><th>Player</th><th>Pos</th>
+          <th class="sortable-th" onclick="sortPotgTable('potg')" id="pgth-potg">POTGs <span class="sort-arrow">↓</span></th>
+          <th class="sortable-th" onclick="sortPotgTable('potw')" id="pgth-potw">POTWs <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortPotgTable('best')" id="pgth-best">Best score <span class="sort-arrow"></span></th>
+        </tr></thead>
         <tbody id="potw-body"></tbody>
       </table></div>
       <!-- Full POTG log -->
@@ -968,9 +987,14 @@ tbody tr.highlight td{background:var(--gold-dim)}
       </div>
     </div>
 
-    <!-- MY TEAM: ALL-TIME LINEUP -->
     <div class="panel" id="panel-mylineup">
-      <div class="sh"><h2>All-Time Lineup</h2><span class="sh-sub" id="mylineup-sub">Best single-season score at each position</span></div>
+      <div class="sh"><h2>All-Time Lineup</h2><span class="sh-sub" id="mylineup-sub">Your best at each position</span></div>
+      <div class="yr-filter-row" style="margin-bottom:1rem" id="lineup-mode-chips">
+        <button class="yr-chip active" onclick="setLineupMode('games',this)">Most games played</button>
+        <button class="yr-chip" onclick="setLineupMode('total',this)">All-time points</button>
+        <button class="yr-chip" onclick="setLineupMode('season',this)">Best season</button>
+        <button class="yr-chip" onclick="setLineupMode('singlegame',this)">Best single game</button>
+      </div>
       <div id="mylineup-content"></div>
     </div>
 
@@ -983,20 +1007,19 @@ tbody tr.highlight td{background:var(--gold-dim)}
           <option value="all">All positions</option>
           <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
         </select>
-        <select class="f-sel" id="mys-sort" onchange="renderMyScoring()">
-          <option value="total">Total pts</option>
-          <option value="starts">Starts</option>
-          <option value="avg">Avg pts</option>
-          <option value="best">Best game</option>
-        </select>
       </div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Player</th><th>Pos</th><th>Total Pts</th><th>Starts</th><th>Avg</th><th>Best</th></tr></thead>
+        <thead><tr>
+          <th>Player</th><th>Pos</th>
+          <th class="sortable-th" onclick="sortMyScoring('total')" id="msth-total">Total Pts <span class="sort-arrow">↓</span></th>
+          <th class="sortable-th" onclick="sortMyScoring('starts')" id="msth-starts">Starts <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortMyScoring('avg')" id="msth-avg">Avg <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortMyScoring('best')" id="msth-best">Best <span class="sort-arrow"></span></th>
+        </tr></thead>
         <tbody id="myscoring-body"></tbody>
       </table></div>
     </div>
 
-    <!-- MY TEAM: MY H2H -->
     <div class="panel" id="panel-myh2h">
       <div class="sh"><h2>My Head-to-Head</h2><span class="sh-sub">Your record against every manager</span></div>
       <div id="myh2h-content"></div>
@@ -1510,6 +1533,50 @@ let activeYrs = new Set(), activeTeams = new Set();
 let standingsSort = {col:'wins', dir:-1};
 let playoffsSort = {col:'wl', dir:-1};
 let probowlSort  = {col:'count', dir:-1};
+let myScoringSort = {col:'total', dir:-1};
+let playerScoringSort = {col:'total', dir:-1};
+let potgSort = {col:'potg', dir:-1};
+
+function sortMyScoring(col){
+  myScoringSort=myScoringSort.col===col?{col,dir:myScoringSort.dir*-1}:{col,dir:-1};
+  ['total','starts','avg','best'].forEach(c=>{
+    const th=document.getElementById('msth-'+c);if(!th)return;
+    th.classList.toggle('active-sort',c===col);
+    th.querySelector('.sort-arrow').textContent=c===col?(myScoringSort.dir===-1?'↓':'↑'):'';
+  });
+  renderMyScoring();
+}
+
+function sortPlayers(col){
+  playerScoringSort=playerScoringSort.col===col?{col,dir:playerScoringSort.dir*-1}:{col,dir:-1};
+  ['total','starts','avg','best'].forEach(c=>{
+    const th=document.getElementById('pth-'+c);if(!th)return;
+    th.classList.toggle('active-sort',c===col);
+    th.querySelector('.sort-arrow').textContent=c===col?(playerScoringSort.dir===-1?'↓':'↑'):'';
+  });
+  renderPlayers();
+}
+
+function sortPotgTable(col){
+  potgSort=potgSort.col===col?{col,dir:potgSort.dir*-1}:{col,dir:-1};
+  ['potg','potw','best'].forEach(c=>{
+    const th=document.getElementById('pgth-'+c);if(!th)return;
+    th.classList.toggle('active-sort',c===col);
+    th.querySelector('.sort-arrow').textContent=c===col?(potgSort.dir===-1?'↓':'↑'):'';
+  });
+  renderPotg();
+}
+
+function sortMyH2H(col){
+  myH2HSort=myH2HSort.col===col?{col,dir:myH2HSort.dir*-1}:{col,dir:-1};
+  ['w','l','pct','myavg','oppavg'].forEach(c=>{
+    const th=document.getElementById('mhth-'+c);if(!th)return;
+    th.classList.toggle('active-sort',c===col);
+    th.querySelector('.sort-arrow').textContent=c===col?(myH2HSort.dir===-1?'↓':'↑'):'';
+  });
+  renderMyH2H();
+}
+let myH2HSort={col:'w',dir:-1};
 
 function sortStandings(col){
   if(standingsSort.col===col){standingsSort.dir*=-1;}
@@ -2033,7 +2100,7 @@ function getSeasons(){
   return v==='all'?DB.seasons:DB.seasons.filter(s=>s.year==v);
 }
 function onSeasonChange(){renderAll();}
-function renderAll(){renderMetrics();renderStandings();renderMatchups();renderPlayers();renderH2H();renderPlayoffs();renderTrades();renderAwards();renderDocile();renderProbowl();renderHof();renderTimeline();generateInsights();}
+function renderAll(){renderMetrics();renderHome();renderStandings();renderMatchups();renderPlayers();renderH2H();renderPlayoffs();renderTrades();renderAwards();renderDocile();renderProbowl();renderHof();generateInsights();}
 
 function syncAllYrBtn(){
   const years=DB.seasons.map(s=>s.year);
@@ -2080,70 +2147,65 @@ function renderMetrics(){
   const seasonV=document.getElementById('s-sel').value;
   const isAllTime=seasonV==='all';
 
-  // My record + PF from loaded Sleeper seasons
-  let wins=0,losses=0,pf=0,pa=0,totalGames=0;
+  let wins=0,losses=0,pf=0,pa=0;
   seasons.forEach(s=>{
     const me=s.teams.find(t=>t.isMe);
     if(me){wins+=me.wins;losses+=me.losses;pf+=me.pf;pa+=me.pa;}
-    totalGames+=s.teams.reduce((a,t)=>a+t.wins+t.losses,0)/2;
   });
   const ppg=wins+losses>0?(pf/(wins+losses)).toFixed(1):0;
   const papg=wins+losses>0?(pa/(wins+losses)).toFixed(1):0;
-
-  // Starters filtered by season selection
-  const seasonStarters=isAllTime
-    ? DB.allStarters
-    : DB.allStarters.filter(s=>s.year==seasonV);
-  const mySeasonStarters=isAllTime
-    ? DB.myStarters
-    : DB.myStarters.filter(s=>s.year==seasonV);
-
-  // League totals
-  const leagueStarts=seasonStarters.length;
-  const leagueUnique=new Set(seasonStarters.map(s=>s.pid)).size;
-
-  // My totals
-  const myStarts=mySeasonStarters.length;
-  const myUnique=new Set(mySeasonStarters.map(s=>s.pid)).size;
-
-  // Championships count
-  const totalChamps=Object.values(CHAMPIONS).length;
-
-  // My display name — find manager key matching logged-in user
   const myManagerKey=sleeperToManagerKey(DB.username)||DB.myTeamName||DB.username||'You';
-
-  // Subtext label
   const scopeLabel=isAllTime?'all-time':'this season';
 
-  document.getElementById('metrics').innerHTML=`
+  const seasonStarters=isAllTime?DB.allStarters:DB.allStarters.filter(s=>s.year==seasonV);
+  const mySeasonStarters=isAllTime?DB.myStarters:DB.myStarters.filter(s=>s.year==seasonV);
+  const leagueStarts=seasonStarters.length;
+  const leagueUnique=new Set(seasonStarters.map(s=>s.pid)).size;
+  const myStarts=mySeasonStarters.length;
+  const myUnique=new Set(mySeasonStarters.map(s=>s.pid)).size;
+  const totalChamps=Object.values(CHAMPIONS).length;
+
+  // Always-visible metrics
+  const always=`
     <div class="metric gold">
       <div class="ml">Manager</div>
-      <div class="mv" style="font-size:1.4rem;letter-spacing:0.02em;font-weight:700;line-height:1.1;padding-top:2px">${myManagerKey}</div>
+      <div class="mv" style="font-size:1.3rem;line-height:1.1;padding-top:3px">${myManagerKey}</div>
       <div class="ms">The Archive</div>
     </div>
     <div class="metric gold">
       <div class="ml">My record</div>
       <div class="mv">${wins}–${losses}</div>
       <div class="ms">${wins+losses>0?((wins/(wins+losses))*100).toFixed(0)+'% win rate':''}</div>
-    </div>
+    </div>`;
+
+  // My Team context
+  const myTeamMetrics=`
     <div class="metric">
       <div class="ml">My points for</div>
-      <div class="mv">${pf.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+      <div class="mv">${pf.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
       <div class="ms">${ppg} PPG</div>
     </div>
     <div class="metric">
       <div class="ml">My points against</div>
-      <div class="mv">${pa.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+      <div class="mv">${pa.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
       <div class="ms">${papg} PPG against</div>
     </div>
+    <div class="metric teal">
+      <div class="ml">My starts</div>
+      <div class="mv">${myStarts.toLocaleString()}</div>
+      <div class="ms">${scopeLabel}</div>
+    </div>
+    <div class="metric teal">
+      <div class="ml">My players used</div>
+      <div class="mv">${myUnique.toLocaleString()}</div>
+      <div class="ms">unique · ${scopeLabel}</div>
+    </div>`;
+
+  // League context
+  const leagueMetrics=`
     <div class="metric">
       <div class="ml">League starts</div>
       <div class="mv">${leagueStarts.toLocaleString()}</div>
-      <div class="ms">${scopeLabel}</div>
-    </div>
-    <div class="metric">
-      <div class="ml">My starts</div>
-      <div class="mv">${myStarts.toLocaleString()}</div>
       <div class="ms">${scopeLabel}</div>
     </div>
     <div class="metric teal">
@@ -2151,20 +2213,131 @@ function renderMetrics(){
       <div class="mv">${leagueUnique.toLocaleString()}</div>
       <div class="ms">unique · ${scopeLabel}</div>
     </div>
-    <div class="metric teal">
-      <div class="ml">My players used</div>
-      <div class="mv">${myUnique.toLocaleString()}</div>
-      <div class="ms">unique · ${scopeLabel}</div>
-    </div>
     <div class="metric gold">
       <div class="ml">Championships</div>
       <div class="mv">${totalChamps}</div>
       <div class="ms">seasons of glory</div>
     </div>`;
+
+  // Determine context from active tab
+  const isMyTeam=['mylineup','myscoring','myh2h','mytrades'].includes(activeTab);
+  const isLeague=['timeline','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','potg','projections'].includes(activeTab);
+
+  let extra='';
+  if(isMyTeam)extra=myTeamMetrics;
+  else if(isLeague)extra=leagueMetrics;
+
+  document.getElementById('metrics').innerHTML=always+extra;
+}
+
+let activeTab='home';
+
+// ══════════════════════════════════════════════════════════════
+// RENDER: HOME (Now dashboard)
+// ══════════════════════════════════════════════════════════════
+function renderHome(){
+  // Season sub label
+  const years=DB.seasons.map(s=>s.year).sort((a,b)=>b-a);
+  const latestYear=years[0]||'';
+  const sub=document.getElementById('home-sub');
+  if(sub)sub.textContent=`${latestYear} season · ${DB.seasons.length} seasons loaded`;
+
+  // My season stats (latest loaded season)
+  const latestSeason=DB.seasons.find(s=>s.year===latestYear);
+  const me=latestSeason?.teams.find(t=>t.isMe);
+
+  // Current week matchup
+  const matchupEl=document.getElementById('home-matchup');
+  if(matchupEl&&latestSeason){
+    const weeks=Object.keys(latestSeason.matchupsByWeek).map(Number).sort((a,b)=>b-a);
+    const latestWk=weeks[0];
+    const mus=latestSeason.matchupsByWeek[latestWk]||[];
+    const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+    let myMatchup=null;
+    Object.values(byId).forEach(pair=>{
+      if(pair.some(m=>m.roster_id===latestSeason.myRosterId))myMatchup=pair;
+    });
+    if(myMatchup&&myMatchup.length>=2){
+      const[a,b]=myMatchup;
+      const isMyA=a.roster_id===latestSeason.myRosterId;
+      const myM=isMyA?a:b,oppM=isMyA?b:a;
+      const myT=latestSeason.teams.find(t=>t.rosterId===myM.roster_id);
+      const oppT=latestSeason.teams.find(t=>t.rosterId===oppM.roster_id);
+      const myPts=myM.points||0,oppPts=oppM.points||0;
+      const winning=myPts>=oppPts;
+      const h2h=getH2HRecord(myT?.managerKey||'',oppT?.managerKey||'');
+      const myW=winning?h2h.w1:h2h.w2,oppW=winning?h2h.w2:h2h.w1;
+      matchupEl.innerHTML=`<div class="home-hero ${winning?'winning':'losing'}">
+        <div class="hero-label">Week ${latestWk} · ${latestYear} · Your matchup</div>
+        <div class="hero-score">${myT?.managerKey||'You'} <span style="font-size:1.4rem;color:var(--text3)">vs</span> ${oppT?.managerKey||'Opp'}</div>
+        <div style="font-family:var(--font-display);font-size:1.6rem;letter-spacing:0.04em;margin:4px 0">
+          <span style="color:${winning?'var(--teal)':'var(--crimson)'}">${myPts.toFixed(2)}</span>
+          <span style="font-size:1rem;color:var(--text3);margin:0 6px">–</span>
+          <span>${oppPts.toFixed(2)}</span>
+        </div>
+        <div class="hero-outcome ${winning?'win':'loss'}">${winning?'Winning':'Losing'} by ${Math.abs(myPts-oppPts).toFixed(2)} pts · ${myT?.managerKey||'You'} leads H2H ${myW}–${oppW}</div>
+      </div>`;
+    } else {
+      matchupEl.innerHTML=`<div class="home-hero"><div class="hero-label">Week ${latestWk} · ${latestYear}</div><div style="color:var(--text3);font-size:0.85rem">No matchup data for this week yet.</div></div>`;
+    }
+  }
+
+  // Season stats cards
+  const statsEl=document.getElementById('home-stats');
+  if(statsEl&&me){
+    const allW=Object.values(CHAMPIONS).filter(m=>m===sleeperToManagerKey(DB.username)).length;
+    const allTeams=[...latestSeason.teams].sort((a,b)=>b.wins-a.wins||b.pf-a.pf);
+    const myRank=allTeams.findIndex(t=>t.isMe)+1;
+    const leader=allTeams[0];
+    // POTW this season
+    const potgData=computePotgData('all').filter(e=>e.year===latestYear);
+    const potwEntry=potgData.filter(e=>e.type==='POTW').sort((a,b)=>b.week-a.week)[0];
+    const potwName=potwEntry?getPlayerName(potwEntry.pid):'—';
+    statsEl.innerHTML=`
+      <div class="home-card"><div class="hc-label">Your season</div><div class="hc-val">${me.wins}–${me.losses}</div><div class="hc-sub">#${myRank} · ${me.pf.toFixed(0)} PF</div></div>
+      <div class="home-card"><div class="hc-label">League leader</div><div class="hc-val">${leader?.managerKey||leader?.name||'—'}</div><div class="hc-sub">${leader?.wins}–${leader?.losses} · ${leader?.pf.toFixed(0)} PF</div></div>
+      <div class="home-card"><div class="hc-label">Recent POTW</div><div class="hc-val" style="font-size:1rem;padding-top:4px">${potwName}</div><div class="hc-sub">${potwEntry?potwEntry.pts.toFixed(1)+' pts · Wk '+potwEntry.week:''}</div></div>
+      <div class="home-card"><div class="hc-label">Championships</div><div class="hc-val">${allW}</div><div class="hc-sub">${allW>0?Object.entries(CHAMPIONS).filter(([,m])=>m===sleeperToManagerKey(DB.username)).map(([y])=>y).join(', '):'—'}</div></div>`;
+  }
+
+  // Risers + fallers (rank movement from previous week)
+  const risersEl=document.getElementById('home-risers');
+  if(risersEl&&latestSeason){
+    const weeks=Object.keys(latestSeason.matchupsByWeek).map(Number).sort((a,b)=>a-b);
+    if(weeks.length>=2){
+      const curWk=weeks[weeks.length-1],prevWk=weeks[weeks.length-2];
+      // Player rank this week vs last week in this season
+      const weekStarters=DB.allStarters.filter(s=>s.year===latestYear);
+      const rankAtWeek=(wk)=>{
+        const agg={};
+        weekStarters.filter(s=>s.week<=wk).forEach(s=>{
+          if(!agg[s.pid])agg[s.pid]=0;agg[s.pid]+=(s.points||0);
+        });
+        return Object.entries(agg).sort((a,b)=>b[1]-a[1]).map(([pid],i)=>({pid,rank:i+1}));
+      };
+      const cur=rankAtWeek(curWk),prev=rankAtWeek(prevWk);
+      const prevMap={};prev.forEach(r=>prevMap[r.pid]=r.rank);
+      const deltas=cur.map(r=>({pid:r.pid,curRank:r.rank,prevRank:prevMap[r.pid]||r.rank,delta:(prevMap[r.pid]||r.rank)-r.rank}))
+        .filter(r=>r.prevRank&&r.curRank<=60);
+      const risers=deltas.filter(r=>r.delta>0).sort((a,b)=>b.delta-a.delta).slice(0,4);
+      const fallers=deltas.filter(r=>r.delta<0).sort((a,b)=>a.delta-b.delta).slice(0,4);
+      risersEl.innerHTML=`
+        <div class="riser-card">
+          <div class="rf-label">↑ Risers — Week ${curWk}</div>
+          ${risers.map(r=>`<div class="rf-item"><span>${getPlayerName(r.pid)}</span><span class="rf-delta">+${r.delta}</span></div>`).join('')||'<div style="font-size:0.78rem;color:var(--text3)">Insufficient data</div>'}
+        </div>
+        <div class="faller-card">
+          <div class="rf-label">↓ Fallers — Week ${curWk}</div>
+          ${fallers.map(r=>`<div class="rf-item"><span>${getPlayerName(r.pid)}</span><span class="rf-delta">${r.delta}</span></div>`).join('')||'<div style="font-size:0.78rem;color:var(--text3)">Insufficient data</div>'}
+        </div>`;
+    } else {
+      risersEl.innerHTML='';
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
-// RENDER: HOME TIMELINE
+// RENDER: SEASON TIMELINE
 // ══════════════════════════════════════════════════════════════
 function renderTimeline(){
   const el=document.getElementById('timeline-content');
@@ -2297,9 +2470,6 @@ function renderMatchups(){
 // RENDER: PLAYER LINEUPS
 // ══════════════════════════════════════════════════════════════
 function buildWeeklyRanks(starters, sortBy){
-  // Build per-week rank snapshots so we can compute movement
-  // Groups starters by week+year, aggregates cumulative stats up to that week,
-  // ranks them, returns map of pid -> rank for the most recent week and the one before
   const byYearWeek={};
   starters.forEach(s=>{
     const key=`${s.year}|${s.week}`;
@@ -2308,8 +2478,6 @@ function buildWeeklyRanks(starters, sortBy){
   });
   const sorted=Object.values(byYearWeek).sort((a,b)=>a.year-b.year||a.week-b.week);
   if(sorted.length<2)return{current:null,prev:null};
-
-  // Cumulative totals up through each week
   const cumulative={};
   const snapshots=[];
   sorted.forEach(({year,week,entries})=>{
@@ -2317,7 +2485,6 @@ function buildWeeklyRanks(starters, sortBy){
       if(!cumulative[s.pid])cumulative[s.pid]={pts:0,starts:0};
       cumulative[s.pid].pts+=(s.points||0);cumulative[s.pid].starts++;
     });
-    // Take a snapshot of rankings at this week
     const ranked=Object.entries(cumulative)
       .map(([pid,d])=>({pid,val:sortBy==='starts'?d.starts:sortBy==='avg'?d.pts/d.starts:d.pts}))
       .sort((a,b)=>b.val-a.val);
@@ -2331,7 +2498,8 @@ function buildWeeklyRanks(starters, sortBy){
 function renderPlayers(){
   const search=(document.getElementById('p-search').value||'').toLowerCase();
   const posF=document.getElementById('p-pos').value;
-  const sortBy=document.getElementById('p-sort').value;
+  const sortBy=playerScoringSort.col;
+  const dir=playerScoringSort.dir;
   let starters=DB.allStarters.filter(s=>activeYrs.has(s.year)&&activeTeams.has(s.managerKey));
   const agg={};
   starters.forEach(s=>{
@@ -2348,7 +2516,7 @@ function renderPlayers(){
   });
   if(search)rows=rows.filter(r=>r.name.toLowerCase().includes(search)||r.pos.toLowerCase().includes(search)||r.nflTeam.toLowerCase().includes(search));
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
-  const sf={total:(a,b)=>b.total-a.total,starts:(a,b)=>b.starts-a.starts,avg:(a,b)=>b.avg-a.avg,best:(a,b)=>b.best-a.best};
+  const sf={total:(a,b)=>(b.total-a.total)*dir,starts:(a,b)=>(b.starts-a.starts)*dir,avg:(a,b)=>(b.avg-a.avg)*dir,best:(a,b)=>(b.best-a.best)*dir};
   rows.sort(sf[sortBy]||sf.total);
 
   // Compute week-over-week rank movement
@@ -2999,18 +3167,18 @@ function renderHof(){
 // ══════════════════════════════════════════════════════════════
 const TABS=['home','standings','matchups','players','h2h','playoffs','trades','awards',
   'probowl','hof','projections','potg','recap','search',
-  'mylineup','myscoring','myh2h','mytrades'];
+  'mylineup','myscoring','myh2h','mytrades','timeline'];
 
 const SECTIONS={
-  now:['home','recap','projections'],
+  now:['home','recap'],
   myteam:['mylineup','myscoring','myh2h','mytrades'],
-  league:['standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','potg'],
+  league:['timeline','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','potg','projections'],
   search:['search']
 };
 const SECTION_LABELS={
-  now:['Home','Weekly Recap','Projections'],
+  now:['Home','Weekly Recap'],
   myteam:['All-Time Lineup','My Scoring','My H2H','My Trades'],
-  league:['Standings','Matchups','Player Scoring','Head-to-Head','Playoffs','Trades','Awards','Pro Bowl','Hall of Fame','POTG/POTW'],
+  league:['Timeline','Standings','Matchups','Player Scoring','Head-to-Head','Playoffs','Trades','Awards','Pro Bowl','Hall of Fame','POTG/POTW','Projections'],
   search:['Smart Search']
 };
 
@@ -3033,15 +3201,13 @@ function setSection(section){
 }
 
 function switchTab(name){
+  activeTab=name;
   TABS.forEach(t=>{
     const p=document.getElementById('panel-'+t);
     if(p)p.classList.toggle('active',t===name);
   });
-  // Update sidebar active state
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-  // Update mobile pill active state
   document.querySelectorAll('.sub-pill').forEach(b=>b.classList.toggle('active',b.dataset.subtab===name));
-  // Update mobile section if needed
   const section=Object.entries(SECTIONS).find(([,tabs])=>tabs.includes(name))?.[0];
   if(section&&section!==activeSection){
     activeSection=section;
@@ -3054,6 +3220,8 @@ function switchTab(name){
       document.querySelectorAll('.sub-pill').forEach(b=>b.classList.toggle('active',b.dataset.subtab===name));
     }
   }
+  // Refresh metrics for context
+  if(DB.seasons.length)renderMetrics();
   // Lazy render
   if(name==='search')initSearch();
   if(name==='projections')renderProjections();
@@ -3063,6 +3231,7 @@ function switchTab(name){
   if(name==='myscoring')renderMyScoring();
   if(name==='myh2h')renderMyH2H();
   if(name==='mytrades')renderMyTrades();
+  if(name==='timeline')renderTimeline();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3293,7 +3462,7 @@ function buildLeagueContext(){
 // ══════════════════════════════════════════════════════════════
 // AUTOMATED INSIGHTS
 // ══════════════════════════════════════════════════════════════
-function generateInsights(){
+function generateInsights(force=false){
   const el=document.getElementById('insights-grid');
   if(!el)return;
   if(!DB.seasons.length){el.innerHTML='<div class="empty">Load seasons to generate insights.</div>';return;}
@@ -3713,7 +3882,8 @@ function syncPotgAllBtn(){
 function renderPotg(){
   initPotgChips();
   const posF=document.getElementById('potg-pos-sel')?.value||'all';
-  const sortF=document.getElementById('potg-sort-sel')?.value||'potg';
+  const sortF=potgSort.col;
+  const dir=potgSort.dir;
 
   // Filter log to selected seasons
   const allLog=computePotgData('all');
@@ -3740,8 +3910,9 @@ function renderPotg(){
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
 
   // Sort — "Most POTGs" = total appearances (POTG+POTW); "Most POTWs" = POTW count then POTG
-  if(sortF==='potg') rows.sort((a,b)=>b.potg-a.potg||b.potw-a.potw||b.best-a.best);
-  else               rows.sort((a,b)=>b.potw-a.potw||b.potg-a.potg||b.best-a.best);
+  if(sortF==='potg') rows.sort((a,b)=>(b.potg-a.potg)*dir||(b.potw-a.potw)||b.best-a.best);
+  else if(sortF==='potw') rows.sort((a,b)=>(b.potw-a.potw)*dir||(b.potg-a.potg)||b.best-a.best);
+  else rows.sort((a,b)=>(b.best-a.best)*dir);
 
   // Metrics
   const totalPotg=log.length;
@@ -4261,34 +4432,34 @@ function copyRecap(){
 // ══════════════════════════════════════════════════════════════
 // MY TEAM: ALL-TIME LINEUP
 // ══════════════════════════════════════════════════════════════
+let lineupMode='games';
+function setLineupMode(mode,btn){
+  lineupMode=mode;
+  document.querySelectorAll('#lineup-mode-chips .yr-chip').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderMyLineup();
+}
+
 function renderMyLineup(){
   const el=document.getElementById('mylineup-content');
   const sub=document.getElementById('mylineup-sub');
   if(!DB.myStarters.length){
-    el.innerHTML='<div class="empty">Load your league data to see your all-time lineup.</div>';
-    return;
+    el.innerHTML='<div class="empty">Load your league data to see your all-time lineup.</div>';return;
   }
   const myKey=sleeperToManagerKey(DB.username)||DB.username;
-  if(sub)sub.textContent=`Best single-season score at each slot · ${myKey}`;
 
-  // Group my starters by position and find best score + player per slot
-  const SLOTS=[
-    {pos:'QB',label:'QB'},
-    {pos:'RB',label:'RB',count:2},
-    {pos:'WR',label:'WR',count:2},
-    {pos:'TE',label:'TE'},
-    {pos:'FLEX',label:'FLEX',count:2},  // best non-QB/K/DEF not already used
-    {pos:'SF',label:'SF'},              // SuperFlex — best QB not already used
-    {pos:'K',label:'K'},
-    {pos:'DEF',label:'DEF'},
-  ];
+  const modeLabels={games:'Most games played',total:'All-time points',season:'Best single season',singlegame:'Best single game'};
+  if(sub)sub.textContent=`${modeLabels[lineupMode]} at each position · ${myKey}`;
 
-  // Aggregate my starters by pid — best single game per player
+  // Build player data per pid from my starters
   const byPid={};
   DB.myStarters.forEach(s=>{
-    if(!byPid[s.pid])byPid[s.pid]={pid:s.pid,pts:0,starts:0,best:0,bestYr:0};
-    byPid[s.pid].pts+=(s.points||0);byPid[s.pid].starts++;
+    if(!byPid[s.pid])byPid[s.pid]={pid:s.pid,starts:0,total:0,best:0,bestYr:0,byYear:{}};
+    byPid[s.pid].starts++;
+    byPid[s.pid].total+=(s.points||0);
     if((s.points||0)>byPid[s.pid].best){byPid[s.pid].best=s.points||0;byPid[s.pid].bestYr=s.year;}
+    if(!byPid[s.pid].byYear[s.year])byPid[s.pid].byYear[s.year]=0;
+    byPid[s.pid].byYear[s.year]+=(s.points||0);
   });
 
   const posMap={QB:[],RB:[],WR:[],TE:[],K:[],DEF:[]};
@@ -4296,57 +4467,65 @@ function renderMyLineup(){
     const m=DB.playerMeta[p.pid];
     const pos=m?.fantasy_positions?.[0]||m?.position||'?';
     const name=m?`${m.first_name} ${m.last_name}`:'PID:'+p.pid;
-    if(posMap[pos])posMap[pos].push({...p,name,pos});
+    // Best season total
+    const bestSeasonVal=Math.max(...Object.values(p.byYear));
+    const bestSeasonYr=Object.entries(p.byYear).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+    if(posMap[pos])posMap[pos].push({...p,name,pos,bestSeasonVal,bestSeasonYr});
   });
-  Object.values(posMap).forEach(arr=>arr.sort((a,b)=>b.best-a.best));
+
+  // Sort each position by the active mode
+  const sortFn={
+    games:(a,b)=>b.starts-a.starts,
+    total:(a,b)=>b.total-a.total,
+    season:(a,b)=>b.bestSeasonVal-a.bestSeasonVal,
+    singlegame:(a,b)=>b.best-a.best
+  }[lineupMode]||((a,b)=>b.starts-a.starts);
+
+  Object.values(posMap).forEach(arr=>arr.sort(sortFn));
 
   const used=new Set();
-  const lineup=[];
-
   const pick=(positions,label)=>{
     for(const pos of positions){
-      const arr=posMap[pos]||[];
-      for(const p of arr){
+      for(const p of (posMap[pos]||[])){
         if(!used.has(p.pid)){used.add(p.pid);return{...p,slotLabel:label};break;}
       }
     }
     return null;
   };
 
-  // QB
-  const qb=pick(['QB'],'QB');if(qb)lineup.push(qb);
-  // RB x2
+  const lineup=[];
+  lineup.push(pick(['QB'],'QB'));
   lineup.push(pick(['RB'],'RB'));lineup.push(pick(['RB'],'RB'));
-  // WR x2
   lineup.push(pick(['WR'],'WR'));lineup.push(pick(['WR'],'WR'));
-  // TE
   lineup.push(pick(['TE'],'TE'));
-  // FLEX x2 — best remaining RB/WR/TE
   lineup.push(pick(['RB','WR','TE'],'FLEX'));
   lineup.push(pick(['RB','WR','TE'],'FLEX'));
-  // SuperFlex — best remaining QB or skill
   lineup.push(pick(['QB','RB','WR','TE'],'SF'));
-  // K
   lineup.push(pick(['K'],'K'));
-  // DEF
   lineup.push(pick(['DEF','DST'],'DEF'));
 
   const filtered=lineup.filter(Boolean);
+
+  const getVal=(p)=>{
+    if(lineupMode==='games')return{val:p.starts,label:`${p.starts} starts`};
+    if(lineupMode==='total')return{val:p.total,label:`${p.total.toFixed(1)} pts total`};
+    if(lineupMode==='season')return{val:p.bestSeasonVal,label:`${p.bestSeasonVal.toFixed(1)} pts · ${p.bestSeasonYr}`};
+    if(lineupMode==='singlegame')return{val:p.best,label:`${p.best.toFixed(1)} pts · ${p.bestYr}`};
+    return{val:0,label:'—'};
+  };
+
   el.innerHTML=`<div class="lineup-card" style="max-width:520px">
-    <div class="lineup-hdr">${myKey} · All-Time Best</div>
-    ${filtered.map(p=>`
-      <div class="lineup-row">
+    <div class="lineup-hdr">${myKey} · ${modeLabels[lineupMode]}</div>
+    ${filtered.map(p=>{
+      const{label}=getVal(p);
+      return`<div class="lineup-row">
         <div class="lineup-pos">${p.slotLabel}</div>
         <div class="lineup-name player-link" onclick="openPlayerModal('${p.pid}')">${p.name}</div>
-        <div style="display:flex;align-items:baseline;gap:4px">
-          <div class="lineup-pts">${p.best.toFixed(1)}</div>
-          <div class="lineup-yr">${p.bestYr}</div>
+        <div style="display:flex;align-items:baseline;gap:4px;text-align:right">
+          <div class="lineup-pts" style="font-size:0.85rem">${label}</div>
         </div>
-      </div>`).join('')}
-  </div>
-  <div style="font-size:0.75rem;color:var(--text3);margin-top:0.75rem">
-    Best single-game score at each slot across all loaded seasons.
-    FLEX = best available RB/WR/TE · SF = best available QB or skill.
+      </div>`;
+    }).join('')}
   </div>`;
 }
 
@@ -4356,7 +4535,8 @@ function renderMyLineup(){
 function renderMyScoring(){
   const search=(document.getElementById('mys-search')?.value||'').toLowerCase();
   const posF=document.getElementById('mys-pos')?.value||'all';
-  const sortBy=document.getElementById('mys-sort')?.value||'total';
+  const sortBy=myScoringSort.col;
+  const dir=myScoringSort.dir;
   const starters=DB.myStarters;
   const agg={};
   starters.forEach(s=>{
@@ -4371,7 +4551,7 @@ function renderMyScoring(){
   });
   if(search)rows=rows.filter(r=>r.name.toLowerCase().includes(search));
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
-  const sf={total:(a,b)=>b.total-a.total,starts:(a,b)=>b.starts-a.starts,avg:(a,b)=>b.avg-a.avg,best:(a,b)=>b.best-a.best};
+  const sf={total:(a,b)=>(b.total-a.total)*dir,starts:(a,b)=>(b.starts-a.starts)*dir,avg:(a,b)=>(b.avg-a.avg)*dir,best:(a,b)=>(b.best-a.best)*dir};
   rows.sort(sf[sortBy]||sf.total);
   const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
   const body=document.getElementById('myscoring-body');
@@ -4419,9 +4599,32 @@ function renderMyH2H(){
     return{opp,w,l,games};
   }).filter(r=>r.w+r.l>0).sort((a,b)=>b.w+b.l-a.w-a.l);
 
+  const dir=myH2HSort.dir;
+  const col=myH2HSort.col;
+  const sorted=records.sort((a,b)=>{
+    const g1=a.w+a.l,g2=b.w+b.l;
+    const pct1=g1?a.w/g1:0,pct2=g2?b.w/g2:0;
+    const myAvg1=a.games.reduce((s,g)=>s+g.myPts,0)/(g1||1);
+    const myAvg2=b.games.reduce((s,g)=>s+g.myPts,0)/(g2||1);
+    const oppAvg1=a.games.reduce((s,g)=>s+g.oppPts,0)/(g1||1);
+    const oppAvg2=b.games.reduce((s,g)=>s+g.oppPts,0)/(g2||1);
+    if(col==='w')return(b.w-a.w)*dir;
+    if(col==='l')return(b.l-a.l)*dir;
+    if(col==='pct')return(pct2-pct1)*dir;
+    if(col==='myavg')return(myAvg2-myAvg1)*dir;
+    if(col==='oppavg')return(oppAvg2-oppAvg1)*dir;
+    return(b.w-a.w)*dir;
+  });
   el.innerHTML=`<div class="tbl-wrap"><table>
-    <thead><tr><th>Opponent</th><th>W</th><th>L</th><th>Win %</th><th>Avg scored</th><th>Avg allowed</th></tr></thead>
-    <tbody>${records.map(r=>{
+    <thead><tr>
+      <th>Opponent</th>
+      <th class="sortable-th" onclick="sortMyH2H('w')" id="mhth-w">W <span class="sort-arrow">↓</span></th>
+      <th class="sortable-th" onclick="sortMyH2H('l')" id="mhth-l">L <span class="sort-arrow"></span></th>
+      <th class="sortable-th" onclick="sortMyH2H('pct')" id="mhth-pct">Win % <span class="sort-arrow"></span></th>
+      <th class="sortable-th" onclick="sortMyH2H('myavg')" id="mhth-myavg">Avg scored <span class="sort-arrow"></span></th>
+      <th class="sortable-th" onclick="sortMyH2H('oppavg')" id="mhth-oppavg">Avg allowed <span class="sort-arrow"></span></th>
+    </tr></thead>
+    <tbody>${sorted.map(r=>{
       const g=r.w+r.l;
       const myAvg=r.games.reduce((a,b)=>a+b.myPts,0)/g;
       const oppAvg=r.games.reduce((a,b)=>a+b.oppPts,0)/g;
