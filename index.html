@@ -510,6 +510,12 @@ tbody tr.highlight td{background:var(--gold-dim)}
   border-radius:5px;padding:3px 8px;font-size:0.68rem;color:var(--text2);white-space:nowrap;
   opacity:0;pointer-events:none;transition:opacity 0.15s;font-family:var(--font-body);font-weight:400}
 .player-link:hover::after{opacity:1}
+/* Mobile: show a subtle tap indicator since hover doesn't work on touch */
+@media(hover:none){
+  .player-link{display:inline-flex;align-items:center;gap:3px}
+  .player-link::before{content:'↗';font-size:0.6rem;color:var(--gold);opacity:0.6;flex-shrink:0;order:2}
+  .player-link::after{display:none}
+}
 .recap-card{background:var(--surface);border:1px solid var(--gold-border);border-radius:var(--radius-lg);overflow:hidden}
 .recap-hdr{background:linear-gradient(135deg,#1a1808,#0d0d0f);padding:1.25rem 1.5rem;border-bottom:1px solid var(--gold-border)}
 .recap-title{font-family:var(--font-display);font-size:1.5rem;letter-spacing:0.06em;color:var(--gold);text-transform:uppercase}
@@ -2401,7 +2407,8 @@ function renderStandings(){
     else if(col==='pa'){av=a.pa;bv=b.pa;}
     else if(col==='titles'){av=a.titles;bv=b.titles;}
     else{av=a.wins;bv=b.wins;}
-    return dir*(bv-av)||(b.pf-a.pf); // secondary: pf
+    // (a-b)*dir: dir=-1 → descending (highest first), dir=1 → ascending
+    return (av-bv)*dir||(b.pf-a.pf);
   });
   const body=document.getElementById('standings-body');
   if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty">No data loaded.</td></tr>';return;}
@@ -2516,7 +2523,7 @@ function renderPlayers(){
   });
   if(search)rows=rows.filter(r=>r.name.toLowerCase().includes(search)||r.pos.toLowerCase().includes(search)||r.nflTeam.toLowerCase().includes(search));
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
-  const sf={total:(a,b)=>(b.total-a.total)*dir,starts:(a,b)=>(b.starts-a.starts)*dir,avg:(a,b)=>(b.avg-a.avg)*dir,best:(a,b)=>(b.best-a.best)*dir};
+  const sf={total:(a,b)=>(a.total-b.total)*dir,starts:(a,b)=>(a.starts-b.starts)*dir,avg:(a,b)=>(a.avg-b.avg)*dir,best:(a,b)=>(a.best-b.best)*dir};
   rows.sort(sf[sortBy]||sf.total);
 
   // Compute week-over-week rank movement
@@ -2610,6 +2617,36 @@ function openPlayerModal(pid){
       </div>
     </div>`:'';
 
+  // Trade history for this player
+  const playerTrades=DB.transactions.filter(t=>{
+    if(t.type!=='trade')return false;
+    return Object.keys(t.adds||{}).includes(pid);
+  }).sort((a,b)=>b.year-a.year||b.week-a.week);
+
+  const tradeHistoryHtml=playerTrades.length?`
+    <div style="margin-top:0.75rem">
+      <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem">Trade History</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        ${playerTrades.map(t=>{
+          const season=DB.seasons.find(s=>s.year===t.year);
+          const destRid=t.adds[pid];
+          const destTeam=season?.teams.find(tm=>tm.rosterId===destRid);
+          const destMgr=destTeam?.managerKey||destTeam?.name||'Team '+destRid;
+          const[r1,r2]=t.roster_ids||[0,0];
+          const srcRid=destRid===r1?r2:r1;
+          const srcTeam=season?.teams.find(tm=>tm.rosterId===srcRid);
+          const srcMgr=srcTeam?.managerKey||srcTeam?.name||'Team '+srcRid;
+          return`<div style="background:var(--surface2);border-radius:6px;padding:5px 10px;font-size:0.8rem">
+            <span style="color:var(--text3);font-family:var(--font-mono);font-size:0.7rem">${t.year} Wk ${t.week}</span>
+            <span style="margin:0 6px;color:var(--text3)">·</span>
+            <span style="color:var(--text2)">${srcMgr}</span>
+            <span style="margin:0 5px;color:var(--gold)">→</span>
+            <span style="color:var(--text);font-weight:500">${destMgr}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:'';
+
   document.getElementById('modal-body').innerHTML=`
     <h3>${name}</h3>
     <div class="modal-pos">${pos}${nflTeam?' · '+nflTeam:''}</div>
@@ -2633,6 +2670,7 @@ function openPlayerModal(pid){
     </div>
     <div style="font-size:0.68rem;color:var(--text3);margin-top:4px">${SHARED_SHEET_ID?'Notes are managed via the PlayerBios sheet.':'No shared sheet configured.'}</div>
     ${awardsHtml}
+    ${tradeHistoryHtml}
     <div class="modal-seasons">
       <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;margin-top:0.75rem">Season breakdown</div>
       <div class="tbl-wrap" style="margin:0"><table style="min-width:unset">
@@ -2760,7 +2798,7 @@ function renderPlayoffStandings(){
     else if(col==='pct') v=pct1-pct2;
     else if(col==='avg') v=a.avg-b.avg;
     else if(col==='total') v=a.total-b.total;
-    return v*dir*-1; // dir -1 = desc
+    return v*dir; // dir=-1 → descending
   });
   body.innerHTML=sorted.map((r,i)=>{
     const g=r.w+r.l; const pct=g?(r.w/g*100).toFixed(0):0;
@@ -3046,7 +3084,7 @@ function renderProbowlLeaders(){
   const body=document.getElementById('pb-leaders-body');
   if(!body)return;
   const dir=probowlSort.dir;
-  const sorted=[...PB_LEADERS].sort((a,b)=>(a.count-b.count)*dir*-1);
+  const sorted=[...PB_LEADERS].sort((a,b)=>(a.count-b.count)*dir);
   body.innerHTML=sorted.map((r,i)=>`<tr>
     <td class="rank">${i+1}</td>
     <td><div class="tcell"><div class="av">${getInitials(r.mgr)}</div><span style="font-weight:500">${r.mgr}</span></div></td>
@@ -3910,9 +3948,9 @@ function renderPotg(){
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
 
   // Sort — "Most POTGs" = total appearances (POTG+POTW); "Most POTWs" = POTW count then POTG
-  if(sortF==='potg') rows.sort((a,b)=>(b.potg-a.potg)*dir||(b.potw-a.potw)||b.best-a.best);
-  else if(sortF==='potw') rows.sort((a,b)=>(b.potw-a.potw)*dir||(b.potg-a.potg)||b.best-a.best);
-  else rows.sort((a,b)=>(b.best-a.best)*dir);
+  if(sortF==='potg') rows.sort((a,b)=>(a.potg-b.potg)*dir||(b.potw-a.potw)||b.best-a.best);
+  else if(sortF==='potw') rows.sort((a,b)=>(a.potw-b.potw)*dir||(b.potg-a.potg)||b.best-a.best);
+  else rows.sort((a,b)=>(a.best-b.best)*dir);
 
   // Metrics
   const totalPotg=log.length;
@@ -4484,25 +4522,35 @@ function renderMyLineup(){
   Object.values(posMap).forEach(arr=>arr.sort(sortFn));
 
   const used=new Set();
-  const pick=(positions,label)=>{
-    for(const pos of positions){
-      for(const p of (posMap[pos]||[])){
-        if(!used.has(p.pid)){used.add(p.pid);return{...p,slotLabel:label};break;}
-      }
-    }
-    return null;
+
+  // Pick best single player across all listed positions jointly (not sequentially)
+  const pickBest=(positions,label)=>{
+    const candidates=positions.flatMap(pos=>(posMap[pos]||[]).filter(p=>!used.has(p.pid)));
+    if(!candidates.length)return null;
+    // Sort by current mode value
+    const best=candidates.sort(sortFn)[0];
+    used.add(best.pid);
+    return{...best,slotLabel:label};
+  };
+
+  // Pick best from a single position (dedicated slots)
+  const pickPos=(pos,label)=>{
+    const arr=(posMap[pos]||[]).filter(p=>!used.has(p.pid));
+    if(!arr.length)return null;
+    const best=arr[0]; // already sorted by sortFn above
+    used.add(best.pid);
+    return{...best,slotLabel:label};
   };
 
   const lineup=[];
-  lineup.push(pick(['QB'],'QB'));
-  lineup.push(pick(['RB'],'RB'));lineup.push(pick(['RB'],'RB'));
-  lineup.push(pick(['WR'],'WR'));lineup.push(pick(['WR'],'WR'));
-  lineup.push(pick(['TE'],'TE'));
-  lineup.push(pick(['RB','WR','TE'],'FLEX'));
-  lineup.push(pick(['RB','WR','TE'],'FLEX'));
-  lineup.push(pick(['QB','RB','WR','TE'],'SF'));
-  lineup.push(pick(['K'],'K'));
-  lineup.push(pick(['DEF','DST'],'DEF'));
+  lineup.push(pickPos('QB','QB'));
+  lineup.push(pickPos('RB','RB'));lineup.push(pickPos('RB','RB'));
+  lineup.push(pickPos('WR','WR'));lineup.push(pickPos('WR','WR'));
+  lineup.push(pickPos('TE','TE'));
+  lineup.push(pickBest(['RB','WR','TE'],'FLEX'));
+  lineup.push(pickBest(['RB','WR','TE'],'FLEX'));
+  lineup.push(pickBest(['QB','RB','WR','TE'],'SF'));
+  lineup.push(pickPos('K','K'));lineup.push(pickBest(['DEF','DST'],'DEF'));
 
   const filtered=lineup.filter(Boolean);
 
@@ -4551,7 +4599,7 @@ function renderMyScoring(){
   });
   if(search)rows=rows.filter(r=>r.name.toLowerCase().includes(search));
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
-  const sf={total:(a,b)=>(b.total-a.total)*dir,starts:(a,b)=>(b.starts-a.starts)*dir,avg:(a,b)=>(b.avg-a.avg)*dir,best:(a,b)=>(b.best-a.best)*dir};
+  const sf={total:(a,b)=>(a.total-b.total)*dir,starts:(a,b)=>(a.starts-b.starts)*dir,avg:(a,b)=>(a.avg-b.avg)*dir,best:(a,b)=>(a.best-b.best)*dir};
   rows.sort(sf[sortBy]||sf.total);
   const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
   const body=document.getElementById('myscoring-body');
@@ -4608,12 +4656,12 @@ function renderMyH2H(){
     const myAvg2=b.games.reduce((s,g)=>s+g.myPts,0)/(g2||1);
     const oppAvg1=a.games.reduce((s,g)=>s+g.oppPts,0)/(g1||1);
     const oppAvg2=b.games.reduce((s,g)=>s+g.oppPts,0)/(g2||1);
-    if(col==='w')return(b.w-a.w)*dir;
-    if(col==='l')return(b.l-a.l)*dir;
-    if(col==='pct')return(pct2-pct1)*dir;
-    if(col==='myavg')return(myAvg2-myAvg1)*dir;
-    if(col==='oppavg')return(oppAvg2-oppAvg1)*dir;
-    return(b.w-a.w)*dir;
+    if(col==='w')return(a.w-b.w)*dir;
+    if(col==='l')return(a.l-b.l)*dir;
+    if(col==='pct')return(pct1-pct2)*dir;
+    if(col==='myavg')return(myAvg1-myAvg2)*dir;
+    if(col==='oppavg')return(oppAvg1-oppAvg2)*dir;
+    return(a.w-b.w)*dir;
   });
   el.innerHTML=`<div class="tbl-wrap"><table>
     <thead><tr>
