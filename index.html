@@ -118,29 +118,110 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .prog-track{height:2px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden;display:none}
 .prog-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.4s ease;width:0%}
 
-/* ─── TOPBAR ─── */
-#app{display:none;min-height:100vh}
-.topbar{position:sticky;top:0;z-index:200;background:rgba(13,13,15,0.94);backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;gap:1.5rem;height:52px}
-.topbar-brand{font-family:var(--font-display);font-size:1.25rem;letter-spacing:0.08em;color:var(--gold);
-  white-space:nowrap;flex-shrink:0;text-transform:uppercase}
-.topbar-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none}
-.topbar-tabs::-webkit-scrollbar{display:none}
-.tab-btn{background:none;border:none;color:var(--text2);font-family:var(--font-body);font-size:0.82rem;
-  font-weight:500;padding:0.35rem 0.8rem;border-radius:5px;cursor:pointer;white-space:nowrap;transition:all 0.15s}
-.tab-btn:hover{color:var(--text);background:var(--surface2)}
-.tab-btn.active{color:var(--gold);background:var(--gold-dim)}
-.topbar-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
-.s-sel,.c-sel{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;
-  color:var(--text);font-family:var(--font-body);font-size:0.78rem;padding:0.3rem 0.6rem;outline:none;cursor:pointer}
-.back-btn,.refresh-btn{background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text2);
-  font-family:var(--font-body);font-size:0.75rem;padding:0.3rem 0.7rem;cursor:pointer;transition:all 0.15s}
-.back-btn:hover{color:var(--text);border-color:var(--border3)}
-.refresh-btn{color:var(--gold);border-color:var(--gold-border)}
-.refresh-btn:hover{background:var(--gold-dim)}
+/* ─── SIDEBAR LAYOUT ─── */
+.sidebar-layout{display:grid;grid-template-columns:200px 1fr;min-height:100vh}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;gap:1px;padding:1.25rem 0.75rem;
+  position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.sidebar-brand{font-family:var(--font-display);font-size:1.15rem;letter-spacing:0.06em;
+  color:var(--gold);text-transform:uppercase;padding:0.25rem 0.5rem;margin-bottom:0.5rem}
+.sb-section-label{font-size:0.65rem;font-weight:600;color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.12em;padding:0.5rem 0.5rem 0.2rem;margin-top:0.5rem}
+.sb-item{display:flex;align-items:center;gap:8px;background:none;border:none;
+  color:var(--text2);font-family:var(--font-body);font-size:0.82rem;font-weight:400;
+  padding:0.45rem 0.6rem;border-radius:6px;cursor:pointer;text-align:left;width:100%;
+  transition:all 0.12s;white-space:nowrap}
+.sb-item:hover{background:var(--surface2);color:var(--text)}
+.sb-item.active{background:var(--gold-dim);color:var(--gold)}
+.sb-item svg{flex-shrink:0;opacity:0.7}
+.sb-item.active svg{opacity:1}
+.sb-search{color:var(--text3);border:1px dashed var(--border2);margin-top:2px}
+.sb-search:hover{border-color:var(--gold-border);color:var(--gold);background:var(--gold-dim)}
+.sb-search.active{border-style:solid;border-color:var(--gold-border);background:var(--gold-dim);color:var(--gold)}
+.sb-divider{height:1px;background:var(--border);margin:0.5rem 0}
+.sb-controls{display:flex;gap:4px;align-items:center;padding:0 0.25rem;flex-wrap:wrap}
+.sb-controls .s-sel{font-size:0.72rem;padding:0.25rem 0.4rem;flex:1;min-width:0}
+.sb-btn{background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text2);
+  font-size:0.8rem;padding:0.25rem 0.4rem;cursor:pointer;transition:all 0.12s}
+.sb-btn:hover{color:var(--gold);border-color:var(--gold-border)}
+.main-area{min-width:0;overflow:hidden}
+
+/* ─── MOBILE BOTTOM NAV ─── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:rgba(13,13,15,0.96);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border2);flex-direction:column}
+.bn-items{display:flex;justify-content:space-around;padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;
+  color:var(--text3);font-family:var(--font-body);font-size:0.65rem;font-weight:500;
+  padding:4px 16px;cursor:pointer;transition:color 0.15s;min-width:60px}
+.bn-item.active{color:var(--gold)}
+.bn-item svg{transition:stroke 0.15s}
+.sub-pill-bar{display:flex;gap:6px;overflow-x:auto;padding:8px 12px 0;
+  -ms-overflow-style:none;scrollbar-width:none}
+.sub-pill-bar::-webkit-scrollbar{display:none}
+.sub-pill-bar:empty{display:none}
+.sub-pill{background:none;border:1px solid var(--border2);border-radius:20px;
+  color:var(--text2);font-size:0.72rem;padding:4px 12px;cursor:pointer;
+  white-space:nowrap;flex-shrink:0;font-family:var(--font-body);transition:all 0.12s}
+.sub-pill.active{border-color:var(--gold-border);color:var(--gold);background:var(--gold-dim)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:768px){
+  .sidebar-layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .bottom-nav{display:flex}
+  .main-area{padding-bottom:90px}
+  .app-body{padding:1rem}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+}
+@media(min-width:769px){
+  .bottom-nav{display:none!important}
+}
+
+/* ─── HOME PANEL ─── */
+.home-hero{background:var(--surface);border:1px solid var(--gold-border);
+  border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1rem}
+.home-hero.winning{border-color:rgba(42,157,143,0.4);background:rgba(42,157,143,0.06)}
+.home-hero.losing{border-color:rgba(192,57,43,0.4);background:rgba(192,57,43,0.06)}
+.hero-label{font-size:0.68rem;font-weight:600;color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:0.4rem}
+.hero-score{font-family:var(--font-display);font-size:2.2rem;letter-spacing:0.04em;line-height:1}
+.hero-outcome{font-size:0.8rem;margin-top:0.35rem;font-weight:600}
+.hero-outcome.win{color:var(--teal)}.hero-outcome.loss{color:var(--crimson)}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:1rem}
+.home-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.85rem 1rem}
+.home-card .hc-label{font-size:0.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
+.home-card .hc-val{font-family:var(--font-display);font-size:1.5rem;letter-spacing:0.04em;color:var(--text)}
+.home-card .hc-sub{font-size:0.72rem;color:var(--text3);margin-top:2px}
+.riser-faller-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.riser-card{background:rgba(42,157,143,0.08);border:1px solid rgba(42,157,143,0.3);
+  border-radius:var(--radius);padding:0.85rem 1rem}
+.faller-card{background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.25);
+  border-radius:var(--radius);padding:0.85rem 1rem}
+.rf-label{font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem}
+.riser-card .rf-label{color:var(--teal)}.faller-card .rf-label{color:var(--crimson)}
+.rf-item{display:flex;justify-content:space-between;font-size:0.8rem;padding:2px 0;color:var(--text2)}
+.rf-delta{font-family:var(--font-mono);font-size:0.72rem;font-weight:600}
+.riser-card .rf-delta{color:var(--teal)}.faller-card .rf-delta{color:var(--crimson)}
+
+/* ─── ALL-TIME LINEUP ─── */
+.lineup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:1.5rem}
+.lineup-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.lineup-hdr{background:var(--surface2);padding:0.6rem 1rem;border-bottom:1px solid var(--border);
+  font-family:var(--font-display);font-size:1rem;letter-spacing:0.05em;color:var(--gold);text-transform:uppercase}
+.lineup-row{display:flex;align-items:center;justify-content:space-between;
+  padding:0.55rem 1rem;border-bottom:1px solid var(--border)}
+.lineup-row:last-child{border-bottom:none}
+.lineup-pos{font-family:var(--font-mono);font-size:0.68rem;color:var(--text3);width:38px;flex-shrink:0}
+.lineup-name{font-size:0.85rem;font-weight:500;flex:1;cursor:pointer}
+.lineup-name:hover{color:var(--gold);text-decoration:underline;text-underline-offset:3px}
+.lineup-pts{font-family:var(--font-display);font-size:1rem;color:var(--gold);letter-spacing:0.04em}
+.lineup-yr{font-size:0.65rem;color:var(--text3);margin-left:6px}
 
 /* ─── APP BODY ─── */
-.app-body{padding:1.75rem;max-width:1180px;margin:0 auto}
+#app{display:none;min-height:100vh}
+.app-body{padding:1.75rem;max-width:1100px}
 .panel{display:none}.panel.active{display:block}
 
 /* ─── METRICS ─── */
@@ -508,33 +589,105 @@ tbody tr.highlight td{background:var(--gold-dim)}
 
 <!-- ══ APP ══ -->
 <div id="app">
-  <div class="topbar">
-    <div class="topbar-brand" id="app-brand">The Archive</div>
-    <div class="topbar-tabs">
-      <button class="tab-btn active" onclick="switchTab('home')">Home</button>
-      <button class="tab-btn" onclick="switchTab('standings')">Standings</button>
-      <button class="tab-btn" onclick="switchTab('matchups')">Matchups</button>
-      <button class="tab-btn" onclick="switchTab('players')">Player Scoring</button>
-      <button class="tab-btn" onclick="switchTab('h2h')">Head-to-Head</button>
-      <button class="tab-btn" onclick="switchTab('playoffs')">Playoffs</button>
-      <button class="tab-btn" onclick="switchTab('trades')">Trades</button>
-      <button class="tab-btn" onclick="switchTab('awards')">Awards</button>
-      <button class="tab-btn" onclick="switchTab('probowl')">Pro Bowl</button>
-      <button class="tab-btn" onclick="switchTab('hof')">Hall of Fame</button>
-      <button class="tab-btn" onclick="switchTab('projections')">Projections</button>
-      <button class="tab-btn" onclick="switchTab('potg')">POTG / POTW</button>
-      <button class="tab-btn" onclick="switchTab('recap')">Weekly Recap</button>
-      <button class="tab-btn" onclick="switchTab('search')">🔍 Smart Search</button>
-    </div>
-    <div class="topbar-right">
-      <select class="s-sel" id="s-sel" onchange="onSeasonChange()"></select>
-      <button class="refresh-btn" onclick="doRefresh()">↻ Refresh</button>
-      <button class="refresh-btn" onclick="exportSnapshot()" title="Export season snapshots for GitHub backup">⬇ Snapshot</button>
-      <button class="back-btn" onclick="goBack()">← Setup</button>
-    </div>
-  </div>
-  <div class="app-body">
-    <div class="metrics" id="metrics"></div>
+
+  <!-- DESKTOP SIDEBAR -->
+  <div class="sidebar-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand" id="app-brand">The Archive</div>
+
+      <div class="sb-section-label">Now</div>
+      <button class="sb-item active" onclick="switchTab('home')" data-tab="home">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Home
+      </button>
+      <button class="sb-item" onclick="switchTab('recap')" data-tab="recap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Weekly Recap
+      </button>
+      <button class="sb-item" onclick="switchTab('projections')" data-tab="projections">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Projections
+      </button>
+
+      <div class="sb-section-label">My Team</div>
+      <button class="sb-item" onclick="switchTab('mylineup')" data-tab="mylineup">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        All-Time Lineup
+      </button>
+      <button class="sb-item" onclick="switchTab('myscoring')" data-tab="myscoring">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        My Scoring
+      </button>
+      <button class="sb-item" onclick="switchTab('myh2h')" data-tab="myh2h">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        My H2H
+      </button>
+      <button class="sb-item" onclick="switchTab('mytrades')" data-tab="mytrades">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        My Trades
+      </button>
+
+      <div class="sb-section-label">League</div>
+      <button class="sb-item" onclick="switchTab('standings')" data-tab="standings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Standings
+      </button>
+      <button class="sb-item" onclick="switchTab('matchups')" data-tab="matchups">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Matchups
+      </button>
+      <button class="sb-item" onclick="switchTab('players')" data-tab="players">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Player Scoring
+      </button>
+      <button class="sb-item" onclick="switchTab('h2h')" data-tab="h2h">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        Head-to-Head
+      </button>
+      <button class="sb-item" onclick="switchTab('playoffs')" data-tab="playoffs">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="7" x2="7" y2="13"/><polyline points="16 17 3 4"/><polyline points="17.5 6.5 21 3 21 21 3 21 6.5 17.5"/></svg>
+        Playoffs
+      </button>
+      <button class="sb-item" onclick="switchTab('trades')" data-tab="trades">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Trades
+      </button>
+      <button class="sb-item" onclick="switchTab('awards')" data-tab="awards">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        Awards
+      </button>
+      <button class="sb-item" onclick="switchTab('probowl')" data-tab="probowl">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Pro Bowl
+      </button>
+      <button class="sb-item" onclick="switchTab('hof')" data-tab="hof">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        Hall of Fame
+      </button>
+      <button class="sb-item" onclick="switchTab('potg')" data-tab="potg">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        POTG / POTW
+      </button>
+
+      <div class="sb-divider"></div>
+      <button class="sb-item sb-search" onclick="switchTab('search')" data-tab="search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Smart Search
+      </button>
+
+      <div class="sb-divider"></div>
+      <div class="sb-controls">
+        <select class="s-sel" id="s-sel" onchange="onSeasonChange()" title="Filter by season"></select>
+        <button class="sb-btn" onclick="doRefresh()" title="Refresh data">↻</button>
+        <button class="sb-btn" onclick="exportSnapshot()" title="Export snapshots">⬇</button>
+        <button class="sb-btn" onclick="goBack()" title="Setup">←</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-area">
+      <div class="app-body">
+        <div class="metrics" id="metrics"></div>
 
     <!-- HOME -->
     <div class="panel active" id="panel-home">
@@ -815,6 +968,46 @@ tbody tr.highlight td{background:var(--gold-dim)}
       </div>
     </div>
 
+    <!-- MY TEAM: ALL-TIME LINEUP -->
+    <div class="panel" id="panel-mylineup">
+      <div class="sh"><h2>All-Time Lineup</h2><span class="sh-sub" id="mylineup-sub">Best single-season score at each position</span></div>
+      <div id="mylineup-content"></div>
+    </div>
+
+    <!-- MY TEAM: MY SCORING (filtered Player Scoring) -->
+    <div class="panel" id="panel-myscoring">
+      <div class="sh"><h2>My Scoring</h2><span class="sh-sub">All players you've started across loaded seasons</span></div>
+      <div class="filters">
+        <input class="s-input" id="mys-search" placeholder="Search player…" oninput="renderMyScoring()">
+        <select class="f-sel" id="mys-pos" onchange="renderMyScoring()">
+          <option value="all">All positions</option>
+          <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
+        </select>
+        <select class="f-sel" id="mys-sort" onchange="renderMyScoring()">
+          <option value="total">Total pts</option>
+          <option value="starts">Starts</option>
+          <option value="avg">Avg pts</option>
+          <option value="best">Best game</option>
+        </select>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Player</th><th>Pos</th><th>Total Pts</th><th>Starts</th><th>Avg</th><th>Best</th></tr></thead>
+        <tbody id="myscoring-body"></tbody>
+      </table></div>
+    </div>
+
+    <!-- MY TEAM: MY H2H -->
+    <div class="panel" id="panel-myh2h">
+      <div class="sh"><h2>My Head-to-Head</h2><span class="sh-sub">Your record against every manager</span></div>
+      <div id="myh2h-content"></div>
+    </div>
+
+    <!-- MY TEAM: MY TRADES -->
+    <div class="panel" id="panel-mytrades">
+      <div class="sh"><h2>My Trades</h2><span class="sh-sub">All trades involving your roster</span></div>
+      <div id="mytrades-content"></div>
+    </div>
+
     <!-- SMART SEARCH -->
     <div class="panel" id="panel-search">
       <div class="sh"><h2>Smart Search</h2><span class="sh-sub">Ask anything about the Docile League</span></div>
@@ -842,8 +1035,34 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <div id="search-result"></div>
       <div id="search-history" style="margin-top:1.5rem"></div>
     </div>
-  </div>
-</div>
+      </div><!-- end app-body -->
+    </main><!-- end main-area -->
+  </div><!-- end sidebar-layout -->
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Main navigation">
+    <div class="sub-pill-bar" id="sub-pill-bar"></div>
+    <div class="bn-items">
+      <button class="bn-item active" onclick="setSection('now')" data-section="now" aria-label="Now">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Now</span>
+      </button>
+      <button class="bn-item" onclick="setSection('myteam')" data-section="myteam" aria-label="My Team">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>My Team</span>
+      </button>
+      <button class="bn-item" onclick="setSection('league')" data-section="league" aria-label="League">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>League</span>
+      </button>
+      <button class="bn-item" onclick="setSection('search')" data-section="search" aria-label="Search">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search</span>
+      </button>
+    </div>
+  </nav>
+
+</div><!-- end app -->
 
 <!-- PLAYER MODAL -->
 <div class="modal-bg" id="player-modal" style="display:none" onclick="if(event.target===this)closeModal()">
@@ -1775,11 +1994,10 @@ function loadDemo(){
 // BUILD APP
 // ══════════════════════════════════════════════════════════════
 function buildApp(){
-  const name=DB.seasons[0]?.league?.name||'The Docile League';
-  document.getElementById('app-brand').textContent=name.toUpperCase().substring(0,24);
+  document.getElementById('app-brand').textContent='The Archive';
   const years=DB.seasons.map(s=>s.year).sort((a,b)=>b-a);
   const sSel=document.getElementById('s-sel');
-  sSel.innerHTML='<option value="all">All seasons</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  sSel.innerHTML='<option value="all">All</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
   // Year chips
   activeYrs=new Set(years);
   const yrChips=document.getElementById('yr-chips');
@@ -1805,6 +2023,8 @@ function buildApp(){
   // Award year sel
   document.getElementById('award-yr-sel').innerHTML='<option value="all">All seasons</option>'+
     Object.keys(PLAYER_AWARDS).map(y=>`<option value="${y}">${y}</option>`).join('');
+  // Init mobile nav
+  setSection('now');
   renderAll();
 }
 
@@ -2774,14 +2994,75 @@ function renderHof(){
 // ══════════════════════════════════════════════════════════════
 // TAB SWITCHING
 // ══════════════════════════════════════════════════════════════
-const TABS=['home','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','projections','potg','recap','search'];
+// ══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════
+const TABS=['home','standings','matchups','players','h2h','playoffs','trades','awards',
+  'probowl','hof','projections','potg','recap','search',
+  'mylineup','myscoring','myh2h','mytrades'];
+
+const SECTIONS={
+  now:['home','recap','projections'],
+  myteam:['mylineup','myscoring','myh2h','mytrades'],
+  league:['standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','potg'],
+  search:['search']
+};
+const SECTION_LABELS={
+  now:['Home','Weekly Recap','Projections'],
+  myteam:['All-Time Lineup','My Scoring','My H2H','My Trades'],
+  league:['Standings','Matchups','Player Scoring','Head-to-Head','Playoffs','Trades','Awards','Pro Bowl','Hall of Fame','POTG/POTW'],
+  search:['Smart Search']
+};
+
+let activeSection='now';
+
+function setSection(section){
+  activeSection=section;
+  // Update bottom nav items
+  document.querySelectorAll('.bn-item').forEach(b=>b.classList.toggle('active',b.dataset.section===section));
+  // Build pill row
+  const bar=document.getElementById('sub-pill-bar');
+  if(bar){
+    const tabs=SECTIONS[section]||[];
+    const labels=SECTION_LABELS[section]||tabs;
+    bar.innerHTML=tabs.map((t,i)=>`<button class="sub-pill" onclick="switchTab('${t}')" data-subtab="${t}">${labels[i]}</button>`).join('');
+  }
+  // If search, go straight there; otherwise go to first tab in section
+  if(section==='search'){switchTab('search');}
+  else{switchTab(SECTIONS[section][0]);}
+}
+
 function switchTab(name){
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',TABS[i]===name));
-  TABS.forEach(t=>document.getElementById('panel-'+t).classList.toggle('active',t===name));
+  TABS.forEach(t=>{
+    const p=document.getElementById('panel-'+t);
+    if(p)p.classList.toggle('active',t===name);
+  });
+  // Update sidebar active state
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  // Update mobile pill active state
+  document.querySelectorAll('.sub-pill').forEach(b=>b.classList.toggle('active',b.dataset.subtab===name));
+  // Update mobile section if needed
+  const section=Object.entries(SECTIONS).find(([,tabs])=>tabs.includes(name))?.[0];
+  if(section&&section!==activeSection){
+    activeSection=section;
+    document.querySelectorAll('.bn-item').forEach(b=>b.classList.toggle('active',b.dataset.section===section));
+    const bar=document.getElementById('sub-pill-bar');
+    if(bar){
+      const tabs=SECTIONS[section]||[];
+      const labels=SECTION_LABELS[section]||tabs;
+      bar.innerHTML=tabs.map((t,i)=>`<button class="sub-pill" onclick="switchTab('${t}')" data-subtab="${t}">${labels[i]}</button>`).join('');
+      document.querySelectorAll('.sub-pill').forEach(b=>b.classList.toggle('active',b.dataset.subtab===name));
+    }
+  }
+  // Lazy render
   if(name==='search')initSearch();
   if(name==='projections')renderProjections();
   if(name==='potg'){activePotgYrs=new Set(DB.seasons.map(s=>String(s.year)));initPotgChips();renderPotg();}
   if(name==='recap')initRecap();
+  if(name==='mylineup')renderMyLineup();
+  if(name==='myscoring')renderMyScoring();
+  if(name==='myh2h')renderMyH2H();
+  if(name==='mytrades')renderMyTrades();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3975,6 +4256,248 @@ function copyRecap(){
     btn.textContent='Copied!';
     setTimeout(()=>btn.textContent='Copy text',1500);
   });
+}
+
+// ══════════════════════════════════════════════════════════════
+// MY TEAM: ALL-TIME LINEUP
+// ══════════════════════════════════════════════════════════════
+function renderMyLineup(){
+  const el=document.getElementById('mylineup-content');
+  const sub=document.getElementById('mylineup-sub');
+  if(!DB.myStarters.length){
+    el.innerHTML='<div class="empty">Load your league data to see your all-time lineup.</div>';
+    return;
+  }
+  const myKey=sleeperToManagerKey(DB.username)||DB.username;
+  if(sub)sub.textContent=`Best single-season score at each slot · ${myKey}`;
+
+  // Group my starters by position and find best score + player per slot
+  const SLOTS=[
+    {pos:'QB',label:'QB'},
+    {pos:'RB',label:'RB',count:2},
+    {pos:'WR',label:'WR',count:2},
+    {pos:'TE',label:'TE'},
+    {pos:'FLEX',label:'FLEX',count:2},  // best non-QB/K/DEF not already used
+    {pos:'SF',label:'SF'},              // SuperFlex — best QB not already used
+    {pos:'K',label:'K'},
+    {pos:'DEF',label:'DEF'},
+  ];
+
+  // Aggregate my starters by pid — best single game per player
+  const byPid={};
+  DB.myStarters.forEach(s=>{
+    if(!byPid[s.pid])byPid[s.pid]={pid:s.pid,pts:0,starts:0,best:0,bestYr:0};
+    byPid[s.pid].pts+=(s.points||0);byPid[s.pid].starts++;
+    if((s.points||0)>byPid[s.pid].best){byPid[s.pid].best=s.points||0;byPid[s.pid].bestYr=s.year;}
+  });
+
+  const posMap={QB:[],RB:[],WR:[],TE:[],K:[],DEF:[]};
+  Object.values(byPid).forEach(p=>{
+    const m=DB.playerMeta[p.pid];
+    const pos=m?.fantasy_positions?.[0]||m?.position||'?';
+    const name=m?`${m.first_name} ${m.last_name}`:'PID:'+p.pid;
+    if(posMap[pos])posMap[pos].push({...p,name,pos});
+  });
+  Object.values(posMap).forEach(arr=>arr.sort((a,b)=>b.best-a.best));
+
+  const used=new Set();
+  const lineup=[];
+
+  const pick=(positions,label)=>{
+    for(const pos of positions){
+      const arr=posMap[pos]||[];
+      for(const p of arr){
+        if(!used.has(p.pid)){used.add(p.pid);return{...p,slotLabel:label};break;}
+      }
+    }
+    return null;
+  };
+
+  // QB
+  const qb=pick(['QB'],'QB');if(qb)lineup.push(qb);
+  // RB x2
+  lineup.push(pick(['RB'],'RB'));lineup.push(pick(['RB'],'RB'));
+  // WR x2
+  lineup.push(pick(['WR'],'WR'));lineup.push(pick(['WR'],'WR'));
+  // TE
+  lineup.push(pick(['TE'],'TE'));
+  // FLEX x2 — best remaining RB/WR/TE
+  lineup.push(pick(['RB','WR','TE'],'FLEX'));
+  lineup.push(pick(['RB','WR','TE'],'FLEX'));
+  // SuperFlex — best remaining QB or skill
+  lineup.push(pick(['QB','RB','WR','TE'],'SF'));
+  // K
+  lineup.push(pick(['K'],'K'));
+  // DEF
+  lineup.push(pick(['DEF','DST'],'DEF'));
+
+  const filtered=lineup.filter(Boolean);
+  el.innerHTML=`<div class="lineup-card" style="max-width:520px">
+    <div class="lineup-hdr">${myKey} · All-Time Best</div>
+    ${filtered.map(p=>`
+      <div class="lineup-row">
+        <div class="lineup-pos">${p.slotLabel}</div>
+        <div class="lineup-name player-link" onclick="openPlayerModal('${p.pid}')">${p.name}</div>
+        <div style="display:flex;align-items:baseline;gap:4px">
+          <div class="lineup-pts">${p.best.toFixed(1)}</div>
+          <div class="lineup-yr">${p.bestYr}</div>
+        </div>
+      </div>`).join('')}
+  </div>
+  <div style="font-size:0.75rem;color:var(--text3);margin-top:0.75rem">
+    Best single-game score at each slot across all loaded seasons.
+    FLEX = best available RB/WR/TE · SF = best available QB or skill.
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MY TEAM: MY SCORING
+// ══════════════════════════════════════════════════════════════
+function renderMyScoring(){
+  const search=(document.getElementById('mys-search')?.value||'').toLowerCase();
+  const posF=document.getElementById('mys-pos')?.value||'all';
+  const sortBy=document.getElementById('mys-sort')?.value||'total';
+  const starters=DB.myStarters;
+  const agg={};
+  starters.forEach(s=>{
+    if(!agg[s.pid])agg[s.pid]={pid:s.pid,starts:0,total:0,best:0};
+    agg[s.pid].starts++;agg[s.pid].total+=(s.points||0);
+    if((s.points||0)>agg[s.pid].best)agg[s.pid].best=s.points||0;
+  });
+  let rows=Object.values(agg).map(p=>{
+    const m=DB.playerMeta[p.pid];
+    return{...p,name:m?`${m.first_name} ${m.last_name}`:'PID:'+p.pid,
+      pos:m?.fantasy_positions?.[0]||'?',avg:p.starts?p.total/p.starts:0};
+  });
+  if(search)rows=rows.filter(r=>r.name.toLowerCase().includes(search));
+  if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
+  const sf={total:(a,b)=>b.total-a.total,starts:(a,b)=>b.starts-a.starts,avg:(a,b)=>b.avg-a.avg,best:(a,b)=>b.best-a.best};
+  rows.sort(sf[sortBy]||sf.total);
+  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
+  const body=document.getElementById('myscoring-body');
+  if(!rows.length){body.innerHTML='<tr><td colspan="6" class="empty">No starters found.</td></tr>';return;}
+  body.innerHTML=rows.slice(0,200).map(r=>`<tr>
+    <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
+    <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
+    <td class="mono">${r.total.toFixed(1)}</td>
+    <td class="mono">${r.starts}</td>
+    <td class="mono">${r.avg.toFixed(1)}</td>
+    <td class="mono">${r.best.toFixed(1)}</td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// MY TEAM: MY H2H
+// ══════════════════════════════════════════════════════════════
+function renderMyH2H(){
+  const el=document.getElementById('myh2h-content');
+  if(!DB.myStarters.length){el.innerHTML='<div class="empty">Load your data first.</div>';return;}
+  const myKey=sleeperToManagerKey(DB.username)||DB.username;
+  // Get all managers
+  const mgrs=[...new Set(DB.seasons.flatMap(s=>s.teams.map(t=>t.managerKey)).filter(k=>k&&k!==myKey))].sort();
+  const records=mgrs.map(opp=>{
+    let w=0,l=0,games=[];
+    DB.seasons.forEach(s=>{
+      Object.entries(s.matchupsByWeek).forEach(([wk,mus])=>{
+        const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+        Object.values(byId).forEach(pair=>{
+          if(pair.length<2)return;
+          const[a,b]=pair;
+          const ta=s.teams.find(t=>t.rosterId===a.roster_id);
+          const tb=s.teams.find(t=>t.rosterId===b.roster_id);
+          if(!ta||!tb)return;
+          const isMyA=ta.managerKey===myKey,isMyB=tb.managerKey===myKey;
+          const isOppA=ta.managerKey===opp,isOppB=tb.managerKey===opp;
+          if(!((isMyA&&isOppB)||(isMyB&&isOppA)))return;
+          const myPts=isMyA?a.points||0:b.points||0;
+          const oppPts=isOppA?a.points||0:b.points||0;
+          if(myPts>oppPts)w++;else l++;
+          games.push({year:s.year,week:parseInt(wk),myPts,oppPts,won:myPts>oppPts});
+        });
+      });
+    });
+    return{opp,w,l,games};
+  }).filter(r=>r.w+r.l>0).sort((a,b)=>b.w+b.l-a.w-a.l);
+
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>Opponent</th><th>W</th><th>L</th><th>Win %</th><th>Avg scored</th><th>Avg allowed</th></tr></thead>
+    <tbody>${records.map(r=>{
+      const g=r.w+r.l;
+      const myAvg=r.games.reduce((a,b)=>a+b.myPts,0)/g;
+      const oppAvg=r.games.reduce((a,b)=>a+b.oppPts,0)/g;
+      const pct=(r.w/g*100).toFixed(0);
+      return`<tr>
+        <td style="font-weight:500">${r.opp}</td>
+        <td class="mono">${r.w}</td>
+        <td class="mono">${r.l}</td>
+        <td class="mono">${pct}%</td>
+        <td class="mono">${myAvg.toFixed(1)}</td>
+        <td class="mono">${oppAvg.toFixed(1)}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MY TEAM: MY TRADES
+// ══════════════════════════════════════════════════════════════
+function renderMyTrades(){
+  const el=document.getElementById('mytrades-content');
+  // Find my roster IDs across all seasons
+  const myRosterIds=new Set(DB.seasons.map(s=>s.myRosterId).filter(Boolean));
+  const myTrades=DB.transactions.filter(t=>
+    t.type==='trade'&&t.roster_ids?.some(r=>myRosterIds.has(r)));
+  if(!myTrades.length){el.innerHTML='<div class="empty"><span class="ebig">↔</span>No trades found on your roster.</div>';return;}
+  myTrades.sort((a,b)=>b.year-a.year||b.week-a.week);
+  // Reuse the core trade rendering logic
+  el.innerHTML='<div id="mytrades-inner"></div>';
+  const inner=document.getElementById('mytrades-inner');
+
+  inner.innerHTML=myTrades.map(t=>{
+    const season=DB.seasons.find(s=>s.year===t.year);
+    const myRid=DB.seasons.find(s=>s.year===t.year)?.myRosterId;
+    const[r1,r2]=t.roster_ids||[0,0];
+    const mk1=getManagerKey(season,r1),mk2=getManagerKey(season,r2);
+    const adds=t.adds||{};
+    const toR1=Object.entries(adds).filter(([,r])=>r===r1).map(([pid])=>{
+      const m=DB.playerMeta[pid];
+      return{name:m?`${m.first_name} ${m.last_name}`:pid,
+        pts:DB.allStarters.filter(s=>s.pid===pid&&s.year>=t.year&&s.teamRosterId===r1).reduce((a,b)=>a+(b.points||0),0)};
+    });
+    const toR2=Object.entries(adds).filter(([,r])=>r===r2).map(([pid])=>{
+      const m=DB.playerMeta[pid];
+      return{name:m?`${m.first_name} ${m.last_name}`:pid,
+        pts:DB.allStarters.filter(s=>s.pid===pid&&s.year>=t.year&&s.teamRosterId===r2).reduce((a,b)=>a+(b.points||0),0)};
+    });
+    // Add picks
+    (t.draft_picks||[]).filter(p=>p.owner_id===r1).forEach(pick=>{
+      toR1.push({name:resolvePickName(pick,t.year),pts:0});
+    });
+    (t.draft_picks||[]).filter(p=>p.owner_id===r2).forEach(pick=>{
+      toR2.push({name:resolvePickName(pick,t.year),pts:0});
+    });
+    const r1T=toR1.reduce((a,b)=>a+b.pts,0),r2T=toR2.reduce((a,b)=>a+b.pts,0);
+    const r1W=r1T>=r2T;
+    const isMyR1=r1===myRid;
+    return`<div class="trade-card">
+      <div class="trade-card-hdr">
+        <span class="trade-card-meta">${t.year} · Wk ${t.week}</span>
+        <span class="trade-card-meta">${mk1} ↔ ${mk2}</span>
+      </div>
+      <div class="trade-card-body">
+        <div class="trade-side${isMyR1?' ':''}">
+          <div class="trade-side-hdr">${mk1} received${isMyR1?' (you)':''}</div>
+          ${toR1.map(p=>`<div class="trade-player"><span>${p.name}</span><span class="trade-player-pts">${p.pts>0?p.pts.toFixed(1)+' pts':'—'}</span></div>`).join('')}
+          <div class="trade-total ${r1W?'winner':'loser'}">${r1T.toFixed(1)} pts${r1W?' ✓':''}</div>
+        </div>
+        <div class="trade-side${!isMyR1?' ':''}">
+          <div class="trade-side-hdr">${mk2} received${!isMyR1?' (you)':''}</div>
+          ${toR2.map(p=>`<div class="trade-player"><span>${p.name}</span><span class="trade-player-pts">${p.pts>0?p.pts.toFixed(1)+' pts':'—'}</span></div>`).join('')}
+          <div class="trade-total ${!r1W?'winner':'loser'}">${r2T.toFixed(1)} pts${!r1W?' ✓':''}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
