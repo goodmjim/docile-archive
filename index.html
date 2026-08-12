@@ -3782,11 +3782,11 @@ function computePlayerAwards(pid){
   // 12. POTW 🎖️ (separate from POTG)
   const allLog=computePotgData('all');
   const potwCount=allLog.filter(e=>e.pid===pid&&e.type==='POTW').length;
-  if(potwCount>0)awards.push({line:`${repeat('🎖️',potwCount)} POTW`});
+  if(potwCount>0)awards.push({line:`${repeat('🎖️',potwCount)} POTW (${potwCount})`});
 
   // 13. POTG 🎗️ (total including POTW weeks)
   const potgCount=allLog.filter(e=>e.pid===pid).length;
-  if(potgCount>0)awards.push({line:`${repeat('🎗️',potgCount)} POTG`});
+  if(potgCount>0)awards.push({line:`${repeat('🎗️',potgCount)} POTG (${potgCount})`});
 
   return awards;
 }
