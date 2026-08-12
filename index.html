@@ -421,7 +421,14 @@ tbody tr.highlight td{background:var(--gold-dim)}
 .luck-game{font-size:0.82rem;color:var(--text);margin-bottom:2px}
 .luck-meta{font-size:0.72rem;color:var(--text3)}
 
-/* ─── RECAP CARD ─── */
+/* ─── CLICKABLE PLAYER NAMES ─── */
+.player-link{cursor:pointer;text-decoration:none;position:relative}
+.player-link:hover{text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px}
+.player-link::after{content:'View card';position:absolute;bottom:calc(100% + 6px);left:50%;
+  transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border2);
+  border-radius:5px;padding:3px 8px;font-size:0.68rem;color:var(--text2);white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity 0.15s;font-family:var(--font-body);font-weight:400}
+.player-link:hover::after{opacity:1}
 .recap-card{background:var(--surface);border:1px solid var(--gold-border);border-radius:var(--radius-lg);overflow:hidden}
 .recap-hdr{background:linear-gradient(135deg,#1a1808,#0d0d0f);padding:1.25rem 1.5rem;border-bottom:1px solid var(--gold-border)}
 .recap-title{font-family:var(--font-display);font-size:1.5rem;letter-spacing:0.06em;color:var(--gold);text-transform:uppercase}
@@ -2161,7 +2168,7 @@ function renderPlayers(){
       trendCell=`<div class="pts-bar"><div class="pts-fill" style="width:${bp}%"></div></div>`;
     }
     return`<tr>
-      <td style="cursor:pointer;font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</td>
+      <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
       <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
       <td class="mono" style="color:var(--text3);font-size:0.72rem">${r.nflTeam}</td>
       <td class="mono">${r.total.toFixed(1)}</td>
@@ -2205,6 +2212,19 @@ function openPlayerModal(pid){
     bySeason[s.year].pts+=(s.points||0);bySeason[s.year].starts++;
     bySeason[s.year].managers.add(s.managerKey||s.teamName);});
   const bio=DB.playerBios[pid]||'';
+  // Awards
+  const playerAwards=computePlayerAwards(pid);
+  const awardsHtml=playerAwards.length?`
+    <div style="margin-top:0.75rem">
+      <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem">League Awards & Honors</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        ${playerAwards.map(a=>`<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:6px;padding:5px 10px;font-size:0.82rem">
+          <span>${a.icon}</span>
+          <span style="color:var(--text)">${a.label}</span>
+        </div>`).join('')}
+      </div>
+    </div>`:'';
+
   document.getElementById('modal-body').innerHTML=`
     <h3>${name}</h3>
     <div class="modal-pos">${pos}${nflTeam?' · '+nflTeam:''}</div>
@@ -2223,11 +2243,11 @@ function openPlayerModal(pid){
       <div class="mstat"><div class="ml">${pos} Rank</div><div class="mv">#${posRk}</div></div>
       <div class="mstat"><div class="ml">Overall Rank</div><div class="mv">#${overallRk}</div></div>
     </div>
-    <div class="modal-bio">
-      <textarea id="bio-ta" placeholder="Add a bio or notes for this player…" rows="3">${bio}</textarea>
+    <div class="modal-bio" style="font-style:normal">
+      <div id="modal-bio-text" style="font-size:0.82rem;color:var(--text2);line-height:1.6;font-family:var(--font-body);white-space:pre-wrap">${bio||'<span style="color:var(--text3);font-style:italic">No notes yet.</span>'}</div>
     </div>
-    <button class="modal-save-bio" onclick="saveBio('${pid}')">Save notes</button>
-    <div style="font-size:0.68rem;color:var(--text3);margin-top:4px">${SHARED_SHEET_ID?'Notes saved to your browser. To share with the league, add to the PlayerBios sheet.':'Notes saved locally to your browser only.'}</div>
+    <div style="font-size:0.68rem;color:var(--text3);margin-top:4px">${SHARED_SHEET_ID?'Notes are managed via the PlayerBios sheet.':'No shared sheet configured.'}</div>
+    ${awardsHtml}
     <div class="modal-seasons">
       <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;margin-top:0.75rem">Season breakdown</div>
       <div class="tbl-wrap" style="margin:0"><table style="min-width:unset">
@@ -2240,12 +2260,6 @@ function openPlayerModal(pid){
       </table></div>
     </div>`;
   document.getElementById('player-modal').style.display='flex';
-}
-function saveBio(pid){
-  DB.playerBios[pid]=document.getElementById('bio-ta').value;
-  try{localStorage.setItem('dl_bios',JSON.stringify(DB.playerBios));}catch{}
-  const btn=document.querySelector('.modal-save-bio');
-  btn.textContent='Saved!';setTimeout(()=>btn.textContent='Save notes',1500);
 }
 function closeModal(){document.getElementById('player-modal').style.display='none';}
 
@@ -2749,7 +2763,7 @@ function renderHof(){
   cEl.innerHTML=`<div class="tbl-wrap"><table>
     <thead><tr><th>Player</th><th>Pos</th><th>Team</th><th>Starts</th><th>Total Pts</th><th>Avg / Start</th></tr></thead>
     <tbody>${candidates.map(c=>`<tr>
-      <td style="font-weight:500;cursor:pointer" onclick="openPlayerModal('${c.pid}')">${c.name}</td>
+      <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${c.pid}')">${c.name}</span></td>
       <td><span class="badge bg-dim">${c.pos}</span></td>
       <td class="mono" style="font-size:0.72rem;color:var(--text3)">${c.team}</td>
       <td class="mono">${c.starts}</td>
@@ -3182,7 +3196,7 @@ function renderProjections(){
     const dc=r.diff>0?'diff-pos':r.diff<0?'diff-neg':'diff-neu';
     const beatPct=r.starts>0?Math.round(r.beat/r.starts*100):0;
     return`<tr>
-      <td style="font-weight:500;cursor:pointer" onclick="openPlayerModal('${r.pid}')">${r.name}</td>
+      <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
       <td><span class="badge bg-dim">${r.pos}</span></td>
       <td class="mono">${r.starts}</td>
       <td class="mono">${r.pts.toFixed(1)}</td>
@@ -3465,7 +3479,7 @@ function renderPotg(){
   if(!rows.length){body.innerHTML='<tr><td colspan="6" class="empty">No data for this filter.</td></tr>';return;}
   body.innerHTML=rows.slice(0,50).map((r,i)=>`<tr>
     <td class="rank">${i+1}</td>
-    <td style="font-weight:500;cursor:pointer" onclick="openPlayerModal('${r.pid}')">${r.name}</td>
+    <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
     <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
     <td class="mono">${r.potg}</td>
     <td class="mono">${r.potw}</td>
@@ -3488,7 +3502,7 @@ function renderPotgLog(){
     return`<tr>
       <td class="mono">${e.year}</td>
       <td class="mono">Wk ${e.week}</td>
-      <td style="font-weight:500;cursor:pointer" onclick="openPlayerModal('${e.pid}')">${name}</td>
+      <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${e.pid}')">${name}</span></td>
       <td><span class="badge ${pc[pos]||'bg-dim'}">${pos}</span></td>
       <td style="font-size:0.82rem;color:var(--text2)">${e.managerKey||'—'}</td>
       <td class="mono" style="color:var(--gold)">${e.pts.toFixed(1)}</td>
@@ -3656,6 +3670,111 @@ function renderRecap(){
   // Build and show plain text
   buildPlainText(yr,wk,results,potwEntry,potgList,allLog);
   ptWrap.style.display='block';
+}
+
+// ══════════════════════════════════════════════════════════════
+// PLAYER AWARDS HELPER
+// ══════════════════════════════════════════════════════════════
+function computePlayerAwards(pid){
+  const m=DB.playerMeta[pid];
+  const name=m?`${m.first_name} ${m.last_name}`:null;
+  if(!name)return[];
+  const nameLower=name.toLowerCase();
+  const awards=[];
+
+  // POTG / POTW counts
+  const allLog=computePotgData('all');
+  const potgCount=allLog.filter(e=>e.pid===pid).length;
+  const potwCount=allLog.filter(e=>e.pid===pid&&e.type==='POTW').length;
+  if(potgCount>0)awards.push({icon:'🎯',label:`${potgCount} POTG${potgCount!==1?'s':''}${potwCount>0?` (${potwCount} POTW${potwCount!==1?'s':''})`:''}`,type:'potg'});
+
+  // All-Docile team appearances
+  const docileAppearances=[];
+  Object.entries(ALL_DOCILE).forEach(([yr,data])=>{
+    ['t1','t2','t3'].forEach((tier,i)=>{
+      if(!data[tier])return;
+      Object.values(data[tier]).forEach(val=>{
+        if(typeof val!=='string')return;
+        const pname=val.split(',')[0].replace(/^\[[^\]]+\]\s*/,'').trim().toLowerCase();
+        if(pname===nameLower)docileAppearances.push({year:yr,tier:i+1});
+      });
+    });
+  });
+  if(docileAppearances.length>0){
+    const byTier={1:0,2:0,3:0};
+    docileAppearances.forEach(a=>byTier[a.tier]++);
+    const parts=[];
+    if(byTier[1])parts.push(`${byTier[1]}× 1st Team`);
+    if(byTier[2])parts.push(`${byTier[2]}× 2nd Team`);
+    if(byTier[3])parts.push(`${byTier[3]}× 3rd Team`);
+    awards.push({icon:'⭐',label:`All-Docile: ${parts.join(', ')}`,type:'docile'});
+  }
+
+  // All-Rookie team appearances
+  const rookieYears=[];
+  Object.entries(ALL_DOCILE).forEach(([yr,data])=>{
+    if(!data.rookie)return;
+    Object.values(data.rookie).forEach(val=>{
+      if(typeof val!=='string')return;
+      const pname=val.split(',')[0].replace(/^\[[^\]]+\]\s*/,'').trim().toLowerCase();
+      if(pname===nameLower)rookieYears.push(yr);
+    });
+  });
+  if(rookieYears.length>0)awards.push({icon:'🌱',label:`All-Rookie Team: ${rookieYears.join(', ')}`,type:'rookie'});
+
+  // Pro Bowl selections
+  const pbSelections=[];
+  Object.entries(PRO_BOWL).forEach(([yr,pb])=>{
+    pb.teams.forEach(team=>{
+      team.players.forEach(p=>{
+        // strip team prefix e.g. "[CIN] Ja'Marr Chase"
+        const pname=p.player.replace(/^\[[^\]]+\]\s*/,'').trim().toLowerCase();
+        if(pname===nameLower)pbSelections.push({year:yr,mvp:!!p.mvp});
+      });
+    });
+  });
+  if(pbSelections.length>0){
+    const mvpYears=pbSelections.filter(p=>p.mvp).map(p=>p.year);
+    let label=`${pbSelections.length}× Pro Bowl`;
+    if(mvpYears.length)label+=` · MVP ${mvpYears.join(', ')}`;
+    awards.push({icon:'🏈',label,type:'probowl'});
+  }
+
+  // Named player awards from PLAYER_AWARDS
+  const AWARD_LABELS={
+    mvp:'Docile League MVP',champ_mvp:'Docile Cup MVP',roty:'Rookie of the Year',
+    pb_mvp:'Pro Bowl MVP',mip:'MIP / Comeback POTY',slapdick:'Slapdick of the Year',
+    best_tx:'Best Transaction'
+  };
+  const AWARD_ICONS={mvp:'⭐',champ_mvp:'🏆',roty:'🌱',pb_mvp:'🏈',mip:'📈',slapdick:'🤦',best_tx:'💸'};
+  Object.entries(PLAYER_AWARDS).forEach(([yr,pa])=>{
+    Object.entries(pa).forEach(([key,val])=>{
+      if(!val||val==='N/A')return;
+      // Match player name anywhere in the award string (handles "[CIN] Name" format)
+      const valClean=val.replace(/^\[[^\]]+\]\s*/,'').trim().toLowerCase();
+      if(valClean===nameLower||val.toLowerCase().includes(nameLower)){
+        awards.push({icon:AWARD_ICONS[key]||'🎖️',label:`${yr} ${AWARD_LABELS[key]||key}`,type:'award'});
+      }
+    });
+  });
+
+  // Docile Cup — started for a championship team
+  const champYears=[];
+  Object.entries(CHAMPIONS).forEach(([yr,mgr])=>{
+    const season=DB.seasons.find(s=>s.year===parseInt(yr));
+    if(!season)return;
+    // Find the champion's roster
+    const champMgrKey=mgr;
+    const champTeam=season.teams.find(t=>t.managerKey===champMgrKey);
+    if(!champTeam)return;
+    // Check if this player was started by the champion that season
+    const started=DB.allStarters.some(s=>
+      s.pid===pid&&s.year===parseInt(yr)&&s.teamRosterId===champTeam.rosterId);
+    if(started)champYears.push(yr);
+  });
+  if(champYears.length>0)awards.push({icon:'💍',label:`Docile Cup: ${champYears.join(', ')}`,type:'cup'});
+
+  return awards;
 }
 
 function getPlayerName(pid){
