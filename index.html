@@ -1007,7 +1007,7 @@ const PLAYOFF_STANDINGS = [
 
 const PRO_BOWL = {
   2020:{
-    year:2020,format:'4-team',
+    year:2020,format:'4-team',mvp:'[MIN] Kirk Cousins',
     teams:[
       {name:'East',winner:false,total:134.04,players:[
         {pos:'QB',player:'[SEA] Russell Wilson',owner:'Amol',pts:18.14},
@@ -1033,7 +1033,7 @@ const PRO_BOWL = {
         {pos:'DEF',player:'[MIA] Miami Dolphins',owner:'Jared',pts:-1.00},
         {pos:'K',player:'[MIA] Jason Sanders',owner:'Declan',pts:9.00}
       ]},
-      {name:'South',winner:true,total:170.38,players:[
+      {name:'South',winner:false,total:170.38,players:[
         {pos:'QB',player:'[LAC] Justin Herbert',owner:'Brad',pts:32.98},
         {pos:'RB',player:'[IND] Jonathan Taylor',owner:'Brad',pts:38.40},
         {pos:'RB',player:'[GB] Aaron Jones',owner:'Jon',pts:18.50},
@@ -1045,7 +1045,7 @@ const PRO_BOWL = {
         {pos:'DEF',player:'[IND] Indianapolis Colts',owner:'David',pts:9.00},
         {pos:'K',player:'[BAL] Justin Tucker',owner:'Jon',pts:8.00}
       ]},
-      {name:'West',winner:false,total:178.60,mvp:'[MIN] Kirk Cousins',players:[
+      {name:'West',winner:true,total:178.60,players:[
         {pos:'QB',player:'[MIN] Kirk Cousins',owner:'Abhi',pts:34.30,mvp:true},
         {pos:'RB',player:'[CLE] Kareem Hunt',owner:'Boone',pts:5.10},
         {pos:'RB',player:'[CHI] David Montgomery',owner:'Jimmy',pts:28.20},
@@ -1059,7 +1059,7 @@ const PRO_BOWL = {
       ]}
     ]
   },
-  2021:{year:2021,format:'3-team',mvp:'[MIN] Kirk Cousins',teams:[
+  2021:{year:2021,format:'3-team',mvp:'[SF] Deebo Samuel',teams:[
     {name:'Legends',winner:false,total:120.20,players:[
       {pos:'QB',player:'[ARI] Kyler Murray',owner:'Jared',pts:17.10},{pos:'RB',player:'[IND] Jonathan Taylor',owner:'Brad',pts:12.50},
       {pos:'RB',player:'[DAL] Ezekiel Elliott',owner:'Declan',pts:10.00},{pos:'WR',player:'[PIT] Diontae Johnson',owner:'Declan',pts:12.10},
@@ -1067,27 +1067,27 @@ const PRO_BOWL = {
       {pos:'FLEX',player:'[WAS] Terry McLaurin',owner:'Declan',pts:13.30},{pos:'FLEX',player:'[DAL] Amari Cooper',owner:'Brad',pts:12.90},
       {pos:'DEF',player:'[TB] Tampa Bay Buccaneers',owner:'Declan',pts:7.00},{pos:'K',player:'[BAL] Justin Tucker',owner:'Jon',pts:8.00}
     ]},
-    {name:'Leaders',winner:true,total:145.40,players:[
+    {name:'Leaders',winner:false,total:145.40,players:[
       {pos:'QB',player:'[DAL] Dak Prescott',owner:'Jimmy',pts:31.80},{pos:'RB',player:'[PIT] Najee Harris',owner:'David',pts:9.50},
       {pos:'RB',player:'[NO] Alvin Kamara',owner:'David',pts:18.20},{pos:'WR',player:'[MIN] Justin Jefferson',owner:'David',pts:22.10},
       {pos:'WR',player:'[TB] Mike Evans',owner:'Boone',pts:26.90},{pos:'TE',player:'[BAL] Mark Andrews',owner:'Jimmy',pts:16.50},
       {pos:'FLEX',player:'[KC] Tyreek Hill',owner:'Boone',pts:1.20},{pos:'FLEX',player:'[LAC] Keenan Allen',owner:'Amol',pts:11.20},
       {pos:'DEF',player:'[IND] Indianapolis Colts',owner:'David',pts:1.00},{pos:'K',player:'[LAR] Matt Gay',owner:'David',pts:7.00}
     ]},
-    {name:'Turd Burglars',winner:false,total:198.92,mvp:'[BUF] Josh Allen',players:[
-      {pos:'QB',player:'[BUF] Josh Allen',owner:'Kyle',pts:23.86,mvp:true},{pos:'RB',player:'[LAC] Austin Ekeler',owner:'Hinton',pts:28.90},
+    {name:'Turd Burglars',winner:true,total:198.92,players:[
+      {pos:'QB',player:'[BUF] Josh Allen',owner:'Kyle',pts:23.86},{pos:'RB',player:'[LAC] Austin Ekeler',owner:'Hinton',pts:28.90},
       {pos:'RB',player:'[SEA] Rashaad Penny',owner:'Lance',pts:25.00},{pos:'WR',player:'[LAR] Cooper Kupp',owner:'Abhi',pts:26.60},
-      {pos:'WR',player:'[SF] Deebo Samuel',owner:'Lance',pts:28.96},{pos:'TE',player:'[TB] Rob Gronkowski',owner:'Abhi',pts:20.70},
+      {pos:'WR',player:'[SF] Deebo Samuel',owner:'Lance',pts:28.96,mvp:true},{pos:'TE',player:'[TB] Rob Gronkowski',owner:'Abhi',pts:20.70},
       {pos:'FLEX',player:'[DET] Amon-Ra St. Brown',owner:'Kyle',pts:26.10},{pos:'FLEX',player:'[SEA] DK Metcalf',owner:'Abhi',pts:10.80},
       {pos:'DEF',player:'[NE] New England Patriots',owner:'Abhi',pts:1.00},{pos:'K',player:'[NE] Nick Folk',owner:'Hinton',pts:7.00}
     ]}
   ]},
-  2022:{year:2022,format:'3-team',mvp:'[SF] Deebo Samuel',teams:[
-    {name:'Legends',winner:false,total:151.88,players:[
+  2022:{year:2022,format:'3-team',mvp:'[DEN] Jerry Jeudy',teams:[
+    {name:'Legends',winner:true,total:151.88,players:[
       {pos:'QB',player:'[KC] Patrick Mahomes',owner:'Jon',pts:14.98},{pos:'RB',player:'[SF] Christian McCaffrey',owner:'Brad',pts:16.90},
       {pos:'RB',player:'[GB] Aaron Jones',owner:'Brad',pts:7.80},{pos:'WR',player:'[LV] Davante Adams',owner:'Declan',pts:12.30},
       {pos:'WR',player:'[BUF] Stefon Diggs',owner:'Brad',pts:23.40},{pos:'TE',player:'[KC] Travis Kelce',owner:'Declan',pts:9.80},
-      {pos:'FLEX',player:'[DEN] Jerry Jeudy',owner:'Jared',pts:24.30},{pos:'FLEX',player:'[SEA] Tyler Lockett',owner:'Declan',pts:15.40},
+      {pos:'FLEX',player:'[DEN] Jerry Jeudy',owner:'Jared',pts:24.30,mvp:true},{pos:'FLEX',player:'[SEA] Tyler Lockett',owner:'Declan',pts:15.40},
       {pos:'DEF',player:'[SF] San Francisco 49ers',owner:'Brad',pts:15.00},{pos:'K',player:'[BAL] Justin Tucker',owner:'Brad',pts:12.00}
     ]},
     {name:'Leaders',winner:false,total:109.86,players:[
@@ -1097,7 +1097,7 @@ const PRO_BOWL = {
       {pos:'FLEX',player:'[DAL] CeeDee Lamb',owner:'Amol',pts:16.20},{pos:'FLEX',player:'[MIA] Tyreek Hill',owner:'Amol',pts:4.30},
       {pos:'DEF',player:'[SEA] Seattle Seahawks',owner:'Boone',pts:8.00},{pos:'K',player:'[SEA] Jason Myers',owner:'Jimmy',pts:12.00}
     ]},
-    {name:'Turd Burglars',winner:true,total:103.56,mvp:'[SF] Deebo Samuel',players:[
+    {name:'Turd Burglars',winner:false,total:103.56,players:[
       {pos:'QB',player:'[BUF] Josh Allen',owner:'Kyle',pts:21.76},{pos:'RB',player:'[SEA] Kenneth Walker III',owner:'Lance',pts:13.40},
       {pos:'RB',player:'[DET] DeAndre Swift',owner:'Kyle',pts:14.20},{pos:'WR',player:'[LAR] Cooper Kupp',owner:'Abhi',pts:26.60},
       {pos:'WR',player:'[CIN] Tee Higgins',owner:'Abhi',pts:1.70},{pos:'TE',player:'[JAX] Evan Engram',owner:'Abhi',pts:6.70},
@@ -2217,11 +2217,8 @@ function openPlayerModal(pid){
   const awardsHtml=playerAwards.length?`
     <div style="margin-top:0.75rem">
       <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem">League Awards & Honors</div>
-      <div style="display:flex;flex-direction:column;gap:5px">
-        ${playerAwards.map(a=>`<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:6px;padding:5px 10px;font-size:0.82rem">
-          <span>${a.icon}</span>
-          <span style="color:var(--text)">${a.label}</span>
-        </div>`).join('')}
+      <div style="display:flex;flex-direction:column;gap:4px">
+        ${playerAwards.map(a=>`<div style="font-size:0.85rem;color:var(--text);line-height:1.5;padding:3px 0">${a.line}</div>`).join('')}
       </div>
     </div>`:'';
 
@@ -3679,100 +3676,117 @@ function computePlayerAwards(pid){
   const m=DB.playerMeta[pid];
   const name=m?`${m.first_name} ${m.last_name}`:null;
   if(!name)return[];
-  const nameLower=name.toLowerCase();
+  const normName=s=>s.toLowerCase().replace(/[\u2018\u2019\u02BC']/g,"'").replace(/\s+/g,' ').trim();
+  const nameLower=normName(name);
   const awards=[];
+  const repeat=(emoji,n)=>Array(n).fill(emoji).join('');
 
-  // POTG / POTW counts
-  const allLog=computePotgData('all');
-  const potgCount=allLog.filter(e=>e.pid===pid).length;
-  const potwCount=allLog.filter(e=>e.pid===pid&&e.type==='POTW').length;
-  if(potgCount>0)awards.push({icon:'🎯',label:`${potgCount} POTG${potgCount!==1?'s':''}${potwCount>0?` (${potwCount} POTW${potwCount!==1?'s':''})`:''}`,type:'potg'});
+  // Helper: strip team prefix "[XXX] Name" → "Name", normalize apostrophes
+  const stripTeam=s=>normName(s.replace(/^\[[^\]]+\]\s*/,'').trim());
 
-  // All-Docile team appearances
-  const docileAppearances=[];
-  Object.entries(ALL_DOCILE).forEach(([yr,data])=>{
-    ['t1','t2','t3'].forEach((tier,i)=>{
-      if(!data[tier])return;
-      Object.values(data[tier]).forEach(val=>{
-        if(typeof val!=='string')return;
-        const pname=val.split(',')[0].replace(/^\[[^\]]+\]\s*/,'').trim().toLowerCase();
-        if(pname===nameLower)docileAppearances.push({year:yr,tier:i+1});
-      });
-    });
-  });
-  if(docileAppearances.length>0){
-    const byTier={1:0,2:0,3:0};
-    docileAppearances.forEach(a=>byTier[a.tier]++);
-    const parts=[];
-    if(byTier[1])parts.push(`${byTier[1]}× 1st Team`);
-    if(byTier[2])parts.push(`${byTier[2]}× 2nd Team`);
-    if(byTier[3])parts.push(`${byTier[3]}× 3rd Team`);
-    awards.push({icon:'⭐',label:`All-Docile: ${parts.join(', ')}`,type:'docile'});
-  }
+  // 1. Docile League MVP 👑
+  const mvpYears=Object.entries(PLAYER_AWARDS)
+    .filter(([,pa])=>pa.mvp&&stripTeam(pa.mvp).toLowerCase()===nameLower)
+    .map(([yr])=>yr);
+  if(mvpYears.length)awards.push({line:`${repeat('👑',mvpYears.length)} Docile League MVP (${mvpYears.join(', ')})`});
 
-  // All-Rookie team appearances
-  const rookieYears=[];
-  Object.entries(ALL_DOCILE).forEach(([yr,data])=>{
-    if(!data.rookie)return;
-    Object.values(data.rookie).forEach(val=>{
-      if(typeof val!=='string')return;
-      const pname=val.split(',')[0].replace(/^\[[^\]]+\]\s*/,'').trim().toLowerCase();
-      if(pname===nameLower)rookieYears.push(yr);
-    });
-  });
-  if(rookieYears.length>0)awards.push({icon:'🌱',label:`All-Rookie Team: ${rookieYears.join(', ')}`,type:'rookie'});
-
-  // Pro Bowl selections
-  const pbSelections=[];
-  Object.entries(PRO_BOWL).forEach(([yr,pb])=>{
-    pb.teams.forEach(team=>{
-      team.players.forEach(p=>{
-        // strip team prefix e.g. "[CIN] Ja'Marr Chase"
-        const pname=p.player.replace(/^\[[^\]]+\]\s*/,'').trim().toLowerCase();
-        if(pname===nameLower)pbSelections.push({year:yr,mvp:!!p.mvp});
-      });
-    });
-  });
-  if(pbSelections.length>0){
-    const mvpYears=pbSelections.filter(p=>p.mvp).map(p=>p.year);
-    let label=`${pbSelections.length}× Pro Bowl`;
-    if(mvpYears.length)label+=` · MVP ${mvpYears.join(', ')}`;
-    awards.push({icon:'🏈',label,type:'probowl'});
-  }
-
-  // Named player awards from PLAYER_AWARDS
-  const AWARD_LABELS={
-    mvp:'Docile League MVP',champ_mvp:'Docile Cup MVP',roty:'Rookie of the Year',
-    pb_mvp:'Pro Bowl MVP',mip:'MIP / Comeback POTY',slapdick:'Slapdick of the Year',
-    best_tx:'Best Transaction'
-  };
-  const AWARD_ICONS={mvp:'⭐',champ_mvp:'🏆',roty:'🌱',pb_mvp:'🏈',mip:'📈',slapdick:'🤦',best_tx:'💸'};
-  Object.entries(PLAYER_AWARDS).forEach(([yr,pa])=>{
-    Object.entries(pa).forEach(([key,val])=>{
-      if(!val||val==='N/A')return;
-      // Match player name anywhere in the award string (handles "[CIN] Name" format)
-      const valClean=val.replace(/^\[[^\]]+\]\s*/,'').trim().toLowerCase();
-      if(valClean===nameLower||val.toLowerCase().includes(nameLower)){
-        awards.push({icon:AWARD_ICONS[key]||'🎖️',label:`${yr} ${AWARD_LABELS[key]||key}`,type:'award'});
-      }
-    });
-  });
-
-  // Docile Cup — started for a championship team
+  // 2. Docile Cup 🏆 — started on championship team
   const champYears=[];
   Object.entries(CHAMPIONS).forEach(([yr,mgr])=>{
     const season=DB.seasons.find(s=>s.year===parseInt(yr));
     if(!season)return;
-    // Find the champion's roster
-    const champMgrKey=mgr;
-    const champTeam=season.teams.find(t=>t.managerKey===champMgrKey);
+    const champTeam=season.teams.find(t=>t.managerKey===mgr);
     if(!champTeam)return;
-    // Check if this player was started by the champion that season
-    const started=DB.allStarters.some(s=>
-      s.pid===pid&&s.year===parseInt(yr)&&s.teamRosterId===champTeam.rosterId);
+    const started=DB.allStarters.some(s=>s.pid===pid&&s.year===parseInt(yr)&&s.teamRosterId===champTeam.rosterId);
     if(started)champYears.push(yr);
   });
-  if(champYears.length>0)awards.push({icon:'💍',label:`Docile Cup: ${champYears.join(', ')}`,type:'cup'});
+  if(champYears.length)awards.push({line:`${repeat('🏆',champYears.length)} Docile Cup (${champYears.join(', ')})`});
+
+  // 3. Docile Cup MVP 🏅
+  const cupMvpYears=Object.entries(PLAYER_AWARDS)
+    .filter(([,pa])=>pa.champ_mvp&&stripTeam(pa.champ_mvp).toLowerCase()===nameLower)
+    .map(([yr])=>yr);
+  if(cupMvpYears.length)awards.push({line:`${repeat('🏅',cupMvpYears.length)} Docile Cup MVP (${cupMvpYears.join(', ')})`});
+
+  // 4. All-Docile per tier — separate lines (🥇🥈🥉)
+  const tierEmoji={1:'🥇',2:'🥈',3:'🥉'};
+  [1,2,3].forEach(tier=>{
+    const yrs=[];
+    Object.entries(ALL_DOCILE).forEach(([yr,data])=>{
+      const key=['t1','t2','t3'][tier-1];
+      if(!data[key])return;
+      Object.values(data[key]).forEach(val=>{
+        if(typeof val!=='string')return;
+        const pname=stripTeam(val.split(',')[0]).toLowerCase();
+        if(pname===nameLower)yrs.push(yr);
+      });
+    });
+    if(yrs.length)awards.push({line:`${repeat(tierEmoji[tier],yrs.length)} All-Docile ${['1st','2nd','3rd'][tier-1]} Team (${yrs.join(', ')})`});
+  });
+
+  // 5. Rookie of the Year 🍼
+  const rotyYears=Object.entries(PLAYER_AWARDS)
+    .filter(([,pa])=>pa.roty&&stripTeam(pa.roty).toLowerCase()===nameLower)
+    .map(([yr])=>yr);
+  if(rotyYears.length)awards.push({line:`${repeat('🍼',rotyYears.length)} Rookie of the Year (${rotyYears.join(', ')})`});
+
+  // 6. All-Rookie Team 👶
+  const rookieYrs=[];
+  Object.entries(ALL_DOCILE).forEach(([yr,data])=>{
+    if(!data.rookie)return;
+    Object.values(data.rookie).forEach(val=>{
+      if(typeof val!=='string')return;
+      const pname=stripTeam(val.split(',')[0]).toLowerCase();
+      if(pname===nameLower)rookieYrs.push(yr);
+    });
+  });
+  if(rookieYrs.length)awards.push({line:`${repeat('👶',rookieYrs.length)} All-Rookie Team (${rookieYrs.join(', ')})`});
+
+  // 7. Pro Bowl ⭐️ (selections on winning or any team)
+  const pbSelections=[];
+  const pbMvpYears=[];
+  Object.entries(PRO_BOWL).forEach(([yr,pb])=>{
+    pb.teams.forEach(team=>{
+      team.players.forEach(p=>{
+        const pname=stripTeam(p.player).toLowerCase();
+        if(pname===nameLower){
+          pbSelections.push(yr);
+          if(p.mvp)pbMvpYears.push(yr);
+        }
+      });
+    });
+  });
+  if(pbSelections.length)awards.push({line:`${repeat('⭐',pbSelections.length)} Pro Bowl (${pbSelections.join(', ')})`});
+
+  // 8. Pro Bowl MVP 🦸‍♂️
+  if(pbMvpYears.length)awards.push({line:`${repeat('🦸‍♂️',pbMvpYears.length)} Pro Bowl MVP (${pbMvpYears.join(', ')})`});
+
+  // 9. MIP 🏋️‍♂️
+  const mipYears=Object.entries(PLAYER_AWARDS)
+    .filter(([,pa])=>pa.mip&&stripTeam(pa.mip).toLowerCase()===nameLower)
+    .map(([yr])=>yr);
+  if(mipYears.length)awards.push({line:`${repeat('🏋️‍♂️',mipYears.length)} MIP (${mipYears.join(', ')})`});
+
+  // 10. Slapdick 🍆
+  const slapdickYears=Object.entries(PLAYER_AWARDS)
+    .filter(([,pa])=>pa.slapdick&&(stripTeam(pa.slapdick).toLowerCase()===nameLower||pa.slapdick.toLowerCase()===nameLower))
+    .map(([yr])=>yr);
+  if(slapdickYears.length)awards.push({line:`${repeat('🍆',slapdickYears.length)} Slapdick of the Year (${slapdickYears.join(', ')})`});
+
+  // 11. Best Transaction ✍️
+  const bestTxYears=Object.entries(PLAYER_AWARDS)
+    .filter(([,pa])=>pa.best_tx&&pa.best_tx.toLowerCase().includes(nameLower))
+    .map(([yr])=>yr);
+  if(bestTxYears.length)awards.push({line:`${repeat('✍️',bestTxYears.length)} Best Transaction (${bestTxYears.join(', ')})`});
+
+  // 12. POTW 🎖️ (separate from POTG)
+  const allLog=computePotgData('all');
+  const potwCount=allLog.filter(e=>e.pid===pid&&e.type==='POTW').length;
+  if(potwCount>0)awards.push({line:`${repeat('🎖️',potwCount)} POTW`});
+
+  // 13. POTG 🎗️ (total including POTW weeks)
+  const potgCount=allLog.filter(e=>e.pid===pid).length;
+  if(potgCount>0)awards.push({line:`${repeat('🎗️',potgCount)} POTG`});
 
   return awards;
 }
