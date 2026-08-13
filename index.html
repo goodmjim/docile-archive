@@ -266,10 +266,13 @@ tbody tr.highlight td{background:var(--gold-dim)}
 .wtrack{width:44px;height:3px;border-radius:2px;background:var(--surface3);display:inline-block;position:relative}
 .wfill{position:absolute;left:0;top:0;height:100%;border-radius:2px;background:var(--teal)}
 .badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:0.68rem;font-weight:600;font-family:var(--font-mono)}
-.bg-gold{background:var(--gold-dim);color:var(--gold)}
-.bg-teal{background:var(--teal-dim);color:var(--teal)}
-.bg-red{background:var(--crimson-dim);color:var(--crimson)}
-.bg-dim{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+/* Position color coding: QB=Red, RB=Green, WR=Blue, TE=Orange, K=Purple, DEF=Yellow */
+.bg-gold,.badge-QB{background:rgba(192,57,43,0.18);color:#e05c4b}
+.bg-teal,.badge-RB,.badge-FB{background:rgba(39,174,96,0.15);color:#2ecc71}
+.bg-dim,.badge-WR{background:rgba(52,152,219,0.15);color:#5dade2;border:1px solid rgba(52,152,219,0.25)}
+.badge-TE{background:rgba(230,126,34,0.15);color:#e67e22}
+.badge-K{background:rgba(155,89,182,0.15);color:#9b59b6}
+.bg-red,.badge-DEF,.badge-DST{background:rgba(241,196,15,0.15);color:#d4ac0d}
 .pts-bar{display:inline-block;width:64px;height:3px;border-radius:2px;background:var(--surface3);position:relative;vertical-align:middle}
 .pts-fill{position:absolute;left:0;top:0;height:100%;border-radius:2px;background:var(--gold)}
 
@@ -612,40 +615,44 @@ tbody tr.highlight td{background:var(--gold-dim)}
       </button>
 
       <div class="sb-section-label">My Team</div>
-      <button class="sb-item" onclick="switchTab('mylineup')" data-tab="mylineup">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        All-Time Lineup
-      </button>
       <button class="sb-item" onclick="switchTab('myscoring')" data-tab="myscoring">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         My Scoring
-      </button>
-      <button class="sb-item" onclick="switchTab('myh2h')" data-tab="myh2h">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-        My H2H
-      </button>
-      <button class="sb-item" onclick="switchTab('mytrades')" data-tab="mytrades">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-        My Trades
-      </button>
-      <button class="sb-item" onclick="switchTab('mydraft')" data-tab="mydraft">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        My Draft
-      </button>
-      <button class="sb-item" onclick="switchTab('myprobowl')" data-tab="myprobowl">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        My Pro Bowlers
       </button>
       <button class="sb-item" onclick="switchTab('mytimeline')" data-tab="mytimeline">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         My Timeline
       </button>
+      <button class="sb-item" onclick="switchTab('myh2h')" data-tab="myh2h">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        My H2H
+      </button>
+      <button class="sb-item" onclick="switchTab('mydraft')" data-tab="mydraft">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        My Draft
+      </button>
+      <button class="sb-item" onclick="switchTab('mylineup')" data-tab="mylineup">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        All-Time Lineup
+      </button>
+      <button class="sb-item" onclick="switchTab('myprobowl')" data-tab="myprobowl">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        My Pro Bowlers
+      </button>
       <button class="sb-item" onclick="switchTab('mynfl')" data-tab="mynfl">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         My NFL Breakdown
       </button>
+      <button class="sb-item" onclick="switchTab('mytrades')" data-tab="mytrades">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        My Trades
+      </button>
 
       <div class="sb-section-label">League</div>
+      <button class="sb-item" onclick="switchTab('players')" data-tab="players">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Player Scoring
+      </button>
       <button class="sb-item" onclick="switchTab('timeline')" data-tab="timeline">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Timeline
@@ -654,45 +661,9 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         Standings
       </button>
-      <button class="sb-item" onclick="switchTab('matchups')" data-tab="matchups">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Matchups
-      </button>
-      <button class="sb-item" onclick="switchTab('players')" data-tab="players">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Player Scoring
-      </button>
       <button class="sb-item" onclick="switchTab('h2h')" data-tab="h2h">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
-        Head-to-Head
-      </button>
-      <button class="sb-item" onclick="switchTab('playoffs')" data-tab="playoffs">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="7" x2="7" y2="13"/><polyline points="16 17 3 4"/><polyline points="17.5 6.5 21 3 21 21 3 21 6.5 17.5"/></svg>
-        Playoffs
-      </button>
-      <button class="sb-item" onclick="switchTab('trades')" data-tab="trades">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-        Trades
-      </button>
-      <button class="sb-item" onclick="switchTab('awards')" data-tab="awards">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
-        Awards
-      </button>
-      <button class="sb-item" onclick="switchTab('probowl')" data-tab="probowl">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Pro Bowl
-      </button>
-      <button class="sb-item" onclick="switchTab('hof')" data-tab="hof">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-        Hall of Fame
-      </button>
-      <button class="sb-item" onclick="switchTab('potg')" data-tab="potg">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
-        POTG / POTW
-      </button>
-      <button class="sb-item" onclick="switchTab('projections')" data-tab="projections">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Projections
+        H2H
       </button>
       <button class="sb-item" onclick="switchTab('draft')" data-tab="draft">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -702,14 +673,44 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         UDFA Auction
       </button>
+      <button class="sb-item" onclick="switchTab('trades')" data-tab="trades">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Trades
+      </button>
+      <button class="sb-item" onclick="switchTab('hof')" data-tab="hof">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        Hall of Fame
+      </button>
+      <button class="sb-item" onclick="switchTab('awards')" data-tab="awards">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        Awards
+      </button>
+      <button class="sb-item" onclick="switchTab('potg')" data-tab="potg">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        POTG
+      </button>
+      <button class="sb-item" onclick="switchTab('probowl')" data-tab="probowl">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Pro Bowl
+      </button>
+      <button class="sb-item" onclick="switchTab('projections')" data-tab="projections">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Projections
+      </button>
+      <button class="sb-item" onclick="switchTab('playoffs')" data-tab="playoffs">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="7" x2="7" y2="13"/><polyline points="16 17 3 4"/><polyline points="17.5 6.5 21 3 21 21 3 21 6.5 17.5"/></svg>
+        Playoffs
+      </button>
+      <button class="sb-item" onclick="switchTab('matchups')" data-tab="matchups">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Matchups
+      </button>
 
       <div class="sb-divider"></div>
       <button class="sb-item sb-search" onclick="switchTab('search')" data-tab="search">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Smart Search
       </button>
-
-      <div class="sb-divider"></div>
       <div class="sb-controls">
         <select class="s-sel" id="s-sel" onchange="onSeasonChange()" title="Filter by season"></select>
         <button class="sb-btn" onclick="doRefresh()" title="Refresh data">↻</button>
@@ -908,7 +909,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
         </div>
       </div>
       <!-- Lucky/Unlucky matchup analysis -->
-      <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">Lucky & Unlucky Wins</h2>
+      <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">Lucky Wins</h2>
         <span class="sh-sub">Won despite being outprojected, or lost despite being projected higher</span>
       </div>
       <div id="luck-content" style="margin-bottom:2rem"></div>
@@ -1767,7 +1768,7 @@ const SFA_AUCTION={
     {mgr:'Kyle',player:'Jaylen Wright',team:'MIA',pos:'RB',bid:51},
     {mgr:'Lance',player:'Keon Coleman',team:'BUF',pos:'WR',bid:138},
     {mgr:'Jimmy',player:'Troy Franklin',team:'DEN',pos:'WR',bid:38},
-    {mgr:'David',player:'Jonathan Brooks',team:'CAR',pos:'RB',bid:133},
+    {mgr:'David',player:'Jonathon Brooks',team:'CAR',pos:'RB',bid:133},
     {mgr:'Hinton',player:'Blake Corum',team:'LAR',pos:'RB',bid:135},
     {mgr:'Brad',player:'Ben Sinnott',team:'WAS',pos:'TE',bid:40},
     {mgr:'Jon',player:'Adonai Mitchell',team:'IND',pos:'WR',bid:80},
@@ -1901,6 +1902,7 @@ function lookupPid(name){
     'gabriel davis':'6943',
     'mike strachan':'7571',
     'kalil pimpelton':'8150',
+    'jonathon brooks':'11583',
   };
   const normLower=name.toLowerCase().trim();
   if(PID_OVERRIDES[normLower])return PID_OVERRIDES[normLower];
@@ -3020,7 +3022,7 @@ function renderPlayers(){
   const {current:curRanks, prev:prevRanks, currentLabel} = buildWeeklyRanks(starters, sortBy);
 
   const maxTotal=rows.length?Math.max(...rows.map(r=>r.total)):1;
-  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
+  const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
   const body=document.getElementById('players-body');
   if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">No players found.</td></tr>';return;}
 
@@ -3054,7 +3056,7 @@ function renderPlayers(){
     }
     return`<tr>
       <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
-      <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
+      <td><span class="badge ${pc[r.pos]||'badge-WR'}">${r.pos}</span></td>
       <td class="mono" style="color:var(--text3);font-size:0.72rem">${r.nflTeam}</td>
       <td class="mono">${r.total.toFixed(1)}</td>
       <td class="mono">${r.starts}</td>
@@ -3068,6 +3070,24 @@ function renderPlayers(){
 // ══════════════════════════════════════════════════════════════
 // PLAYER MODAL
 // ══════════════════════════════════════════════════════════════
+function getPlayerAcquisition(pid){
+  // Search draft data
+  for(const[yr,picks] of Object.entries(DB.draftData||{})){
+    const p=picks.find(pk=>pk.pid===pid||String(pk.pid)===String(pid));
+    if(p)return{type:'Draft',label:`${yr} Draft · Rd ${p.round}, Pick ${p.pickNo} · ${p.mgr}`};
+  }
+  // Search SFA
+  for(const[yr,picks] of Object.entries(SFA_AUCTION)){
+    const p=picks.find(pk=>lookupPid(pk.player)===pid||String(lookupPid(pk.player))===String(pid));
+    if(p)return{type:'SFA',label:`${yr} SFA Auction · $${p.bid} · ${p.mgr}`};
+  }
+  // Search UDFA
+  for(const[yr,picks] of Object.entries(UDFA_AUCTION)){
+    const p=picks.find(pk=>lookupPid(pk.player)===pid||String(lookupPid(pk.player))===String(pid));
+    if(p)return{type:'UDFA',label:`${yr} UDFA Auction · $${p.bid} · ${p.mgr}`};
+  }
+  return null;
+}
 function openPlayerModal(pid){
   const m=DB.playerMeta[pid];
   const name=m?`${m.first_name} ${m.last_name}`:'Player '+pid;
@@ -3107,7 +3127,13 @@ function openPlayerModal(pid){
       </div>
     </div>`:'';
 
-  // Trade history for this player
+  // Acquisition info
+  const acq=getPlayerAcquisition(pid);
+  const acqColor=acq?.type==='Draft'?'var(--text2)':acq?.type==='SFA'?'var(--teal)':'var(--gold)';
+  const acqHtml=`<div style="margin-top:0.5rem;padding:6px 10px;background:var(--surface2);border-radius:6px;font-size:0.78rem">
+    <span style="color:var(--text3);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em">Acquired via</span>
+    <div style="color:${acqColor};margin-top:2px;font-weight:500">${acq?acq.label:'N/A — not drafted or auctioned'}</div>
+  </div>`;
   const playerTrades=DB.transactions.filter(t=>{
     if(t.type!=='trade')return false;
     return Object.keys(t.adds||{}).includes(pid);
@@ -3159,6 +3185,7 @@ function openPlayerModal(pid){
       <div id="modal-bio-text" style="font-size:0.82rem;color:var(--text2);line-height:1.6;font-family:var(--font-body);white-space:pre-wrap">${bio||'<span style="color:var(--text3);font-style:italic">No notes yet.</span>'}</div>
     </div>
     <div style="font-size:0.68rem;color:var(--text3);margin-top:4px">${SHARED_SHEET_ID?'Notes are managed via the PlayerBios sheet.':'No shared sheet configured.'}</div>
+    ${acqHtml}
     ${awardsHtml}
     ${tradeHistoryHtml}
     <div class="modal-seasons">
@@ -3221,7 +3248,7 @@ function renderH2H(){
         <td class="mono">${r.year}</td><td class="mono">Wk ${r.week}</td>
         <td class="mono${r.winner===t1?' ':''}"><span${r.winner===t1?' style="color:var(--gold);font-weight:600"':''}>${r.pt1.toFixed(2)}</span></td>
         <td class="mono${r.winner===t2?' ':''}"><span${r.winner===t2?' style="color:var(--gold);font-weight:600"':''}>${r.pt2.toFixed(2)}</span></td>
-        <td><span class="badge ${r.winner===t1?'bg-gold':r.winner===t2?'bg-red':'bg-dim'}">${r.winner}</span></td>
+        <td><span class="badge ${r.winner===t1?'badge-QB':r.winner===t2?'badge-RB':'badge-WR'}">${r.winner}</span></td>
       </tr>`).join('')}</tbody>
     </table></div>`:'<div class="empty">No direct matchups found in loaded seasons.</div>'}`;
 }
@@ -3700,14 +3727,14 @@ const TABS=['home','standings','matchups','players','h2h','playoffs','trades','a
 
 const SECTIONS={
   now:['home','recap'],
-  myteam:['mylineup','myscoring','myh2h','mytrades','mydraft','myprobowl','mytimeline','mynfl'],
-  league:['timeline','standings','matchups','players','h2h','playoffs','trades','awards','probowl','hof','potg','projections','draft','udfa'],
+  myteam:['myscoring','mytimeline','myh2h','mydraft','mylineup','myprobowl','mynfl','mytrades'],
+  league:['players','timeline','standings','h2h','draft','udfa','trades','hof','awards','potg','probowl','projections','playoffs','matchups'],
   search:['search']
 };
 const SECTION_LABELS={
   now:['Home','Weekly Recap'],
-  myteam:['All-Time Lineup','My Scoring','My H2H','My Trades','My Draft','My Pro Bowlers','My Timeline','My NFL Breakdown'],
-  league:['Timeline','Standings','Matchups','Player Scoring','Head-to-Head','Playoffs','Trades','Awards','Pro Bowl','Hall of Fame','POTG/POTW','Projections','Draft','UDFA Auction'],
+  myteam:['My Scoring','My Timeline','My H2H','My Draft','All-Time Lineup','My Pro Bowlers','My NFL Breakdown','My Trades'],
+  league:['Player Scoring','Timeline','Standings','H2H','Draft','UDFA Auction','Trades','Hall of Fame','Awards','POTG','Pro Bowl','Projections','Playoffs','Matchups'],
   search:['Smart Search']
 };
 
@@ -4255,10 +4282,7 @@ function renderLuckAnalysis(yrF,mgrF){
   const fmtUnlucky=g=>`<div class="luck-card unlucky"><div class="luck-label">Unlucky Loss</div>
     <div class="luck-game">${g.loser} lost to ${g.winner} (${g.loseAct.toFixed(1)}–${g.winAct.toFixed(1)})</div>
     <div class="luck-meta">${g.year} Wk${g.week} · Projected: ${g.loser} ${g.loseProj.toFixed(1)} vs ${g.winner} ${g.winProj.toFixed(1)}</div></div>`;
-  el.innerHTML=`<div class="luck-cards">
-    <div>${lucky.slice(0,5).map(fmtLucky).join('')||'<div class="empty" style="padding:1rem">No data — load 2020+ seasons for projection data.</div>'}</div>
-    <div>${unlucky.slice(0,5).map(fmtUnlucky).join('')||'<div class="empty" style="padding:1rem">No data.</div>'}</div>
-  </div>`;
+  el.innerHTML=`<div>${lucky.slice(0,10).map(fmtLucky).join('')||'<div class="empty" style="padding:1rem">No data — load 2020+ seasons for projection data.</div>'}</div>`;
 }
 
 // ── SMART SEARCH CONFIG ──────────────────────────────────────
@@ -4458,13 +4482,13 @@ function renderPotg(){
     <div class="metric gold"><div class="ml">Total POTWs</div><div class="mv">${totalPotw}</div></div>
     <div class="metric teal"><div class="ml">Unique players</div><div class="mv">${uniquePlayers}</div></div>`;
 
-  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
+  const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
   const body=document.getElementById('potw-body');
   if(!rows.length){body.innerHTML='<tr><td colspan="6" class="empty">No data for this filter.</td></tr>';return;}
   body.innerHTML=rows.slice(0,50).map((r,i)=>`<tr>
     <td class="rank">${i+1}</td>
     <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
-    <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
+    <td><span class="badge ${pc[r.pos]||'badge-WR'}">${r.pos}</span></td>
     <td class="mono">${r.potg}</td>
     <td class="mono">${r.potw}</td>
     <td class="mono">${r.best.toFixed(1)}</td>
@@ -4482,15 +4506,15 @@ function renderPotgLog(){
     const m=DB.playerMeta[e.pid];
     const name=m?`${m.first_name} ${m.last_name}`:'PID:'+e.pid;
     const pos=m?.fantasy_positions?.[0]||'?';
-    const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
+    const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
     return`<tr>
       <td class="mono">${e.year}</td>
       <td class="mono">Wk ${e.week}</td>
       <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${e.pid}')">${name}</span></td>
-      <td><span class="badge ${pc[pos]||'bg-dim'}">${pos}</span></td>
+      <td><span class="badge ${pc[pos]||'badge-WR'}">${pos}</span></td>
       <td style="font-size:0.82rem;color:var(--text2)">${e.managerKey||'—'}</td>
       <td class="mono" style="color:var(--gold)">${e.pts.toFixed(1)}</td>
-      <td><span class="badge ${e.type==='POTW'?'bg-gold':'bg-dim'}">${e.type}</span></td>
+      <td><span class="badge ${e.type==='POTW'?'badge-QB':'badge-WR'}">${e.type}</span></td>
     </tr>`;
   }).join('');
 }
@@ -5098,12 +5122,12 @@ function renderMyScoring(){
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
   const sf={total:(a,b)=>(a.total-b.total)*dir,starts:(a,b)=>(a.starts-b.starts)*dir,avg:(a,b)=>(a.avg-b.avg)*dir,best:(a,b)=>(a.best-b.best)*dir};
   rows.sort(sf[sortBy]||sf.total);
-  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red'};
+  const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
   const body=document.getElementById('myscoring-body');
   if(!rows.length){body.innerHTML='<tr><td colspan="6" class="empty">No starters found.</td></tr>';return;}
   body.innerHTML=rows.slice(0,200).map(r=>`<tr>
     <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
-    <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
+    <td><span class="badge ${pc[r.pos]||'badge-WR'}">${r.pos}</span></td>
     <td class="mono">${r.total.toFixed(1)}</td>
     <td class="mono">${r.starts}</td>
     <td class="mono">${r.avg.toFixed(1)}</td>
@@ -5287,7 +5311,7 @@ function renderDraft(){
   initDraftChips('draft-yr-chips',years,activeDraftYrs,'toggleDraftYr');
   const filtered=years.filter(y=>activeDraftYrs.has(y)||activeDraftYrs.has(String(y)));
   if(!filtered.length){el.innerHTML='<div class="empty">No draft seasons selected.</div>';return;}
-  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red',FB:'bg-dim'};
+  const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
 
   // Diagnostic: unmatched players
   const hasYear=(set,y)=>set.has(y)||set.has(Number(y))||set.has(String(y));
@@ -5383,7 +5407,7 @@ function renderDraft(){
     return`<div style="margin-bottom:2rem">
       <div class="sh" style="margin-bottom:0.5rem"><h2 style="font-size:1.1rem">${yr} Rookie Draft <span style="font-size:0.72rem;color:var(--text3);font-weight:400">${draftPicks.length} picks</span></h2></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.75rem">
-        ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'bg-dim'}">${pos}: ${cnt}</span>`).join('')}
+        ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'badge-WR'}">${pos}: ${cnt}</span>`).join('')}
       </div>
       <div class="tbl-wrap"><table>
         <thead><tr>
@@ -5411,7 +5435,7 @@ function renderDraft(){
           return`<tr>
             <td class="mono" style="color:var(--text3);font-size:0.78rem">${pickLabel}</td>
             <td>${p.pid?`<span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.player}</span>`:p.player}</td>
-            <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
+            <td><span class="badge ${pc[p.pos]||'badge-WR'}">${p.pos}</span></td>
             <td style="font-size:0.82rem">${p.mgr}</td>
             <td style="font-size:0.75rem;color:var(--text3)">${p.team||'—'}</td>
             <td style="font-size:0.75rem">${acqLabel}</td>
@@ -5443,7 +5467,7 @@ function renderUdfa(){
   initDraftChips('udfa-yr-chips',years,activeUdfaYrs,'toggleUdfaYr');
 
   const filtered=years.filter(y=>activeUdfaYrs.has(y));
-  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',FB:'bg-dim'};
+  const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
 
   const html=filtered.map(yr=>{
     const picks=UDFA_AUCTION[yr]||[];
@@ -5484,7 +5508,7 @@ function renderUdfa(){
         <div class="metric" style="flex:0 1 auto;padding:8px 14px"><div class="ml">Players</div><div class="mv" style="font-size:1.2rem">${picks.length}</div></div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.75rem">
-        ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'bg-dim'}">${pos}: ${cnt}</span>`).join('')}
+        ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'badge-WR'}">${pos}: ${cnt}</span>`).join('')}
       </div>
       <div class="tbl-wrap"><table>
         <thead><tr>
@@ -5500,7 +5524,7 @@ function renderUdfa(){
           const nameEl=pid?`<span class="player-link" onclick="openPlayerModal('${pid}')">${p.player}</span>`:p.player;
           return`<tr>
             <td style="font-weight:500">${nameEl}</td>
-            <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
+            <td><span class="badge ${pc[p.pos]||'badge-WR'}">${p.pos}</span></td>
             <td style="font-size:0.78rem;color:var(--text3)">${p.team||'—'}</td>
             <td style="font-size:0.82rem">${p.mgr}</td>
             <td class="mono" style="color:var(--gold)">$${p.bid}</td>
@@ -5533,7 +5557,7 @@ function renderMyDraft(){
   if(!activeMyDraftYrs.size)activeMyDraftYrs=new Set(allYears);
   initDraftChips('mydraft-yr-chips',allYears,activeMyDraftYrs,'toggleMyDraftYr');
 
-  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',FB:'bg-dim'};
+  const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
   const filtered=allYears.filter(y=>activeMyDraftYrs.has(y));
 
   // Build combined pick list
@@ -5586,7 +5610,7 @@ function renderMyDraft(){
       <div class="metric teal"><div class="ml">Played for you</div><div class="mv">${played} <span style="font-size:0.8rem;color:var(--text3)">/ ${total}</span></div></div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem">
-      ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'bg-dim'}">${pos}: ${cnt}</span>`).join('')}
+      ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'badge-WR'}">${pos}: ${cnt}</span>`).join('')}
     </div>
     ${steals.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
       <div class="riser-card"><div class="rf-label">Top picks by pts</div>${steals.map(p=>`<div class="rf-item"><span>${p.name} <span style="font-size:0.68rem;color:var(--text3)">${p.year}</span></span><span class="rf-delta">${p.pts.toFixed(0)}</span></div>`).join('')}</div>
@@ -5597,7 +5621,7 @@ function renderMyDraft(){
       <tbody>${allPicks.map(p=>`<tr>
         <td class="mono" style="color:var(--text3)">${p.year}</td>
         <td>${p.pid?`<span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.name}</span>`:p.name}</td>
-        <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
+        <td><span class="badge ${pc[p.pos]||'badge-WR'}">${p.pos}</span></td>
         <td style="font-size:0.75rem">${p.source==='UDFA'?`<span style="color:var(--gold)">UDFA $${p.bid}</span>`:p.source==='SFA'?`<span style="color:var(--teal)">SFA $${p.bid}</span>`:`<span style="color:var(--text3)">Rd ${p.round}</span>`}</td>
         <td class="mono">${p.pts>0?p.pts.toFixed(1):'—'}</td>
         <td class="mono">${p.starts||'—'}</td>
@@ -5612,7 +5636,7 @@ function renderMyDraft(){
 function renderMyProbowl(){
   const el=document.getElementById('myprobowl-content');
   const myKey=sleeperToManagerKey(DB.username)||DB.username;
-  const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red'};
+  const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
   const rows=[];
   Object.entries(PRO_BOWL).forEach(([yr,pb])=>{
     pb.teams.forEach(team=>{
@@ -5639,7 +5663,7 @@ function renderMyProbowl(){
     <tbody>${rows.map(r=>`<tr>
       <td class="mono" style="color:var(--text3)">${r.year}</td>
       <td><span class="player-link" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
-      <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
+      <td><span class="badge ${pc[r.pos]||'badge-WR'}">${r.pos}</span></td>
       <td style="font-size:0.82rem;color:var(--text2)">${r.teamName}</td>
       <td class="mono">${r.score>0?r.score.toFixed(1):'—'}</td>
       <td style="font-size:0.9rem">${r.winner?'🏆 Winner':r.mvp?'🦸‍♂️ MVP':''}</td>
