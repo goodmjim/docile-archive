@@ -5350,6 +5350,7 @@ function renderDraft(){
 // ══════════════════════════════════════════════════════════════
 // UDFA AUCTION
 // ══════════════════════════════════════════════════════════════
+let activeDraftYrs=new Set();
 let activeUdfaYrs=new Set();
 function toggleUdfaYr(yr,btn){
   activeUdfaYrs.has(yr)?activeUdfaYrs.delete(yr):activeUdfaYrs.add(yr);
