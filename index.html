@@ -2223,15 +2223,17 @@ async function loadSeason(year,lid){
   teams.forEach(t=>{if(seedMap[t.rosterId])t.seed=seedMap[t.rosterId];});
 
   // Load draft pick resolutions: for each draft in this season, map
-  // (season, round, originalRosterId) -> player picked
+  // (season, round, rosterId) -> player picked
+  // Note: we key by the LEAGUE year (not draft.season) so renderDraft can find them
   if(Array.isArray(draftList)&&draftList.length){
     await Promise.all(draftList.map(async draft=>{
       try{
         const picks=await apiFetch(`/draft/${draft.draft_id}/picks`);
         if(!Array.isArray(picks))return;
+        console.log(`[Draft] ${year} draft ${draft.draft_id} type=${draft.type} season=${draft.season} picks=${picks.length}`);
         picks.forEach(pick=>{
-          const draftSeason=draft.season||year;
-          const key=`${draftSeason}|${pick.round}|${pick.roster_id}`;
+          // Key by league year so renderDraft(yr) can find them with startsWith(`${yr}|`)
+          const key=`${year}|${pick.round}|${pick.roster_id}`;
           const m=DB.playerMeta[pick.player_id];
           const playerName=m?`${m.first_name} ${m.last_name}`:(pick.metadata?.first_name&&pick.metadata?.last_name?`${pick.metadata.first_name} ${pick.metadata.last_name}`:null);
           if(playerName){
@@ -2240,6 +2242,7 @@ async function loadSeason(year,lid){
         });
       }catch(e){console.warn(`Draft picks load failed for ${draft.draft_id}:`,e);}
     }));
+    console.log(`[Draft] After ${year}: draftPickMap has ${Object.keys(DB.draftPickMap).length} entries, sample:`, Object.keys(DB.draftPickMap).slice(0,3));
   }
 
   DB.seasons.push({year:parseInt(year),lid,league,teams,myRosterId,matchupsByWeek,scoring,projByWeek,seedMap});
@@ -5151,9 +5154,14 @@ function renderDraft(){
       })
       .sort((a,b)=>a.pickNo-b.pickNo);
 
-    if(!picks.length)return`<div class="empty" style="margin-bottom:1rem">${yr}: No draft pick data loaded yet. Export a snapshot after loading this season.</div>`;
-
-    // Positional breakdown
+    if(!picks.length){
+      const totalKeys=Object.keys(DB.draftPickMap).length;
+      return`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;font-size:0.82rem;color:var(--text2)">
+        <strong>${yr}</strong>: No draft pick data found.
+        ${totalKeys===0?'Draft data has not loaded yet — try refreshing the page after your data loads. Check the browser console for [Draft] messages.':
+        `(${totalKeys} picks loaded for other seasons — check console for key format)`}
+      </div>`;
+    }
     const posCounts={};
     picks.forEach(p=>{if(!posCounts[p.pos])posCounts[p.pos]=0;posCounts[p.pos]++;});
 
