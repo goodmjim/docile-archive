@@ -1750,41 +1750,95 @@ const TEAM_CAPTAINS={
 };
 
 // ── DRAFT PICKS (hardcoded — Sleeper doesn't expose rookie draft data) ─────
-const DRAFT_PICKS={
-  2020:[
-    {mgr:'Lance',player:'Clyde Edwards-Helaire',team:'KC',pos:'RB',round:1,pickNo:1},{mgr:'Brad',player:'Jonathan Taylor',team:'IND',pos:'RB',round:1,pickNo:2},{mgr:'Jimmy',player:'JK Dobbins',team:'BAL',pos:'RB',round:1,pickNo:3},{mgr:'Kyle',player:"D'Andre Swift",team:'DET',pos:'RB',round:1,pickNo:4},{mgr:'David',player:'Cam Akers',team:'LAR',pos:'RB',round:1,pickNo:5},{mgr:'Amol',player:'CeeDee Lamb',team:'DAL',pos:'WR',round:1,pickNo:6},{mgr:'Abhi',player:'Jerry Jeudy',team:'DEN',pos:'WR',round:1,pickNo:7},{mgr:'David',player:'Henry Ruggs III',team:'LV',pos:'WR',round:1,pickNo:8},{mgr:'Jimmy',player:'Jalen Reagor',team:'PHI',pos:'WR',round:1,pickNo:9},{mgr:'Amol',player:'Justin Jefferson',team:'MIN',pos:'WR',round:1,pickNo:10},{mgr:'Declan',player:'Michael Pittman Jr.',team:'IND',pos:'WR',round:1,pickNo:11},{mgr:'David',player:'Joe Burrow',team:'CIN',pos:'QB',round:1,pickNo:12},
-    {mgr:'Lance',player:'Denzel Mims',team:'NYJ',pos:'WR',round:2,pickNo:13},{mgr:'David',player:'Brandon Aiyuk',team:'SF',pos:'WR',round:2,pickNo:14},{mgr:'Brad',player:'Tee Higgins',team:'CIN',pos:'WR',round:2,pickNo:15},{mgr:'Abhi',player:'Laviska Shenault',team:'JAX',pos:'WR',round:2,pickNo:16},{mgr:'Declan',player:'Bryan Edwards',team:'LV',pos:'WR',round:2,pickNo:17},{mgr:'David',player:'AJ Dillon',team:'GB',pos:'RB',round:2,pickNo:18},{mgr:'Lance',player:'Tua Tagovailoa',team:'MIA',pos:'QB',round:2,pickNo:19},{mgr:'Jimmy',player:"Ke'Shawn Vaughn",team:'TB',pos:'RB',round:2,pickNo:20},{mgr:'Declan',player:'Antonio Gibson',team:'WAS',pos:'RB',round:2,pickNo:21},{mgr:'Jon',player:'Zack Moss',team:'BUF',pos:'RB',round:2,pickNo:22},{mgr:'Brad',player:'Chase Claypool',team:'PIT',pos:'WR',round:2,pickNo:23},{mgr:'Lance',player:'Darrynton Evans',team:'TEN',pos:'RB',round:2,pickNo:24},
-    {mgr:'Jimmy',player:'KJ Hamler',team:'DEN',pos:'WR',round:3,pickNo:25},{mgr:'Brad',player:'Justin Herbert',team:'LAC',pos:'QB',round:3,pickNo:26},{mgr:'Jimmy',player:'Devin Duvernay',team:'BAL',pos:'WR',round:3,pickNo:27},{mgr:'Kyle',player:'Van Jefferson',team:'LAR',pos:'WR',round:3,pickNo:28},{mgr:'Boone',player:'Antonio Gandy-Golden',team:'WAS',pos:'WR',round:3,pickNo:29},{mgr:'Jared',player:'Jalen Hurts',team:'PHI',pos:'QB',round:3,pickNo:30},{mgr:'Hinton',player:'Josh Kelley',team:'LAC',pos:'RB',round:3,pickNo:31},{mgr:'Declan',player:'Cole Kmet',team:'CHI',pos:'TE',round:3,pickNo:32},{mgr:'Lance',player:'Anthony McFarland Jr.',team:'PIT',pos:'RB',round:3,pickNo:33},{mgr:'Hinton',player:'Jordan Love',team:'GB',pos:'QB',round:3,pickNo:34},{mgr:'Declan',player:"La'Mical Perine",team:'NYJ',pos:'RB',round:3,pickNo:35},{mgr:'Jared',player:'Lynn Bowden Jr.',team:'LV',pos:'RB',round:3,pickNo:36},
-  ],
-  2021:[
-    {mgr:'David',player:"Ja'Marr Chase",team:'CIN',pos:'WR',round:1,pickNo:1},{mgr:'David',player:'Najee Harris',team:'PIT',pos:'RB',round:1,pickNo:2},{mgr:'Boone',player:'Kyle Pitts',team:'ATL',pos:'TE',round:1,pickNo:3},{mgr:'Abhi',player:'Trey Lance',team:'SF',pos:'QB',round:1,pickNo:4},{mgr:'Jimmy',player:'Travis Etienne',team:'JAX',pos:'RB',round:1,pickNo:5},{mgr:'Lance',player:'Trevor Lawrence',team:'JAX',pos:'QB',round:1,pickNo:5},{mgr:'Kyle',player:'Javonte Williams',team:'DEN',pos:'RB',round:1,pickNo:6},{mgr:'Lance',player:'Devonta Smith',team:'PHI',pos:'WR',round:1,pickNo:7},{mgr:'Kyle',player:'Jaylen Waddle',team:'MIA',pos:'WR',round:1,pickNo:8},{mgr:'Jimmy',player:'Rashod Bateman',team:'BAL',pos:'WR',round:1,pickNo:9},{mgr:'Amol',player:'Michael Carter',team:'NYJ',pos:'RB',round:1,pickNo:10},{mgr:'Jimmy',player:'Trey Sermon',team:'SF',pos:'RB',round:1,pickNo:11},{mgr:'Declan',player:'Rondale Moore',team:'ARI',pos:'WR',round:1,pickNo:12},
-    {mgr:'Jimmy',player:'Elijah Moore',team:'NYJ',pos:'WR',round:2,pickNo:13},{mgr:'Jared',player:'Terrace Marshall Jr.',team:'CAR',pos:'WR',round:2,pickNo:14},{mgr:'Jimmy',player:'Kadarius Toney',team:'NYG',pos:'WR',round:2,pickNo:15},{mgr:'Lance',player:'Justin Fields',team:'CHI',pos:'QB',round:2,pickNo:17},{mgr:'Hinton',player:'Zach Wilson',team:'NYJ',pos:'QB',round:2,pickNo:18},{mgr:'Kyle',player:'Amon-Ra St. Brown',team:'DET',pos:'WR',round:2,pickNo:19},{mgr:'Boone',player:'Mac Jones',team:'NE',pos:'QB',round:2,pickNo:20},{mgr:'Jimmy',player:'Pat Freiermuth',team:'PIT',pos:'TE',round:2,pickNo:21},{mgr:'Jared',player:'Chuba Hubbard',team:'CAR',pos:'RB',round:2,pickNo:22},{mgr:'Hinton',player:'Kenneth Gainwell',team:'PHI',pos:'RB',round:2,pickNo:23},{mgr:'Amol',player:'Amari Rodgers',team:'GB',pos:'WR',round:2,pickNo:24},
-    {mgr:'Boone',player:'Dyami Brown',team:'WAS',pos:'WR',round:3,pickNo:25},{mgr:'Brad',player:"D'Wayne Eskridge",team:'SEA',pos:'WR',round:3,pickNo:26},{mgr:'David',player:'Josh Palmer',team:'LAC',pos:'WR',round:3,pickNo:27},{mgr:'Kyle',player:'Nico Collins',team:'HOU',pos:'WR',round:3,pickNo:28},{mgr:'Amol',player:'Tutu Atwell',team:'LAR',pos:'WR',round:3,pickNo:29},{mgr:'Abhi',player:'Kylin Hill',team:'GB',pos:'RB',round:3,pickNo:30},{mgr:'Brad',player:'Tylan Wallace',team:'BAL',pos:'WR',round:3,pickNo:31},{mgr:'Amol',player:'Kyle Trask',team:'TB',pos:'QB',round:3,pickNo:32},{mgr:'Abhi',player:'Noah Gray',team:'KC',pos:'TE',round:3,pickNo:33},{mgr:'Jimmy',player:'Rhamondre Stevenson',team:'NE',pos:'RB',round:3,pickNo:34},{mgr:'Abhi',player:'Chris Evans',team:'CIN',pos:'RB',round:3,pickNo:35},{mgr:'David',player:'Larry Rountree',team:'LAC',pos:'RB',round:3,pickNo:36},
-  ],
-  2022:[
-    {mgr:'Kyle',player:'Breece Hall',team:'NYJ',pos:'RB',round:1,pickNo:1},{mgr:'Jimmy',player:'Drake London',team:'ATL',pos:'WR',round:1,pickNo:2},{mgr:'Jimmy',player:'Garrett Wilson',team:'NYJ',pos:'WR',round:1,pickNo:3},{mgr:'Lance',player:'Kenneth Walker III',team:'SEA',pos:'RB',round:1,pickNo:4},{mgr:'Kyle',player:'Treylon Burks',team:'TEN',pos:'WR',round:1,pickNo:5},{mgr:'Lance',player:'Chris Olave',team:'NO',pos:'WR',round:1,pickNo:6},{mgr:'Jimmy',player:'Jameson Williams',team:'DET',pos:'WR',round:1,pickNo:7},{mgr:'Jared',player:'James Cook',team:'BUF',pos:'RB',round:1,pickNo:8},{mgr:'Jon',player:'George Pickens',team:'PIT',pos:'WR',round:1,pickNo:9},{mgr:'Jared',player:'Skyy Moore',team:'KC',pos:'WR',round:1,pickNo:10},{mgr:'Amol',player:'Jahan Dotson',team:'WAS',pos:'WR',round:1,pickNo:11},{mgr:'Jon',player:'Dameon Pierce',team:'HOU',pos:'RB',round:1,pickNo:12},
-    {mgr:'Jon',player:'Rachaad White',team:'TB',pos:'RB',round:2,pickNo:13},{mgr:'Boone',player:'Christian Watson',team:'GB',pos:'WR',round:2,pickNo:14},{mgr:'Jared',player:'Isaiah Spiller',team:'LAC',pos:'RB',round:2,pickNo:15},{mgr:'Abhi',player:'David Bell',team:'CLE',pos:'WR',round:2,pickNo:16},{mgr:'Kyle',player:'Trey McBride',team:'ARI',pos:'TE',round:2,pickNo:17},{mgr:'Boone',player:'Alec Pierce',team:'IND',pos:'WR',round:2,pickNo:18},{mgr:'David',player:'Jalen Tolbert',team:'DAL',pos:'WR',round:2,pickNo:19},{mgr:'Lance',player:'Tyler Allgeier',team:'ATL',pos:'RB',round:2,pickNo:20},{mgr:'Declan',player:"Wan'Dale Robinson",team:'NYG',pos:'WR',round:2,pickNo:21},{mgr:'David',player:'Zamir White',team:'LV',pos:'RB',round:2,pickNo:22},{mgr:'Jared',player:'Brian Robinson Jr.',team:'WAS',pos:'RB',round:2,pickNo:23},{mgr:'Jimmy',player:'Romeo Doubs',team:'GB',pos:'WR',round:2,pickNo:24},
-    {mgr:'Lance',player:'John Metchie',team:'HOU',pos:'WR',round:3,pickNo:25},{mgr:'Jimmy',player:'Isiah Pacheco',team:'KC',pos:'RB',round:3,pickNo:26},{mgr:'Jared',player:'Tyquan Thornton',team:'NE',pos:'WR',round:3,pickNo:27},{mgr:'Lance',player:'Tyrion Davis-Price',team:'SF',pos:'RB',round:3,pickNo:28},{mgr:'Jared',player:'Pierre Strong',team:'NE',pos:'RB',round:3,pickNo:29},{mgr:'Kyle',player:'Khalil Shakir',team:'BUF',pos:'WR',round:3,pickNo:30},{mgr:'Amol',player:'Jelani Woods',team:'IND',pos:'TE',round:3,pickNo:31},{mgr:'Brad',player:'Kenny Pickett',team:'PIT',pos:'QB',round:3,pickNo:32},{mgr:'Boone',player:'Malik Willis',team:'TEN',pos:'QB',round:3,pickNo:33},{mgr:'Kyle',player:'Keaontay Ingram',team:'ARI',pos:'RB',round:3,pickNo:34},{mgr:'Abhi',player:'Greg Dulcich',team:'DEN',pos:'TE',round:3,pickNo:35},{mgr:'Abhi',player:'Kevin Harris',team:'NE',pos:'RB',round:3,pickNo:36},
-  ],
-  2023:[
-    {mgr:'Declan',player:'Bijan Robinson',team:'ATL',pos:'RB',round:1,pickNo:1},{mgr:'Jared',player:'Jahmyr Gibbs',team:'DET',pos:'RB',round:1,pickNo:2},{mgr:'Jared',player:'Jaxon Smith-Njigba',team:'SEA',pos:'WR',round:1,pickNo:3},{mgr:'Jared',player:'Jordan Addison',team:'MIN',pos:'WR',round:1,pickNo:4},{mgr:'Lance',player:'Quentin Johnston',team:'LAC',pos:'WR',round:1,pickNo:5},{mgr:'Jared',player:'Zay Flowers',team:'BAL',pos:'WR',round:1,pickNo:6},{mgr:'Declan',player:'Anthony Richardson',team:'IND',pos:'QB',round:1,pickNo:7},{mgr:'Jared',player:'Dalton Kincaid',team:'BUF',pos:'TE',round:1,pickNo:8},{mgr:'Lance',player:'Zach Charbonnet',team:'SEA',pos:'RB',round:1,pickNo:9},{mgr:'Lance',player:"De'Von Achane",team:'MIA',pos:'RB',round:1,pickNo:10},{mgr:'Jon',player:'Jonathan Mingo',team:'CAR',pos:'WR',round:1,pickNo:11},{mgr:'Boone',player:'Kendre Miller',team:'NO',pos:'RB',round:1,pickNo:12},
-    {mgr:'Declan',player:'Roschon Johnson',team:'CHI',pos:'RB',round:2,pickNo:13},{mgr:'Abhi',player:'Sam LaPorta',team:'DET',pos:'TE',round:2,pickNo:14},{mgr:'Jimmy',player:'Michael Mayer',team:'LV',pos:'TE',round:2,pickNo:15},{mgr:'Jimmy',player:'Tank Bigsby',team:'JAX',pos:'RB',round:2,pickNo:16},{mgr:'Lance',player:'Rashee Rice',team:'KC',pos:'WR',round:2,pickNo:17},{mgr:'Declan',player:'Marvin Mims',team:'DEN',pos:'WR',round:2,pickNo:18},{mgr:'Abhi',player:'Bryce Young',team:'CAR',pos:'QB',round:2,pickNo:19},{mgr:'Amol',player:'CJ Stroud',team:'HOU',pos:'QB',round:2,pickNo:20},{mgr:'Hinton',player:'Jayden Reed',team:'GB',pos:'WR',round:2,pickNo:21},{mgr:'Jon',player:'Jalin Hyatt',team:'NYG',pos:'WR',round:2,pickNo:22},{mgr:'David',player:'Tyjae Spears',team:'TEN',pos:'RB',round:2,pickNo:23},{mgr:'Abhi',player:'Josh Downs',team:'IND',pos:'WR',round:2,pickNo:24},
-    {mgr:'Jimmy',player:'Tank Dell',team:'HOU',pos:'WR',round:3,pickNo:25},{mgr:'Jon',player:'Luke Musgrave',team:'GB',pos:'TE',round:3,pickNo:26},{mgr:'Hinton',player:'Deuce Vaughn',team:'DAL',pos:'RB',round:3,pickNo:27},{mgr:'Boone',player:'Luke Schoonmaker',team:'DAL',pos:'TE',round:3,pickNo:28},{mgr:'Lance',player:'Cedric Tillman',team:'CLE',pos:'WR',round:3,pickNo:29},{mgr:'Amol',player:'Chase Brown',team:'CIN',pos:'RB',round:3,pickNo:30},{mgr:'Hinton',player:'Israel Abanikanda',team:'NYJ',pos:'RB',round:3,pickNo:31},{mgr:'Boone',player:'Zach Evans',team:'LAR',pos:'RB',round:3,pickNo:32},{mgr:'Jon',player:'Trey Palmer',team:'TB',pos:'WR',round:3,pickNo:33},{mgr:'Jon',player:'Darnell Washington',team:'PIT',pos:'TE',round:3,pickNo:34},{mgr:'David',player:'Sean Tucker',team:'TB',pos:'RB',round:3,pickNo:35},{mgr:'Kyle',player:'Michael Wilson',team:'ARI',pos:'WR',round:3,pickNo:36},
-  ],
-  2024:[
-    {mgr:'Jared',player:'Caleb Williams',team:'CHI',pos:'QB',round:1,pickNo:1},{mgr:'Hinton',player:'Marvin Harrison Jr.',team:'ARI',pos:'WR',round:1,pickNo:2},{mgr:'Jon',player:'Jayden Daniels',team:'WAS',pos:'QB',round:1,pickNo:3},{mgr:'Boone',player:'Drake Maye',team:'NE',pos:'QB',round:1,pickNo:4},{mgr:'Jared',player:'Malik Nabers',team:'NYG',pos:'WR',round:1,pickNo:5},{mgr:'Lance',player:'JJ McCarthy',team:'MIN',pos:'QB',round:1,pickNo:6},{mgr:'Jon',player:'Rome Odunze',team:'CHI',pos:'WR',round:1,pickNo:7},{mgr:'David',player:'Brock Bowers',team:'LV',pos:'TE',round:1,pickNo:8},{mgr:'Boone',player:'Xavier Worthy',team:'KC',pos:'WR',round:1,pickNo:9},{mgr:'Jimmy',player:'Bo Nix',team:'DEN',pos:'QB',round:1,pickNo:10},{mgr:'Boone',player:'Brian Thomas Jr.',team:'JAX',pos:'WR',round:1,pickNo:11},{mgr:'Jimmy',player:'Michael Penix Jr.',team:'ATL',pos:'QB',round:1,pickNo:12},
-    {mgr:'Boone',player:'Malachi Corley',team:'NYJ',pos:'WR',round:2,pickNo:18},
-    {mgr:'Amol',player:"Ja'Tavion Sanders",team:'CAR',pos:'TE',round:3,pickNo:28},
-  ],
-  2025:[
-    {mgr:'Declan',player:'Ashton Jeanty',team:'LV',pos:'RB',round:1,pickNo:1},{mgr:'Hinton',player:'Cam Ward',team:'TEN',pos:'QB',round:1,pickNo:2},{mgr:'Amol',player:'Omarion Hampton',team:'LAC',pos:'RB',round:1,pickNo:3},{mgr:'Lance',player:'Tetairoa McMillan',team:'CAR',pos:'WR',round:1,pickNo:4},{mgr:'Boone',player:'TreVeyon Henderson',team:'NE',pos:'RB',round:1,pickNo:5},{mgr:'Hinton',player:'Travis Hunter',team:'JAX',pos:'WR',round:1,pickNo:6},{mgr:'Jared',player:'Emeka Egbuka',team:'TB',pos:'WR',round:1,pickNo:7},{mgr:'Jimmy',player:'Quinshon Judkins',team:'CLE',pos:'RB',round:1,pickNo:8},{mgr:'Hinton',player:'Colston Loveland',team:'CHI',pos:'TE',round:1,pickNo:9},{mgr:'Abhi',player:'Jaxson Dart',team:'NYG',pos:'QB',round:1,pickNo:10},{mgr:'Boone',player:'RJ Harvey',team:'DEN',pos:'RB',round:1,pickNo:11},{mgr:'Amol',player:'Tyler Warren',team:'IND',pos:'TE',round:1,pickNo:12},
-    {mgr:'Declan',player:'Matthew Golden',team:'GB',pos:'WR',round:2,pickNo:13},{mgr:'Abhi',player:'Cam Skattebo',team:'NYG',pos:'RB',round:2,pickNo:14},{mgr:'Abhi',player:'Bhayshul Tuten',team:'JAX',pos:'RB',round:2,pickNo:15},{mgr:'Lance',player:'Kaleb Johnson',team:'PIT',pos:'RB',round:2,pickNo:16},{mgr:'Boone',player:'Jayden Higgins',team:'HOU',pos:'WR',round:2,pickNo:17},{mgr:'Amol',player:'Luther Burden',team:'CHI',pos:'WR',round:2,pickNo:18},{mgr:'Amol',player:'Jalen Milroe',team:'SEA',pos:'QB',round:2,pickNo:19},{mgr:'Amol',player:'Jaydon Blue',team:'DAL',pos:'RB',round:2,pickNo:20},{mgr:'Amol',player:'Jacory Croskey-Merritt',team:'WAS',pos:'RB',round:2,pickNo:21},{mgr:'Boone',player:"Tre' Harris",team:'LAC',pos:'WR',round:2,pickNo:22},{mgr:'Lance',player:'Kyle Williams',team:'NE',pos:'WR',round:2,pickNo:23},{mgr:'Jon',player:'Mason Taylor',team:'NYJ',pos:'TE',round:2,pickNo:24},
-    {mgr:'Hinton',player:'Jack Bech',team:'LV',pos:'WR',round:3,pickNo:25},{mgr:'Declan',player:'Shedeur Sanders',team:'CLE',pos:'QB',round:3,pickNo:26},{mgr:'Jimmy',player:'Dylan Sampson',team:'CLE',pos:'RB',round:3,pickNo:27},{mgr:'Lance',player:'Elijah Arroyo',team:'SEA',pos:'TE',round:3,pickNo:28},{mgr:'Jared',player:'Pat Bryant',team:'DEN',pos:'WR',round:3,pickNo:29},{mgr:'Hinton',player:'Jaylin Noel',team:'HOU',pos:'WR',round:3,pickNo:30},{mgr:'Jimmy',player:'Harold Fannin',team:'CLE',pos:'TE',round:3,pickNo:31},{mgr:'Jimmy',player:'Isaiah Bond',team:'CLE',pos:'WR',round:3,pickNo:32},{mgr:'Hinton',player:'Terrance Ferguson',team:'LAR',pos:'TE',round:3,pickNo:33},{mgr:'Hinton',player:'Isaac TeSlaa',team:'DET',pos:'WR',round:3,pickNo:34},{mgr:'Jared',player:'Ollie Gordon',team:'MIA',pos:'RB',round:3,pickNo:35},{mgr:'David',player:'Tory Horton',team:'SEA',pos:'WR',round:3,pickNo:36},
-  ],
+// ── ROOKIE DRAFT IDs (from Sleeper draft URLs) ───────────────
+const ROOKIE_DRAFT_IDS={
+  2020:'516059875544244225',
+  2021:'652200603757408257',
+  2022:'812785649806594049',
+  2023:'916403012137201665',
+  2024:'1078418325048332289',
+  2025:'1200669884971749376',
 };
 
-// ══════════════════════════════════════════════════════════════
-// APP STATE
+// DB.draftData: year -> [{mgr, player, pid, pos, team, round, pickNo, source:'Draft'}]
+// Populated at load time from Sleeper API
+
+// ── LOAD ROOKIE DRAFT PICKS FROM SLEEPER ─────────────────────
+async function loadAllDraftPicks(){
+  DB.draftData={};
+  await Promise.all(Object.entries(ROOKIE_DRAFT_IDS).map(async([yr,draftId])=>{
+    const year=parseInt(yr);
+    try{
+      const picks=await apiFetch(`/draft/${draftId}/picks`);
+      if(!Array.isArray(picks)||!picks.length){
+        console.warn(`[Draft] No picks for ${year} draft ${draftId}`);
+        return;
+      }
+      const season=DB.seasons.find(s=>s.year===year);
+      DB.draftData[year]=picks.map(pick=>{
+        const m=DB.playerMeta[pick.player_id];
+        const playerName=m?`${m.first_name} ${m.last_name}`
+          :(pick.metadata?.first_name&&pick.metadata?.last_name
+            ?`${pick.metadata.first_name} ${pick.metadata.last_name}`:'Unknown');
+        const pos=m?.fantasy_positions?.[0]||pick.metadata?.position||'?';
+        const nflTeam=m?.team||pick.metadata?.team||'';
+        const team=season?.teams.find(t=>String(t.rosterId)===String(pick.roster_id));
+        const mgr=team?.managerKey||team?.name||'Roster '+pick.roster_id;
+        return{mgr,player:playerName,pid:pick.player_id,pos,team:nflTeam,
+          round:pick.round,pickNo:pick.pick_no,source:'Draft'};
+      }).sort((a,b)=>a.pickNo-b.pickNo);
+      console.log(`[Draft] ${year}: loaded ${DB.draftData[year].length} picks`);
+    }catch(e){
+      console.warn(`[Draft] Failed to load ${year}:`,e.message);
+    }
+  }));
+}
+
+// ── PLAYER NAME → PID LOOKUP ─────────────────────────────────
+// Built once after playerMeta loads. Normalizes names for fuzzy matching.
+let playerNameMap={}; // normalized name → pid
+
+function buildPlayerNameMap(){
+  playerNameMap={};
+  const normalize=s=>s.toLowerCase()
+    .replace(/[.']/g,'')          // remove apostrophes, dots
+    .replace(/\s+jr\.?$/,'')      // strip Jr suffix
+    .replace(/\s+sr\.?$/,'')
+    .replace(/\s+ii+$/,'')        // strip II, III etc
+    .replace(/\s+iv$/,'')
+    .trim();
+
+  Object.entries(DB.playerMeta).forEach(([pid,m])=>{
+    if(!m.first_name||!m.last_name)return;
+    const full=`${m.first_name} ${m.last_name}`;
+    const norm=normalize(full);
+    // Primary: full normalized name
+    if(!playerNameMap[norm])playerNameMap[norm]=pid;
+    // Also index last name only as fallback key
+    const lastOnly=normalize(m.last_name);
+    if(!playerNameMap['_last_'+lastOnly])playerNameMap['_last_'+lastOnly]=[];
+    playerNameMap['_last_'+lastOnly].push({pid,full:norm});
+  });
+  console.log(`[Archive] playerNameMap built: ${Object.keys(playerNameMap).length} entries`);
+}
+
+function lookupPid(name){
+  if(!name)return null;
+  const normalize=s=>s.toLowerCase().replace(/[.']/g,'').replace(/\s+jr\.?$/,'').replace(/\s+sr\.?$/,'').replace(/\s+ii+$/,'').replace(/\s+iv$/,'').trim();
+  const norm=normalize(name);
+  if(playerNameMap[norm])return playerNameMap[norm];
+  // Try without last word (handles "Jr" in source data but not Sleeper)
+  const parts=norm.split(' ');
+  if(parts.length>2){
+    const withoutLast=parts.slice(0,-1).join(' ');
+    if(playerNameMap[withoutLast])return playerNameMap[withoutLast];
+  }
+  // Try last name match if unique
+  const lastPart=normalize(parts[parts.length-1]);
+  const lastMatches=playerNameMap['_last_'+lastPart];
+  if(lastMatches?.length===1)return lastMatches[0].pid;
+  return null;
+}
 // ══════════════════════════════════════════════════════════════
 const SLEEPER_API = 'https://api.sleeper.app/v1';
 
@@ -1864,7 +1918,8 @@ let DB = {
   username:'',myUserId:'',myTeamName:'',
   seasons:[],playerMeta:{},myStarters:[],allStarters:[],
   transactions:[],playerBios:{},
-  draftPickMap:{} // year -> round -> originalRosterId -> {playerId, playerName, pts}
+  draftPickMap:{}, // kept for trade pick resolution
+  draftData:{}     // year -> [{mgr,player,pid,pos,team,round,pickNo,source}]
 };
 let activeYrs = new Set(), activeTeams = new Set();
 let standingsSort = {col:'wins', dir:-1};
@@ -2109,7 +2164,7 @@ async function startLoad(){
     const user=await apiFetch('/user/'+encodeURIComponent(username));
     if(!user?.user_id)return setSt('User not found. Check your Sleeper username.',true);
     DB.username=username;DB.myUserId=user.user_id;DB.myTeamName='';
-    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];DB.draftPickMap={};
+    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];DB.draftPickMap={};DB.draftData={};
     try{const b=localStorage.getItem('dl_bios');if(b)DB.playerBios=JSON.parse(b);}catch{}
     await fetchSharedData();
 
@@ -2148,6 +2203,9 @@ async function startLoad(){
 
     setSt('Loading player names…');setProg(88);
     await loadPlayerMeta();
+    buildPlayerNameMap();
+    setSt('Loading draft picks…');setProg(92);
+    await loadAllDraftPicks();
     try{localStorage.setItem('dl_config',JSON.stringify({username,selectedSeasons:[...selectedSeasons]}));}catch{}
     setProg(100);setSt('');
     buildApp();
@@ -2190,15 +2248,14 @@ async function loadSeason(year,lid){
   const weekNums=Array.from({length:weekCount},(_,i)=>i+1);
   // Only fetch projections for 2020+ (data reliability)
   const fetchProj=parseInt(year)>=2020;
-  const [weekResults,txResults,statResults,projResults,bracketData,draftList]=await Promise.all([
+  const [weekResults,txResults,statResults,projResults,bracketData]=await Promise.all([
     Promise.all(weekNums.map(w=>apiFetch(`/league/${lid}/matchups/${w}`).then(mu=>({w,mu})).catch(()=>({w,mu:[]})))),
     Promise.all(weekNums.map(w=>apiFetch(`/league/${lid}/transactions/${w}`).then(tx=>tx.map(t=>({...t,week:w,year:parseInt(year)}))).catch(()=>[]))),
     Promise.all(weekNums.map(w=>apiFetch(`/stats/nfl/regular/${year}/${w}`).then(s=>({w,s})).catch(()=>({w,s:{}})))),
     fetchProj
       ? Promise.all(weekNums.map(w=>apiFetch(`/projections/nfl/regular/${year}/${w}`).then(s=>({w,s})).catch(()=>({w,s:{}}))))
       : Promise.resolve(weekNums.map(w=>({w,s:{}}))),
-    apiFetch(`/league/${lid}/winners_bracket`).catch(()=>[]),
-    apiFetch(`/league/${lid}/drafts`).catch(()=>[])
+    apiFetch(`/league/${lid}/winners_bracket`).catch(()=>[])
   ]);
   const matchupsByWeek={};weekResults.forEach(({w,mu})=>matchupsByWeek[w]=mu);
   const statByWeek={};statResults.forEach(({w,s})=>statByWeek[w]=s);
@@ -2255,29 +2312,6 @@ async function loadSeason(year,lid){
   });
   // Attach seeds to teams
   teams.forEach(t=>{if(seedMap[t.rosterId])t.seed=seedMap[t.rosterId];});
-
-  // Load draft pick resolutions: for each draft in this season, map
-  // (season, round, rosterId) -> player picked
-  // Note: we key by the LEAGUE year (not draft.season) so renderDraft can find them
-  if(Array.isArray(draftList)&&draftList.length){
-    await Promise.all(draftList.map(async draft=>{
-      try{
-        const picks=await apiFetch(`/draft/${draft.draft_id}/picks`);
-        if(!Array.isArray(picks))return;
-        console.log(`[Draft] ${year} draft ${draft.draft_id} type=${draft.type} season=${draft.season} picks=${picks.length}`);
-        picks.forEach(pick=>{
-          // Key by league year so renderDraft(yr) can find them with startsWith(`${yr}|`)
-          const key=`${year}|${pick.round}|${pick.roster_id}`;
-          const m=DB.playerMeta[pick.player_id];
-          const playerName=m?`${m.first_name} ${m.last_name}`:(pick.metadata?.first_name&&pick.metadata?.last_name?`${pick.metadata.first_name} ${pick.metadata.last_name}`:null);
-          if(playerName){
-            DB.draftPickMap[key]={playerId:pick.player_id,playerName,round:pick.round,pickNo:pick.pick_no,pickedByRosterId:pick.roster_id};
-          }
-        });
-      }catch(e){console.warn(`Draft picks load failed for ${draft.draft_id}:`,e);}
-    }));
-    console.log(`[Draft] After ${year}: draftPickMap has ${Object.keys(DB.draftPickMap).length} entries, sample:`, Object.keys(DB.draftPickMap).slice(0,3));
-  }
 
   DB.seasons.push({year:parseInt(year),lid,league,teams,myRosterId,matchupsByWeek,scoring,projByWeek,seedMap});
 }
@@ -5156,25 +5190,38 @@ function toggleDraftYr(yr,btn){
 
 function renderDraft(){
   const el=document.getElementById('draft-content');
-  const years=Object.keys(DRAFT_PICKS).map(Number).sort((a,b)=>b-a);
+  const years=Object.keys(ROOKIE_DRAFT_IDS).map(Number).sort((a,b)=>b-a);
   if(!activeDraftYrs.size)activeDraftYrs=new Set(years);
   initDraftChips('draft-yr-chips',years,activeDraftYrs,'toggleDraftYr');
   const filtered=years.filter(y=>activeDraftYrs.has(y));
   if(!filtered.length){el.innerHTML='<div class="empty">No draft seasons selected.</div>';return;}
   const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red',FB:'bg-dim'};
+
   const html=filtered.map(yr=>{
-    const draftPicks=(DRAFT_PICKS[yr]||[]);
-    const udfaPicks=(UDFA_AUCTION[yr]||[]).map(p=>({...p,source:'UDFA',pickNo:9999,round:0}));
+    const draftPicks=DB.draftData[yr]||[];
+    const udfaPicks=(UDFA_AUCTION[yr]||[]).map(p=>{
+      const pid=lookupPid(p.player);
+      return{...p,pid,source:'UDFA',pickNo:9999,round:0};
+    });
     const allYrPicks=[...draftPicks,...udfaPicks];
+
+    if(!draftPicks.length&&!udfaPicks.length){
+      return`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;font-size:0.82rem;color:var(--text2)">
+        <strong>${yr}</strong>: Draft data not loaded yet. Refresh after loading your seasons.
+      </div>`;
+    }
+
+    // Enrich with pts scored
     const enriched=allYrPicks.map(p=>{
-      const nameLower=p.player.toLowerCase();
-      const pid=Object.entries(DB.playerMeta).find(([,m])=>`${m.first_name} ${m.last_name}`.toLowerCase()===nameLower)?.[0];
+      const pid=p.pid||lookupPid(p.player);
       const ptsAllTime=pid?DB.allStarters.filter(s=>s.pid===pid&&s.year>=yr).reduce((a,b)=>a+(b.points||0),0):0;
       return{...p,pid,pts:ptsAllTime};
     });
-    const draftOnly=enriched.filter(p=>p.source==='Draft').sort((a,b)=>a.pickNo-b.pickNo);
+
+    const draftOnly=enriched.filter(p=>p.source==='Draft');
     const posCounts={};enriched.forEach(p=>{if(!posCounts[p.pos])posCounts[p.pos]=0;posCounts[p.pos]++;});
     const avgPts=draftOnly.length?draftOnly.reduce((a,b)=>a+b.pts,0)/draftOnly.length:0;
+
     const col=draftSort.col,ddir=draftSort.dir;
     const darrow=(c)=>col===c?(ddir===1?'↑':'↓'):'';
     const dSortFn={
@@ -5185,6 +5232,8 @@ function renderDraft(){
       surplus:(a,b)=>((a.pts-avgPts)-(b.pts-avgPts))*ddir,
     };
     const sortedPicks=[...enriched].sort(dSortFn[col]||dSortFn.pickNo);
+
+    // Manager grades
     let gradeHtml='';
     if(draftOnly.length){
       const surplusMap={};
@@ -5197,15 +5246,16 @@ function renderDraft(){
           const max=Math.max(...mgrsSorted.map(([,v])=>Math.abs(v)),1);
           const pct=surplus/max;
           const grade=pct>0.5?'A':pct>0.2?'B+':pct>0?'B':pct>-0.2?'C':pct>-0.4?'D+':'D';
-          const sc=surplus>0?'var(--teal)':'var(--crimson)';
+          const sc=surplus>=0?'var(--teal)':'var(--crimson)';
           return`<tr><td style="font-weight:500">${mgr}</td>
-            <td><span style="color:${sc};font-family:var(--font-mono)">${surplus>0?'+':''  }${surplus.toFixed(0)}</span></td>
+            <td><span style="color:${sc};font-family:var(--font-mono)">${surplus>=0?'+':''}${surplus.toFixed(0)}</span></td>
             <td style="font-weight:600;color:${sc}">${grade}</td></tr>`;
         }).join('')}</tbody>
       </table></div>`;
     }
+
     return`<div style="margin-bottom:2rem">
-      <div class="sh" style="margin-bottom:0.5rem"><h2 style="font-size:1.1rem">${yr} Rookie Draft</h2></div>
+      <div class="sh" style="margin-bottom:0.5rem"><h2 style="font-size:1.1rem">${yr} Rookie Draft <span style="font-size:0.72rem;color:var(--text3);font-weight:400">${draftPicks.length} picks</span></h2></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.75rem">
         ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'bg-dim'}">${pos}: ${cnt}</span>`).join('')}
       </div>
@@ -5220,9 +5270,11 @@ function renderDraft(){
           <th class="sortable-th" onclick="sortDraft('surplus')">Surplus <span class="sort-arrow">${darrow('surplus')}</span></th>
         </tr></thead>
         <tbody>${sortedPicks.map(p=>{
-          const surplus=(p.pts-avgPts).toFixed(0);
-          const sCol=surplus>0?'var(--teal)':'var(--crimson)';
-          const pickLabel=p.source==='UDFA'?`<span style="color:var(--gold)">UDFA $${p.bid}</span>`:`${Math.ceil(p.pickNo/12)}.${String(((p.pickNo-1)%12)+1).padStart(2,'0')}`;
+          const surplusNum=p.pts-avgPts;
+          const sCol=surplusNum>=0?'var(--teal)':'var(--crimson)';
+          const pickLabel=p.source==='UDFA'
+            ?`<span style="color:var(--gold)">UDFA $${p.bid}</span>`
+            :`${Math.ceil(p.pickNo/12)}.${String(((p.pickNo-1)%12)+1).padStart(2,'0')}`;
           return`<tr>
             <td class="mono" style="color:var(--text3);font-size:0.78rem">${pickLabel}</td>
             <td>${p.pid?`<span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.player}</span>`:p.player}</td>
@@ -5231,7 +5283,7 @@ function renderDraft(){
             <td style="font-size:0.75rem;color:var(--text3)">${p.team||'—'}</td>
             <td style="font-size:0.75rem">${p.source==='UDFA'?'<span style="color:var(--gold)">UDFA</span>':'Draft'}</td>
             <td class="mono">${p.pts>0?p.pts.toFixed(1):'—'}</td>
-            <td class="mono" style="color:${sCol}">${surplus>0?'+':''  }${surplus}</td>
+            <td class="mono" style="color:${sCol}">${surplusNum>=0?'+':''}${surplusNum.toFixed(0)}</td>
           </tr>`;
         }).join('')}</tbody>
       </table></div>
@@ -5240,7 +5292,6 @@ function renderDraft(){
   }).join('');
   el.innerHTML=html||'<div class="empty">No data available.</div>';
 }
-
 // ══════════════════════════════════════════════════════════════
 // UDFA AUCTION
 // ══════════════════════════════════════════════════════════════
@@ -5270,9 +5321,7 @@ function renderUdfa(){
     const ptsForPlayer=(name,mgr,year)=>{
       const nameLower=name.toLowerCase();
       // Find pid by name match in playerMeta
-      const pid=Object.entries(DB.playerMeta).find(([,m])=>
-        `${m.first_name} ${m.last_name}`.toLowerCase()===nameLower
-      )?.[0];
+      const pid=lookupPid(name);
       if(!pid)return 0;
       // Find rosterId for this mgr in this season
       const season=DB.seasons.find(s=>s.year===year);
@@ -5313,7 +5362,7 @@ function renderUdfa(){
           <th class="sortable-th" onclick="sortUdfa('pts')">Pts scored <span class="sort-arrow">${arrow('pts')}</span></th>
         </tr></thead>
         <tbody>${picksWithPts.map(p=>{
-          const pid=Object.entries(DB.playerMeta).find(([,m])=>`${m.first_name} ${m.last_name}`.toLowerCase()===p.player.toLowerCase())?.[0];
+          const pid=lookupPid(p.player);
           const nameEl=pid?`<span class="player-link" onclick="openPlayerModal('${pid}')">${p.player}</span>`:p.player;
           return`<tr>
             <td style="font-weight:500">${nameEl}</td>
@@ -5344,7 +5393,7 @@ function toggleMyDraftYr(yr,btn){
 function renderMyDraft(){
   const el=document.getElementById('mydraft-content');
   const myKey=sleeperToManagerKey(DB.username)||DB.username;
-  const draftYears=DB.seasons.map(s=>s.year).filter(y=>y>=2019).sort((a,b)=>b-a);
+  const draftYears=Object.keys(ROOKIE_DRAFT_IDS).map(Number).sort((a,b)=>b-a);
   const udfaYears=Object.keys(UDFA_AUCTION).map(Number).sort((a,b)=>b-a);
   const allYears=[...new Set([...draftYears,...udfaYears])].sort((a,b)=>b-a);
   if(!activeMyDraftYrs.size)activeMyDraftYrs=new Set(allYears);
@@ -5356,15 +5405,14 @@ function renderMyDraft(){
   // Build combined pick list
   const allPicks=[];
 
-  // Sleeper draft picks — use hardcoded DRAFT_PICKS
+  // Sleeper draft picks from DB.draftData (loaded via API)
   filtered.forEach(yr=>{
-    (DRAFT_PICKS[yr]||[]).filter(p=>p.mgr===myKey).forEach(p=>{
-      const nameLower=p.player.toLowerCase();
-      const pid=Object.entries(DB.playerMeta).find(([,m])=>`${m.first_name} ${m.last_name}`.toLowerCase()===nameLower)?.[0];
-      const myStarts=pid?DB.myStarters.filter(s=>s.pid===pid):[];
+    (DB.draftData[yr]||[]).filter(p=>p.mgr===myKey).forEach(p=>{
+      const myStarts=p.pid?DB.myStarters.filter(s=>s.pid===p.pid):[];
       const pts=myStarts.reduce((a,b)=>a+(b.points||0),0);
       const played=myStarts.length>0;
-      allPicks.push({year:yr,round:p.round,pickNo:p.pickNo,pid:pid||null,name:p.player,pos:p.pos,pts,starts:myStarts.length,played,source:'Draft',bid:null,team:p.team});
+      allPicks.push({year:yr,round:p.round,pickNo:p.pickNo,pid:p.pid||null,
+        name:p.player,pos:p.pos,pts,starts:myStarts.length,played,source:'Draft',bid:null,team:p.team});
     });
   });
 
@@ -5372,7 +5420,7 @@ function renderMyDraft(){
   filtered.forEach(yr=>{
     (UDFA_AUCTION[yr]||[]).filter(p=>p.mgr===myKey).forEach(p=>{
       const nameLower=p.player.toLowerCase();
-      const pid=Object.entries(DB.playerMeta).find(([,m])=>`${m.first_name} ${m.last_name}`.toLowerCase()===nameLower)?.[0];
+      const pid=lookupPid(p.player);
       const myStarts=pid?DB.myStarters.filter(s=>s.pid===pid):[];
       const pts=myStarts.reduce((a,b)=>a+(b.points||0),0);
       const played=myStarts.length>0;
@@ -5429,7 +5477,7 @@ function renderMyProbowl(){
     pb.teams.forEach(team=>{
       team.players.forEach(p=>{
         const pname=p.player.replace(/^\[[^\]]+\]\s*/,'').trim();
-        const pid=Object.entries(DB.playerMeta).find(([,m])=>`${m.first_name} ${m.last_name}`.toLowerCase()===pname.toLowerCase())?.[0];
+        const pid=lookupPid(pname);
         if(!pid)return;
         // Check if this player was on my roster that year
         const season=DB.seasons.find(s=>s.year===parseInt(yr));
