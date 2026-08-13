@@ -571,6 +571,8 @@ tbody tr.highlight td{background:var(--gold-dim)}
 
 @media(max-width:640px){.topbar{padding:0 1rem;gap:1rem}.app-body{padding:1rem}.metrics{grid-template-columns:repeat(2,1fr)}}
 </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -604,57 +606,65 @@ tbody tr.highlight td{background:var(--gold-dim)}
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand" id="app-brand">The Archive</div>
 
-      <div class="sb-section-label">Now</div>
+      <div class="sb-section-label">Home</div>
       <button class="sb-item active" onclick="switchTab('home')" data-tab="home">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        Home
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
       </button>
       <button class="sb-item" onclick="switchTab('recap')" data-tab="recap">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h10"/><path d="M18 14l2 2 4-4"/></svg>
         Weekly Recap
+      </button>
+      <button class="sb-item" onclick="switchTab('tutorial')" data-tab="tutorial">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Archive Tutorial
       </button>
 
       <div class="sb-section-label">My Team</div>
       <button class="sb-item" onclick="switchTab('myscoring')" data-tab="myscoring">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         My Scoring
       </button>
       <button class="sb-item" onclick="switchTab('mytimeline')" data-tab="mytimeline">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 8v4l3 3"/><path d="M3.05 11A9 9 0 1 0 5 5.6"/></svg>
         My Timeline
       </button>
       <button class="sb-item" onclick="switchTab('myh2h')" data-tab="myh2h">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.5 17.5 3 6 3 3h3l11.5 11.5"/><path d="m13 7 7 7"/><path d="M16 17 3 4"/><path d="m17.5 6.5 3-3 3 3-3 3"/></svg>
         My H2H
       </button>
       <button class="sb-item" onclick="switchTab('mydraft')" data-tab="mydraft">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/></svg>
         My Draft
       </button>
+      <button class="sb-item" onclick="switchTab('mytrades')" data-tab="mytrades">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M21 3l-7.536 7.536A5 5 0 0 0 12 14.07V21"/><path d="M3 3l7.536 7.536"/><path d="M12 21v-6.93a5 5 0 0 0-1.464-3.534L3 3"/></svg>
+        My Trades
+      </button>
       <button class="sb-item" onclick="switchTab('mylineup')" data-tab="mylineup">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
         All-Time Lineup
       </button>
       <button class="sb-item" onclick="switchTab('myprobowl')" data-tab="myprobowl">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
         My Pro Bowlers
       </button>
       <button class="sb-item" onclick="switchTab('mynfl')" data-tab="mynfl">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         My NFL Breakdown
-      </button>
-      <button class="sb-item" onclick="switchTab('mytrades')" data-tab="mytrades">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-        My Trades
       </button>
 
       <div class="sb-section-label">League</div>
       <button class="sb-item" onclick="switchTab('players')" data-tab="players">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="9" y1="17" x2="9" y2="9"/><line x1="13" y1="17" x2="13" y2="5"/><line x1="17" y1="17" x2="17" y2="13"/><line x1="5" y1="17" x2="5" y2="17"/></svg>
         Player Scoring
       </button>
+      <button class="sb-item" onclick="switchTab('playergraphs')" data-tab="playergraphs">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="6" cy="18" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="14" r="2"/><path d="m6 16 6-8M12 8l6 4"/></svg>
+        Player Graphs
+      </button>
       <button class="sb-item" onclick="switchTab('timeline')" data-tab="timeline">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1"/><circle cx="12" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg>
         Timeline
       </button>
       <button class="sb-item" onclick="switchTab('standings')" data-tab="standings">
@@ -662,19 +672,19 @@ tbody tr.highlight td{background:var(--gold-dim)}
         Standings
       </button>
       <button class="sb-item" onclick="switchTab('h2h')" data-tab="h2h">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h13l4-5-4-8z"/><path d="M8 2v4"/><path d="M12 2v4"/><path d="M16 2v4"/></svg>
         H2H
       </button>
       <button class="sb-item" onclick="switchTab('draft')" data-tab="draft">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
         Draft
       </button>
       <button class="sb-item" onclick="switchTab('udfa')" data-tab="udfa">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m14 13-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/><path d="M3.5 3.5l5 5"/></svg>
         UDFA Auction
       </button>
       <button class="sb-item" onclick="switchTab('trades')" data-tab="trades">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M21 3l-7.536 7.536A5 5 0 0 0 12 14.07V21"/><path d="M3 3l7.536 7.536"/></svg>
         Trades
       </button>
       <button class="sb-item" onclick="switchTab('hof')" data-tab="hof">
@@ -686,29 +696,29 @@ tbody tr.highlight td{background:var(--gold-dim)}
         Awards
       </button>
       <button class="sb-item" onclick="switchTab('potg')" data-tab="potg">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
         POTG
       </button>
       <button class="sb-item" onclick="switchTab('probowl')" data-tab="probowl">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/><path d="M12 2v15.77M2 9.27h20"/></svg>
         Pro Bowl
       </button>
       <button class="sb-item" onclick="switchTab('projections')" data-tab="projections">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5"/></svg>
         Projections
       </button>
       <button class="sb-item" onclick="switchTab('playoffs')" data-tab="playoffs">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="7" x2="7" y2="13"/><polyline points="16 17 3 4"/><polyline points="17.5 6.5 21 3 21 21 3 21 6.5 17.5"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 20H4a2 2 0 0 1-2-2v-2"/><path d="M4 4h6"/><path d="M14 4h6v2"/><path d="M20 10v4"/><path d="M20 18v2"/><path d="M14 20h6"/><path d="M4 8v4"/><path d="M4 14v2"/><path d="M10 8h4"/><path d="M10 12h4"/><path d="M10 16h4"/></svg>
         Playoffs
       </button>
       <button class="sb-item" onclick="switchTab('matchups')" data-tab="matchups">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
         Matchups
       </button>
 
       <div class="sb-divider"></div>
       <button class="sb-item sb-search" onclick="switchTab('search')" data-tab="search">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
         Smart Search
       </button>
       <div class="sb-controls">
@@ -726,7 +736,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
 
     <!-- HOME (Now dashboard) -->
     <div class="panel active" id="panel-home">
-      <div class="sh"><h2>Now</h2><span class="sh-sub" id="home-sub">Season at a glance</span></div>
+      <div class="sh"><h2>Dashboard</h2><span class="sh-sub" id="home-sub">Season at a glance</span></div>
       <!-- Live matchup hero -->
       <div id="home-matchup"></div>
       <!-- Season stats row -->
@@ -740,6 +750,77 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <div class="sh-right"><button onclick="generateInsights(true)" class="add-btn-sm" style="background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text2);font-size:0.75rem;padding:3px 10px;cursor:pointer">↻ Refresh</button></div>
       </div>
       <div id="insights-grid" class="insights-grid"></div>
+    </div>
+
+
+    <!-- PLAYER GRAPHS -->
+    <div class="panel" id="panel-playergraphs">
+      <div class="sh"><h2>Player Graphs</h2><span class="sh-sub">Custom visualizations across all loaded seasons</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;align-items:flex-end">
+        <div>
+          <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">X Axis</div>
+          <select class="f-sel" id="pg-x" onchange="renderPlayerGraphs()">
+            <option value="starts">Appearances</option>
+            <option value="total">Total points</option>
+            <option value="avg">Pts per game</option>
+            <option value="best">Best single game</option>
+            <option value="potg">POTG count</option>
+            <option value="potw">POTW count</option>
+            <option value="probowls">Pro Bowls</option>
+            <option value="alldocile">All-Docile selections</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Y Axis</div>
+          <select class="f-sel" id="pg-y" onchange="renderPlayerGraphs()">
+            <option value="total">Total points</option>
+            <option value="starts">Appearances</option>
+            <option value="avg">Pts per game</option>
+            <option value="best">Best single game</option>
+            <option value="potg">POTG count</option>
+            <option value="potw">POTW count</option>
+            <option value="probowls">Pro Bowls</option>
+            <option value="alldocile">All-Docile selections</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Chart type</div>
+          <select class="f-sel" id="pg-type" onchange="renderPlayerGraphs()">
+            <option value="scatter">Scatter</option>
+            <option value="bar">Bar</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Min appearances</div>
+          <select class="f-sel" id="pg-min" onchange="renderPlayerGraphs()">
+            <option value="1">All players</option>
+            <option value="5" selected>5+ starts</option>
+            <option value="10">10+ starts</option>
+            <option value="20">20+ starts</option>
+            <option value="40">40+ starts</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:0.5rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Position</div>
+        <div id="pg-pos-chips" class="yr-filter-row"></div>
+      </div>
+      <div style="margin-bottom:0.5rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Draft year <span style="font-weight:400">(include only players from these classes, or all if none selected)</span></div>
+        <div id="pg-yr-chips" class="yr-filter-row"></div>
+      </div>
+      <div style="margin-bottom:0.5rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Draft round <span style="font-weight:400">(1 = round 1 picks, UDFA/SFA shown separately)</span></div>
+        <div id="pg-rnd-chips" class="yr-filter-row"></div>
+      </div>
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Manager <span style="font-weight:400">(show only players used by)</span></div>
+        <div id="pg-mgr-chips" class="yr-filter-row"></div>
+      </div>
+      <div style="position:relative;width:100%;height:480px;background:var(--surface1);border:0.5px solid var(--border);border-radius:10px;padding:16px;box-sizing:border-box">
+        <canvas id="pg-canvas"></canvas>
+      </div>
+      <div id="pg-stats" style="margin-top:0.75rem;font-size:0.75rem;color:var(--text3)"></div>
     </div>
 
     <!-- TIMELINE (League section) -->
@@ -989,6 +1070,12 @@ tbody tr.highlight td{background:var(--gold-dim)}
       </table></div>
     </div>
 
+    <!-- HOME: ARCHIVE TUTORIAL -->
+    <div class="panel" id="panel-tutorial">
+      <div class="sh"><h2>Archive Tutorial</h2><span class="sh-sub">Everything the Docile League Archive can do</span></div>
+      <div id="tutorial-content"></div>
+    </div>
+
     <!-- WEEKLY RECAP -->
     <div class="panel" id="panel-recap">
       <div class="sh"><h2>Weekly Recap</h2><span class="sh-sub">Auto-generated · ready to send</span></div>
@@ -1144,7 +1231,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
   <nav class="bottom-nav" id="bottom-nav" aria-label="Main navigation">
     <div class="sub-pill-bar" id="sub-pill-bar"></div>
     <div class="bn-items">
-      <button class="bn-item active" onclick="setSection('now')" data-section="now" aria-label="Now">
+      <button class="bn-item active" onclick="setSection('home')" data-section="home" aria-label="Now">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         <span>Now</span>
       </button>
@@ -1561,7 +1648,7 @@ const UDFA_AUCTION={
     {mgr:'Brad',player:'Demetric Felton',team:'CLE',pos:'RB',bid:15},
     {mgr:'David',player:'Mekhi Sargent',team:'TEN',pos:'RB',bid:68},
     {mgr:'David',player:'Dez Fitzpatrick',team:'TEN',pos:'WR',bid:11},
-    {mgr:'Declan',player:'Mike Strachan',team:'IND',pos:'WR',bid:69},
+    {mgr:'Declan',player:'Michael Strachan',team:'IND',pos:'WR',bid:69},
     {mgr:'Declan',player:'Jake Funk',team:'LAR',pos:'RB',bid:56},
     {mgr:'Declan',player:'Ihmir Smith-Marsette',team:'MIN',pos:'WR',bid:45},
     {mgr:'Declan',player:'Kellen Mond',team:'MIN',pos:'QB',bid:31},
@@ -1597,7 +1684,7 @@ const UDFA_AUCTION={
     {mgr:'Hinton',player:'Cade York',team:'CLE',pos:'K',bid:19},
     {mgr:'Jared',player:'Kyle Phillips',team:'TEN',pos:'WR',bid:64},
     {mgr:'Jon',player:'Isaiah Likely',team:'BAL',pos:'TE',bid:162},
-    {mgr:'Jon',player:'Kalil Pimpelton',team:'DET',pos:'WR',bid:9},
+    {mgr:'Jon',player:'Kalil Pimpleton',team:'DET',pos:'WR',bid:9},
     {mgr:'Jon',player:'Cole Turner',team:'WAS',pos:'TE',bid:1},
     {mgr:'Jimmy',player:'Velus Jones Jr.',team:'CHI',pos:'WR',bid:92},
     {mgr:'Kyle',player:'Desmond Ridder',team:'ATL',pos:'QB',bid:27},
@@ -1900,8 +1987,10 @@ function lookupPid(name){
   // Hardcoded PID overrides for players whose names differ between archive and Sleeper
   const PID_OVERRIDES={
     'gabriel davis':'6943',
-    'mike strachan':'7571',
-    'kalil pimpelton':'8150',
+    'mike strachan':'7944',
+    'michael strachan':'7944',
+    'kalil pimpelton':'8248',
+    'kalil pimpleton':'8248',
     'jonathon brooks':'11583',
   };
   const normLower=name.toLowerCase().trim();
@@ -2558,7 +2647,7 @@ function buildApp(){
   document.getElementById('award-yr-sel').innerHTML='<option value="all">All seasons</option>'+
     Object.keys(PLAYER_AWARDS).map(y=>`<option value="${y}">${y}</option>`).join('');
   // Init mobile nav
-  setSection('now');
+  setSection('home');
   renderAll();
 }
 
@@ -2567,7 +2656,19 @@ function getSeasons(){
   return v==='all'?DB.seasons:DB.seasons.filter(s=>s.year==v);
 }
 function onSeasonChange(){renderAll();}
-function renderAll(){renderMetrics();renderHome();renderStandings();renderMatchups();renderPlayers();renderH2H();renderPlayoffs();renderTrades();renderAwards();renderDocile();renderProbowl();renderHof();generateInsights();}
+function renderAll(){
+  renderMetrics();renderHome();renderStandings();renderMatchups();renderPlayers();renderH2H();renderPlayoffs();renderTrades();renderAwards();renderDocile();renderProbowl();renderHof();generateInsights();
+  // Reset graph chip state so new data takes effect
+  pgActiveMgrs=new Set();
+  pgActiveYrs=new Set();
+  pgActiveRnds=new Set();
+  document.getElementById('pg-mgr-chips').innerHTML='';
+  document.getElementById('pg-pos-chips').innerHTML='';
+  document.getElementById('pg-yr-chips').innerHTML='';
+  document.getElementById('pg-rnd-chips').innerHTML='';
+  pgActivePoses=new Set(['QB','RB','WR','TE','K','DEF']);
+  if(pgChart){pgChart.destroy();pgChart=null;}
+}
 
 function syncAllYrBtn(){
   const years=DB.seasons.map(s=>s.year);
@@ -2835,7 +2936,416 @@ function renderHome(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// RENDER: SEASON TIMELINE
+// RENDER: PLAYER GRAPHS
+// ══════════════════════════════════════════════════════════════
+let pgChart=null;
+let pgActivePoses=new Set(['QB','RB','WR','TE','K','DEF']);
+let pgActiveMgrs=new Set();
+let pgActiveYrs=new Set();   // empty = all years
+let pgActiveRnds=new Set();  // empty = all rounds
+
+function initPgChips(){
+  const posEl=document.getElementById('pg-pos-chips');
+  const mgrEl=document.getElementById('pg-mgr-chips');
+  const yrEl=document.getElementById('pg-yr-chips');
+  const rndEl=document.getElementById('pg-rnd-chips');
+
+  if(posEl&&!posEl.children.length){
+    ['QB','RB','WR','TE','K','DEF'].forEach(pos=>{
+      const b=document.createElement('button');
+      b.className='yr-chip active';b.textContent=pos;
+      b.onclick=()=>{
+        pgActivePoses.has(pos)?pgActivePoses.delete(pos):pgActivePoses.add(pos);
+        b.classList.toggle('active',pgActivePoses.has(pos));
+        renderPlayerGraphs();
+      };
+      posEl.appendChild(b);
+    });
+  }
+
+  // Draft year chips — built from ROOKIE_DRAFT_IDS keys
+  if(yrEl&&!yrEl.children.length){
+    const draftYears=Object.keys(ROOKIE_DRAFT_IDS).map(Number).sort((a,b)=>a-b);
+    draftYears.forEach(yr=>{
+      const b=document.createElement('button');
+      b.className='yr-chip';  // off by default = all years
+      b.textContent=String(yr);
+      b.onclick=()=>{
+        pgActiveYrs.has(yr)?pgActiveYrs.delete(yr):pgActiveYrs.add(yr);
+        b.classList.toggle('active',pgActiveYrs.has(yr));
+        renderPlayerGraphs();
+      };
+      yrEl.appendChild(b);
+    });
+    // Add UDFA and SFA as special chips
+    ['UDFA','SFA'].forEach(type=>{
+      const b=document.createElement('button');
+      b.className='yr-chip';
+      b.textContent=type;
+      b.style.color=type==='SFA'?'var(--teal)':'var(--gold)';
+      b.onclick=()=>{
+        pgActiveYrs.has(type)?pgActiveYrs.delete(type):pgActiveYrs.add(type);
+        b.classList.toggle('active',pgActiveYrs.has(type));
+        renderPlayerGraphs();
+      };
+      yrEl.appendChild(b);
+    });
+  }
+
+  // Draft round chips — 1, 2, 3, UDFA, SFA
+  if(rndEl&&!rndEl.children.length){
+    [1,2,3].forEach(rnd=>{
+      const b=document.createElement('button');
+      b.className='yr-chip';  // off by default = all rounds
+      b.textContent=`Rd ${rnd}`;
+      b.onclick=()=>{
+        pgActiveRnds.has(rnd)?pgActiveRnds.delete(rnd):pgActiveRnds.add(rnd);
+        b.classList.toggle('active',pgActiveRnds.has(rnd));
+        renderPlayerGraphs();
+      };
+      rndEl.appendChild(b);
+    });
+    ['UDFA','SFA'].forEach(type=>{
+      const b=document.createElement('button');
+      b.className='yr-chip';
+      b.textContent=type;
+      b.style.color=type==='SFA'?'var(--teal)':'var(--gold)';
+      b.onclick=()=>{
+        pgActiveRnds.has(type)?pgActiveRnds.delete(type):pgActiveRnds.add(type);
+        b.classList.toggle('active',pgActiveRnds.has(type));
+        renderPlayerGraphs();
+      };
+      rndEl.appendChild(b);
+    });
+  }
+
+  if(mgrEl&&!mgrEl.children.length){
+    const mgrs=[...new Set(DB.allStarters.map(s=>s.managerKey).filter(Boolean))].sort();
+    if(!pgActiveMgrs.size)mgrs.forEach(m=>pgActiveMgrs.add(m));
+    mgrs.forEach(mgr=>{
+      const b=document.createElement('button');
+      b.className='yr-chip active';b.textContent=mgr;
+      b.onclick=()=>{
+        pgActiveMgrs.has(mgr)?pgActiveMgrs.delete(mgr):pgActiveMgrs.add(mgr);
+        b.classList.toggle('active',pgActiveMgrs.has(mgr));
+        renderPlayerGraphs();
+      };
+      mgrEl.appendChild(b);
+    });
+  }
+}
+
+function buildPlayerGraphData(){
+  // Build per-pid acquisition info from draft + UDFA + SFA
+  const pidAcq={};  // pid -> {year, round, source}
+  Object.entries(DB.draftData||{}).forEach(([yr,picks])=>{
+    picks.forEach(p=>{
+      if(p.pid&&!pidAcq[p.pid])pidAcq[p.pid]={year:parseInt(yr),round:p.round,source:'Draft'};
+    });
+  });
+  Object.entries(UDFA_AUCTION).forEach(([yr,picks])=>{
+    picks.forEach(p=>{
+      const pid=lookupPid(p.player);
+      if(pid&&!pidAcq[pid])pidAcq[pid]={year:parseInt(yr),round:'UDFA',source:'UDFA'};
+    });
+  });
+  Object.entries(SFA_AUCTION).forEach(([yr,picks])=>{
+    picks.forEach(p=>{
+      const pid=lookupPid(p.player);
+      if(pid&&!pidAcq[pid])pidAcq[pid]={year:parseInt(yr),round:'SFA',source:'SFA'};
+    });
+  });
+
+  // Build per-pid stats from allStarters
+  const byPid={};
+  DB.allStarters.forEach(s=>{
+    if(!byPid[s.pid])byPid[s.pid]={pid:s.pid,starts:0,total:0,best:0,potg:0,potw:0,probowls:0,alldocile:0,mgrs:new Set(),acq:pidAcq[s.pid]||null};
+    byPid[s.pid].starts++;
+    byPid[s.pid].total+=(s.points||0);
+    if((s.points||0)>byPid[s.pid].best)byPid[s.pid].best=s.points||0;
+    if(s.managerKey)byPid[s.pid].mgrs.add(s.managerKey);
+  });
+
+  // POTG/POTW counts
+  const pgData=computePotgData('all');
+  pgData.forEach(e=>{
+    if(!byPid[e.pid])return;
+    if(e.type==='POTG')byPid[e.pid].potg++;
+    if(e.type==='POTW')byPid[e.pid].potw++;
+  });
+
+  // Pro Bowl counts
+  Object.entries(PRO_BOWL).forEach(([yr,pb])=>{
+    pb.teams.forEach(team=>{
+      team.players.forEach(p=>{
+        const pname=p.player.replace(/^\[[^\]]+\]\s*/,'').trim();
+        const pid=lookupPid(pname);
+        if(pid&&byPid[pid])byPid[pid].probowls++;
+      });
+    });
+  });
+
+  // All-Docile counts — check each year's players
+  Object.entries(ALL_DOCILE).forEach(([yr,data])=>{
+    if(!data)return;
+    // ALL_DOCILE entries have positions with player arrays
+    Object.values(data).forEach(entry=>{
+      if(!entry)return;
+      const pname=(typeof entry==='string'?entry:entry.player||entry.name||'');
+      const pid=lookupPid(pname);
+      if(pid&&byPid[pid])byPid[pid].alldocile++;
+    });
+  });
+
+  return byPid;
+}
+
+const METRIC_LABELS={
+  starts:'Appearances',total:'Total Points',avg:'Pts/Game',best:'Best Game',
+  potg:'POTG',potw:'POTW',probowls:'Pro Bowls',alldocile:'All-Docile'
+};
+
+const POS_COLORS={
+  QB:'rgba(224,92,75,0.85)',RB:'rgba(46,204,113,0.85)',WR:'rgba(93,173,226,0.85)',
+  TE:'rgba(230,126,34,0.85)',K:'rgba(155,89,182,0.85)',DEF:'rgba(212,175,55,0.85)',DST:'rgba(212,175,55,0.85)'
+};
+
+function renderPlayerGraphs(){
+  if(!DB.allStarters.length){
+    document.getElementById('pg-stats').textContent='Load your data first.';return;
+  }
+  initPgChips();
+
+  const xKey=document.getElementById('pg-x')?.value||'starts';
+  const yKey=document.getElementById('pg-y')?.value||'total';
+  const chartType=document.getElementById('pg-type')?.value||'scatter';
+  const minStarts=parseInt(document.getElementById('pg-min')?.value||'5');
+
+  const byPid=buildPlayerGraphData();
+
+  // Filter
+  const points=Object.values(byPid).filter(d=>{
+    if(d.starts<minStarts)return false;
+    const m=DB.playerMeta[d.pid];
+    const pos=m?.fantasy_positions?.[0]||m?.position||'?';
+    const posKey=(pos==='DST')?'DEF':pos;
+    if(!pgActivePoses.has(posKey))return false;
+    // Draft year filter (empty = show all)
+    if(pgActiveYrs.size){
+      const acq=d.acq;
+      if(!acq)return false; // no acq data, exclude when filter active
+      const yrMatch=pgActiveYrs.has(acq.year)||pgActiveYrs.has(acq.source);
+      if(!yrMatch)return false;
+    }
+    // Draft round filter (empty = show all)
+    if(pgActiveRnds.size){
+      const acq=d.acq;
+      if(!acq)return false;
+      const rndKey=acq.source==='UDFA'?'UDFA':acq.source==='SFA'?'SFA':acq.round;
+      if(!pgActiveRnds.has(rndKey))return false;
+    }
+    // Manager filter
+    if(pgActiveMgrs.size&&![...d.mgrs].some(m=>pgActiveMgrs.has(m)))return false;
+    return true;
+  }).map(d=>{
+    const m=DB.playerMeta[d.pid];
+    const name=m?`${m.first_name} ${m.last_name}`:'PID:'+d.pid;
+    const pos=m?.fantasy_positions?.[0]||m?.position||'?';
+    const avg=d.starts?d.total/d.starts:0;
+    const getVal=(key)=>{
+      if(key==='avg')return avg;
+      return d[key]||0;
+    };
+    return{...d,name,pos,avg,xVal:getVal(xKey),yVal:getVal(yKey)};
+  });
+
+  const canvas=document.getElementById('pg-canvas');
+  if(!canvas)return;
+  if(pgChart){pgChart.destroy();pgChart=null;}
+
+  const ctx=canvas.getContext('2d');
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const textColor=isDark?'rgba(255,255,255,0.5)':'rgba(0,0,0,0.5)';
+  const gridColor=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)';
+
+  Chart.defaults.color=textColor;
+  Chart.defaults.borderColor=gridColor;
+  Chart.defaults.font.family="'Inter','system-ui',sans-serif";
+  Chart.defaults.font.size=11;
+
+  if(chartType==='scatter'){
+    const datasets=[...pgActivePoses].filter(pos=>['QB','RB','WR','TE','K','DEF'].includes(pos)).map(pos=>({
+      label:pos,
+      data:points.filter(p=>(p.pos===pos||(pos==='DEF'&&(p.pos==='DEF'||p.pos==='DST')))).map(p=>({x:p.xVal,y:p.yVal,name:p.name,pid:p.pid,starts:p.starts,total:p.total,avg:p.avg,acq:p.acq})),
+      backgroundColor:POS_COLORS[pos]||'rgba(150,150,150,0.7)',
+      pointRadius:5,pointHoverRadius:8,
+    }));
+
+    pgChart=new Chart(ctx,{
+      type:'scatter',
+      data:{datasets},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'top',labels:{boxWidth:10,padding:12}},
+          tooltip:{callbacks:{
+            title:items=>items[0]?.raw?.name||'',
+            label:item=>{
+              const d=item.raw;
+              const acqStr=d.acq?(d.acq.source==='Draft'?`${d.acq.year} Rd ${d.acq.round}`:`${d.acq.year} ${d.acq.source}`):'Undrafted';
+              return[
+                `${METRIC_LABELS[xKey]}: ${typeof d.x==='number'?d.x.toFixed(xKey==='starts'||xKey==='potg'||xKey==='potw'||xKey==='probowls'||xKey==='alldocile'?0:1):'—'}`,
+                `${METRIC_LABELS[yKey]}: ${typeof d.y==='number'?d.y.toFixed(yKey==='starts'||yKey==='potg'||yKey==='potw'||yKey==='probowls'||yKey==='alldocile'?0:1):'—'}`,
+                `Starts: ${d.starts} · Avg: ${d.avg?.toFixed(1)}`,
+                `Acquired: ${acqStr}`,
+              ];
+            }
+          }},
+        },
+        scales:{
+          x:{title:{display:true,text:METRIC_LABELS[xKey]},grid:{color:gridColor}},
+          y:{title:{display:true,text:METRIC_LABELS[yKey]},grid:{color:gridColor}},
+        },
+        onClick:(evt,els)=>{
+          if(els.length){
+            const d=pgChart.data.datasets[els[0].datasetIndex].data[els[0].index];
+            if(d.pid)openPlayerModal(d.pid);
+          }
+        },
+      }
+    });
+  } else {
+    // Bar chart — sort by Y value, top 30
+    const sorted=[...points].sort((a,b)=>b.yVal-a.yVal).slice(0,30);
+    pgChart=new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:sorted.map(p=>p.name),
+        datasets:[{
+          label:METRIC_LABELS[yKey],
+          data:sorted.map(p=>p.yVal),
+          backgroundColor:sorted.map(p=>POS_COLORS[p.pos]||'rgba(150,150,150,0.7)'),
+          borderWidth:0,borderRadius:3,
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{
+            title:items=>{const p=sorted[items[0].dataIndex];return p.name;},
+            label:item=>{
+              const p=sorted[item.dataIndex];
+              return[`${METRIC_LABELS[yKey]}: ${item.raw.toFixed(1)}`,`Starts: ${p.starts} · Avg: ${p.avg.toFixed(1)}`];
+            }
+          }}
+        },
+        scales:{
+          x:{ticks:{maxRotation:45,minRotation:30},grid:{display:false}},
+          y:{title:{display:true,text:METRIC_LABELS[yKey]},grid:{color:gridColor}},
+        },
+        onClick:(evt,els)=>{
+          if(els.length){const p=sorted[els[0].index];if(p.pid)openPlayerModal(p.pid);}
+        },
+      }
+    });
+  }
+
+  const statsEl=document.getElementById('pg-stats');
+  if(statsEl)statsEl.textContent=`${points.length} players shown · Click any point or bar to open player card · Colors indicate position`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER: ARCHIVE TUTORIAL
+// ══════════════════════════════════════════════════════════════
+function renderTutorial(){
+  const el=document.getElementById('tutorial-content');
+  if(el.children.length)return;
+  const groups=[
+    {
+      icon:'ti-user-circle',color:'var(--text-accent)',bg:'var(--bg-accent)',
+      title:'Your team\'s history',
+      desc:'Everything about your franchise across all 12 seasons.',
+      pages:[
+        {name:'My Scoring',desc:'Every player you\'ve started, ranked by pts, starts, average, or best game.'},
+        {name:'My Timeline',desc:'Year-by-year record, finish, PF/PA, team name, and trophy history.'},
+        {name:'My H2H',desc:'Your all-time record against every other manager.'},
+        {name:'My Draft',desc:'Every rookie pick and UDFA/SFA acquisition with pts scored for your team.'},
+        {name:'My Trades',desc:'All trades involving your roster across loaded seasons.'},
+        {name:'All-Time Lineup',desc:'Your best-ever starting lineup — by games played, total pts, best season, or best single game.'},
+        {name:'My Pro Bowlers',desc:'Players from your teams selected to the Docile League Pro Bowl.'},
+        {name:'My NFL Breakdown',desc:'How many times you\'ve started players from each NFL franchise.'},
+      ]
+    },
+    {
+      icon:'ti-trophy',color:'var(--text-warning)',bg:'var(--bg-warning)',
+      title:'League records',
+      desc:'12 seasons of Docile League history — who won, who lost, and everything in between.',
+      pages:[
+        {name:'Timeline',desc:'Season-by-season history from 2014 to present — champions, Bina Turds, Amol Dhaliwal Award.'},
+        {name:'Standings',desc:'All-time and single-season standings aggregated by manager.'},
+        {name:'H2H',desc:'Full league head-to-head matrix — every manager vs every other manager.'},
+        {name:'Awards',desc:'Team and player awards, championship history, All-Docile teams by year.'},
+        {name:'POTG',desc:'Player of the Game and Player of the Week leaderboard, filterable by position and season.'},
+        {name:'Pro Bowl',desc:'Docile League Pro Bowl history — rosters, scores, winners, and career leaders.'},
+        {name:'Hall of Fame',desc:'The Docile League immortals — inducted classes with career highlights.'},
+        {name:'Playoffs',desc:'Bracket results for every season, showing semifinal and championship matchups.'},
+        {name:'Matchups',desc:'Week-by-week matchup cards for any loaded season.'},
+        {name:'Projections',desc:'Actual vs projected scoring — identifies the luckiest wins each season.'},
+      ]
+    },
+    {
+      icon:'ti-chart-dots',color:'var(--text-success)',bg:'var(--bg-success)',
+      title:'Player data',
+      desc:'Deep dives into the players who\'ve made (and broken) your lineups.',
+      pages:[
+        {name:'Player Scoring',desc:'League-wide leaderboard for all players ever started. Click any name to open their full card with career stats, awards, and trade history.'},
+        {name:'Player Graphs',desc:'Custom scatter plots and bar charts. Compare any two metrics — appearances, pts, POTG count, Pro Bowls — with position, manager, draft year, and round filters.'},
+        {name:'Draft',desc:'Rookie draft boards for all years pulled from Sleeper, plus UDFA and SFA acquisitions, with pts-by-manager breakdowns.'},
+        {name:'UDFA Auction',desc:'Results from the annual undrafted rookie auction (2020–2025), with bids and pts scored.'},
+        {name:'Trades',desc:'Full league-wide trade log, filterable by year and manager.'},
+      ]
+    },
+    {
+      icon:'ti-sparkles',color:'var(--text-muted)',bg:'var(--surface-1)',
+      title:'Smart Search',
+      desc:'Ask anything about the archive in plain English — powered by Claude.',
+      pages:[
+        {name:'How it works',desc:'Type any question: "Who has the most career POTG?", "What\'s Jimmy\'s record vs David?", "Which draft class scored the most points?" The AI reads your league data and answers directly.'},
+        {name:'Rate limit',desc:'Limited to 10 requests per hour per IP to keep costs manageable. Results are only as current as your loaded data.'},
+      ]
+    },
+  ];
+
+  el.innerHTML=`
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:1.5rem;max-width:620px;line-height:1.7">
+      The Docile League Archive pulls live data from Sleeper and combines it with 12 seasons of records going back to 2014. Here's what you can explore:
+    </p>
+    <div style="display:flex;flex-direction:column;gap:1.25rem">
+      ${groups.map(g=>`
+        <div style="background:var(--surface1);border:0.5px solid var(--border);border-radius:12px;padding:16px 18px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:${g.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ${g.icon}" style="font-size:16px;color:${g.color}" aria-hidden="true"></i>
+            </div>
+            <div>
+              <div style="font-size:0.9rem;font-weight:500;color:var(--text)">${g.title}</div>
+              <div style="font-size:0.75rem;color:var(--text3)">${g.desc}</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px">
+            ${g.pages.map(p=>`
+              <div style="background:var(--surface2);border-radius:7px;padding:8px 12px">
+                <div style="font-size:0.78rem;font-weight:500;color:var(--text2);margin-bottom:2px">${p.name}</div>
+                <div style="font-size:0.73rem;color:var(--text3);line-height:1.45">${p.desc}</div>
+              </div>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:1.25rem;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:0.75rem;color:var(--text3);line-height:1.6">
+      <strong style="color:var(--text2)">Data sources:</strong> Live Sleeper API · GitHub snapshot files (2019–present) · UDFA/SFA/Pro Bowl/Awards hardcoded · Rookie draft picks via Sleeper draft IDs
+    </div>`;}
+
 // ══════════════════════════════════════════════════════════════
 function renderTimeline(){
   const el=document.getElementById('timeline-content');
@@ -3720,25 +4230,25 @@ function renderHof(){
 // ══════════════════════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════════════════════
-const TABS=['home','standings','matchups','players','h2h','playoffs','trades','awards',
+const TABS=['home','standings','matchups','players','playergraphs','h2h','playoffs','trades','awards',
   'probowl','hof','projections','potg','recap','search',
   'mylineup','myscoring','myh2h','mytrades','timeline',
-  'draft','udfa','mydraft','myprobowl','mytimeline','mynfl'];
+  'draft','udfa','mydraft','myprobowl','mytimeline','mynfl','tutorial'];
 
 const SECTIONS={
-  now:['home','recap'],
-  myteam:['myscoring','mytimeline','myh2h','mydraft','mylineup','myprobowl','mynfl','mytrades'],
-  league:['players','timeline','standings','h2h','draft','udfa','trades','hof','awards','potg','probowl','projections','playoffs','matchups'],
+  home:['home','recap','tutorial'],
+  myteam:['myscoring','mytimeline','myh2h','mydraft','mytrades','mylineup','myprobowl','mynfl'],
+  league:['players','playergraphs','timeline','standings','h2h','draft','udfa','trades','hof','awards','potg','probowl','projections','playoffs','matchups'],
   search:['search']
 };
 const SECTION_LABELS={
-  now:['Home','Weekly Recap'],
-  myteam:['My Scoring','My Timeline','My H2H','My Draft','All-Time Lineup','My Pro Bowlers','My NFL Breakdown','My Trades'],
-  league:['Player Scoring','Timeline','Standings','H2H','Draft','UDFA Auction','Trades','Hall of Fame','Awards','POTG','Pro Bowl','Projections','Playoffs','Matchups'],
+  home:['Dashboard','Weekly Recap','Archive Tutorial'],
+  myteam:['My Scoring','My Timeline','My H2H','My Draft','My Trades','All-Time Lineup','My Pro Bowlers','My NFL Breakdown'],
+  league:['Player Scoring','Player Graphs','Timeline','Standings','H2H','Draft','UDFA Auction','Trades','Hall of Fame','Awards','POTG','Pro Bowl','Projections','Playoffs','Matchups'],
   search:['Smart Search']
 };
 
-let activeSection='now';
+let activeSection='home';
 
 function setSection(section){
   activeSection=section;
@@ -3788,6 +4298,8 @@ function switchTab(name){
   if(name==='myh2h')renderMyH2H();
   if(name==='mytrades')renderMyTrades();
   if(name==='timeline')renderTimeline();
+  if(name==='tutorial')renderTutorial();
+  if(name==='playergraphs')renderPlayerGraphs();
   if(name==='draft')renderDraft();
   if(name==='udfa')renderUdfa();
   if(name==='mydraft')renderMyDraft();
@@ -5343,8 +5855,32 @@ function renderDraft(){
       </table></div>
     </div>`:'';
 
+  // All-time totals across all loaded draft years
+  const allTimeMgr={};
+  Object.entries(DB.draftData||{}).forEach(([yr,picks])=>{
+    [...picks,...(UDFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player)})),
+     ...(SFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player)}))].forEach(p=>{
+      const pid=p.pid;
+      const pts=pid?DB.allStarters.filter(s=>s.pid===pid&&s.year>=parseInt(yr)).reduce((a,b)=>a+(b.points||0),0):0;
+      if(!allTimeMgr[p.mgr])allTimeMgr[p.mgr]={pts:0,picks:0};
+      allTimeMgr[p.mgr].pts+=pts;allTimeMgr[p.mgr].picks++;
+    });
+  });
+  const allTimeSorted=Object.entries(allTimeMgr).sort((a,b)=>b[1].pts-a[1].pts);
+  const allTimeHtml=allTimeSorted.length?`
+    <div class="sh" style="margin-bottom:0.5rem"><h2 style="font-size:1rem">All-Time Draft Points Leaderboard</h2><span class="sh-sub">Total pts from all draft + auction picks across all classes</span></div>
+    <div class="tbl-wrap" style="margin-bottom:1.5rem"><table>
+      <thead><tr><th>#</th><th>Manager</th><th>Total picks</th><th>Total pts</th><th>Avg per pick</th></tr></thead>
+      <tbody>${allTimeSorted.map(([mgr,d],i)=>`<tr>
+        <td class="mono" style="color:var(--text3)">${i+1}</td>
+        <td style="font-weight:500">${mgr}</td>
+        <td class="mono">${d.picks}</td>
+        <td class="mono" style="color:var(--teal)">${d.pts.toFixed(1)}</td>
+        <td class="mono">${d.picks?(d.pts/d.picks).toFixed(1):'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`:'';
+
   const html=filtered.map(yr=>{
-    const draftPicks=DB.draftData[yr]||[];
     const udfaPicks=(UDFA_AUCTION[yr]||[]).map(p=>{
       const pid=lookupPid(p.player);
       return{...p,pid,source:'UDFA',pickNo:9999,round:0};
@@ -5370,7 +5906,6 @@ function renderDraft(){
 
     const draftOnly=enriched.filter(p=>p.source==='Draft');
     const posCounts={};enriched.forEach(p=>{if(!posCounts[p.pos])posCounts[p.pos]=0;posCounts[p.pos]++;});
-    const avgPts=draftOnly.length?draftOnly.reduce((a,b)=>a+b.pts,0)/draftOnly.length:0;
 
     const col=draftSort.col,ddir=draftSort.dir;
     const darrow=(c)=>col===c?(ddir===1?'↑':'↓'):'';
@@ -5379,30 +5914,24 @@ function renderDraft(){
       pos:(a,b)=>a.pos.localeCompare(b.pos)*ddir,
       mgr:(a,b)=>a.mgr.localeCompare(b.mgr)*ddir,
       pts:(a,b)=>(a.pts-b.pts)*ddir,
-      surplus:(a,b)=>((a.pts-avgPts)-(b.pts-avgPts))*ddir,
     };
     const sortedPicks=[...enriched].sort(dSortFn[col]||dSortFn.pickNo);
 
-    // Manager grades
-    let gradeHtml='';
-    if(draftOnly.length){
-      const surplusMap={};
-      draftOnly.forEach(p=>{surplusMap[p.mgr]=(surplusMap[p.mgr]||0)+(p.pts-avgPts);});
-      const mgrsSorted=Object.entries(surplusMap).sort((a,b)=>b[1]-a[1]);
-      gradeHtml=`<div class="sh" style="margin-top:1.25rem;margin-bottom:0.5rem"><h2 style="font-size:1rem">Manager Draft Grades</h2><span class="sh-sub">Surplus vs average pick value</span></div>
+    // Points by manager table
+    const mgrPts={};
+    enriched.forEach(p=>{if(!mgrPts[p.mgr])mgrPts[p.mgr]={pts:0,picks:0};mgrPts[p.mgr].pts+=p.pts;mgrPts[p.mgr].picks++;});
+    const mgrsSorted=Object.entries(mgrPts).sort((a,b)=>b[1].pts-a[1].pts);
+    const ptsTableHtml=`<div class="sh" style="margin-top:1.25rem;margin-bottom:0.5rem"><h2 style="font-size:1rem">Points by Manager</h2><span class="sh-sub">Total pts scored by all picks from this draft class</span></div>
       <div class="tbl-wrap" style="margin-bottom:1.25rem"><table>
-        <thead><tr><th>Manager</th><th>Surplus</th><th>Grade</th></tr></thead>
-        <tbody>${mgrsSorted.map(([mgr,surplus])=>{
-          const max=Math.max(...mgrsSorted.map(([,v])=>Math.abs(v)),1);
-          const pct=surplus/max;
-          const grade=pct>0.5?'A':pct>0.2?'B+':pct>0?'B':pct>-0.2?'C':pct>-0.4?'D+':'D';
-          const sc=surplus>=0?'var(--teal)':'var(--crimson)';
-          return`<tr><td style="font-weight:500">${mgr}</td>
-            <td><span style="color:${sc};font-family:var(--font-mono)">${surplus>=0?'+':''}${surplus.toFixed(0)}</span></td>
-            <td style="font-weight:600;color:${sc}">${grade}</td></tr>`;
-        }).join('')}</tbody>
+        <thead><tr><th>#</th><th>Manager</th><th>Picks</th><th>Total pts</th><th>Avg per pick</th></tr></thead>
+        <tbody>${mgrsSorted.map(([mgr,d],i)=>`<tr>
+          <td class="mono" style="color:var(--text3)">${i+1}</td>
+          <td style="font-weight:500">${mgr}</td>
+          <td class="mono">${d.picks}</td>
+          <td class="mono" style="color:var(--teal)">${d.pts.toFixed(1)}</td>
+          <td class="mono">${d.picks?( d.pts/d.picks).toFixed(1):'—'}</td>
+        </tr>`).join('')}</tbody>
       </table></div>`;
-    }
 
     return`<div style="margin-bottom:2rem">
       <div class="sh" style="margin-bottom:0.5rem"><h2 style="font-size:1.1rem">${yr} Rookie Draft <span style="font-size:0.72rem;color:var(--text3);font-weight:400">${draftPicks.length} picks</span></h2></div>
@@ -5417,11 +5946,8 @@ function renderDraft(){
           <th class="sortable-th" onclick="sortDraft('mgr')">Manager <span class="sort-arrow">${darrow('mgr')}</span></th>
           <th>NFL Team</th><th>Acq.</th>
           <th class="sortable-th" onclick="sortDraft('pts')">Pts <span class="sort-arrow">${darrow('pts')}</span></th>
-          <th class="sortable-th" onclick="sortDraft('surplus')">Surplus <span class="sort-arrow">${darrow('surplus')}</span></th>
         </tr></thead>
         <tbody>${sortedPicks.map(p=>{
-          const surplusNum=p.pts-avgPts;
-          const sCol=surplusNum>=0?'var(--teal)':'var(--crimson)';
           const pickLabel=p.source==='UDFA'
             ?`<span style="color:var(--gold)">UDFA $${p.bid}</span>`
             :p.source==='SFA'
@@ -5440,14 +5966,13 @@ function renderDraft(){
             <td style="font-size:0.75rem;color:var(--text3)">${p.team||'—'}</td>
             <td style="font-size:0.75rem">${acqLabel}</td>
             <td class="mono">${p.pts>0?p.pts.toFixed(1):'—'}</td>
-            <td class="mono" style="color:${sCol}">${surplusNum>=0?'+':''}${surplusNum.toFixed(0)}</td>
           </tr>`;
         }).join('')}</tbody>
       </table></div>
-      ${gradeHtml}
+      ${ptsTableHtml}
     </div>`;
   }).join('');
-  el.innerHTML=diagnosticHtml+(html||'<div class="empty">No data available.</div>');
+  el.innerHTML=diagnosticHtml+allTimeHtml+(html||'<div class="empty">No data available.</div>');
 }
 // ══════════════════════════════════════════════════════════════
 // UDFA AUCTION
