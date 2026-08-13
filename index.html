@@ -2235,7 +2235,7 @@ async function loadSeason(year,lid){
           const m=DB.playerMeta[pick.player_id];
           const playerName=m?`${m.first_name} ${m.last_name}`:(pick.metadata?.first_name&&pick.metadata?.last_name?`${pick.metadata.first_name} ${pick.metadata.last_name}`:null);
           if(playerName){
-            DB.draftPickMap[key]={playerId:pick.player_id,playerName,round:pick.round,pickNo:pick.pick_no};
+            DB.draftPickMap[key]={playerId:pick.player_id,playerName,round:pick.round,pickNo:pick.pick_no,pickedByRosterId:pick.roster_id};
           }
         });
       }catch(e){console.warn(`Draft picks load failed for ${draft.draft_id}:`,e);}
@@ -5098,7 +5098,19 @@ function initDraftChips(elId, years, activeSet, onToggle){
   el.innerHTML=years.map(y=>`<button class="yr-chip${activeSet.has(y)?' active':''}" onclick="${onToggle}(${y},this)">${y}</button>`).join('');
 }
 
-let activeDraftYrs=new Set();
+let udfaSort={col:'bid',dir:-1};
+let draftSort={col:'pickNo',dir:-1};
+
+function sortUdfa(col){
+  udfaSort=udfaSort.col===col?{col,dir:udfaSort.dir*-1}:{col,dir:-1};
+  renderUdfa();
+}
+function sortDraft(col){
+  // Default for draft is ascending pick order; desc for pts
+  const defaultDir=col==='pickNo'?1:-1;
+  draftSort=draftSort.col===col?{col,dir:draftSort.dir*-1}:{col,dir:defaultDir};
+  renderDraft();
+}
 function toggleDraftYr(yr,btn){
   activeDraftYrs.has(yr)?activeDraftYrs.delete(yr):activeDraftYrs.add(yr);
   btn.classList.toggle('active',activeDraftYrs.has(yr));
@@ -5145,8 +5157,16 @@ function renderDraft(){
     const posCounts={};
     picks.forEach(p=>{if(!posCounts[p.pos])posCounts[p.pos]=0;posCounts[p.pos]++;});
 
-    // Grade only if 2020+
-    let gradeHtml='';
+    const col=draftSort.col,ddir=draftSort.dir;
+    const darrow=(c)=>col===c?(ddir===1?'↑':'↓'):'';
+    const dSortFn={
+      pickNo:(a,b)=>(a.pickNo-b.pickNo)*ddir,
+      pos:(a,b)=>a.pos.localeCompare(b.pos)*ddir,
+      mgr:(a,b)=>a.mgr.localeCompare(b.mgr)*ddir,
+      pts:(a,b)=>(a.pts-b.pts)*ddir,
+      surplus:(a,b)=>((a.pts-picks.reduce((s,x)=>s+x.pts,0)/picks.length)-(b.pts-picks.reduce((s,x)=>s+x.pts,0)/picks.length))*ddir,
+    };
+    const sortedPicks=[...picks].sort(dSortFn[col]||dSortFn.pickNo);
     if(isStarterYear){
       const maxPts=Math.max(...picks.map(p=>p.pts),1);
       // Expected pts curve: 1st pick = maxPts, falls off by round
@@ -5183,9 +5203,16 @@ function renderDraft(){
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Pick</th><th>Player</th><th>Pos</th><th>Manager</th>${isStarterYear?'<th>Pts scored</th><th>Surplus</th>':''}</tr></thead>
-          <tbody>${picks.map(p=>{
-            const surplus=isStarterYear?(p.pts-picks.reduce((a,b)=>a+b.pts,0)/picks.length).toFixed(0):null;
+          <thead><tr>
+            <th class="sortable-th" onclick="sortDraft('pickNo')">Pick <span class="sort-arrow">${darrow('pickNo')||'↑'}</span></th>
+            <th>Player</th>
+            <th class="sortable-th" onclick="sortDraft('pos')">Pos <span class="sort-arrow">${darrow('pos')}</span></th>
+            <th class="sortable-th" onclick="sortDraft('mgr')">Manager <span class="sort-arrow">${darrow('mgr')}</span></th>
+            ${isStarterYear?`<th class="sortable-th" onclick="sortDraft('pts')">Pts scored <span class="sort-arrow">${darrow('pts')}</span></th><th class="sortable-th" onclick="sortDraft('surplus')">Surplus <span class="sort-arrow">${darrow('surplus')}</span></th>`:''}
+          </tr></thead>
+          <tbody>${sortedPicks.map(p=>{
+            const avg=picks.reduce((a,b)=>a+b.pts,0)/picks.length;
+            const surplus=isStarterYear?(p.pts-avg).toFixed(0):null;
             const sCol=surplus>0?'var(--teal)':'var(--crimson)';
             return`<tr>
               <td class="mono" style="color:var(--text3)">${Math.ceil(p.pickNo/12)}.${String(((p.pickNo-1)%12)+1).padStart(2,'0')}</td>
@@ -5244,8 +5271,17 @@ function renderUdfa(){
       return DB.allStarters.filter(s=>s.pid===pid&&s.year>=year&&s.teamRosterId===team.rosterId).reduce((a,b)=>a+(b.points||0),0);
     };
 
+    const col=udfaSort.col,dir=udfaSort.dir;
+    const sortFn={
+      bid:(a,b)=>(a.bid-b.bid)*dir,
+      pts:(a,b)=>(a.pts-b.pts)*dir,
+      pos:(a,b)=>a.pos.localeCompare(b.pos)*dir,
+      team:(a,b)=>(a.team||'').localeCompare(b.team||'')*dir,
+      mgr:(a,b)=>a.mgr.localeCompare(b.mgr)*dir,
+    };
+    const arrow=(c)=>col===c?(dir===1?'↑':'↓'):'';
     const picksWithPts=picks.map(p=>({...p,pts:ptsForPlayer(p.player,p.mgr,yr)}))
-      .sort((a,b)=>b.bid-a.bid);
+      .sort(sortFn[col]||sortFn.bid);
 
     return`<div style="margin-bottom:2rem">
       <div class="sh" style="margin-bottom:0.75rem"><h2 style="font-size:1.1rem">${yr} UDFA Auction</h2></div>
@@ -5258,15 +5294,26 @@ function renderUdfa(){
         ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'bg-dim'}">${pos}: ${cnt}</span>`).join('')}
       </div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Player</th><th>Pos</th><th>NFL Team</th><th>Manager</th><th>Bid</th><th>Pts scored</th></tr></thead>
-        <tbody>${picksWithPts.map(p=>`<tr>
-          <td style="font-weight:500">${p.player}</td>
-          <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
-          <td style="font-size:0.78rem;color:var(--text3)">${p.team||'—'}</td>
-          <td style="font-size:0.82rem">${p.mgr}</td>
-          <td class="mono" style="color:var(--gold)">$${p.bid}</td>
-          <td class="mono" style="color:${p.pts>50?'var(--teal)':p.pts>0?'var(--text2)':'var(--text3)'}">${p.pts>0?p.pts.toFixed(1):'—'}</td>
-        </tr>`).join('')}</tbody>
+        <thead><tr>
+          <th>Player</th>
+          <th class="sortable-th" onclick="sortUdfa('pos')">Pos <span class="sort-arrow">${arrow('pos')}</span></th>
+          <th class="sortable-th" onclick="sortUdfa('team')">NFL Team <span class="sort-arrow">${arrow('team')}</span></th>
+          <th class="sortable-th" onclick="sortUdfa('mgr')">Manager <span class="sort-arrow">${arrow('mgr')}</span></th>
+          <th class="sortable-th" onclick="sortUdfa('bid')">Bid <span class="sort-arrow">${arrow('bid')||'↓'}</span></th>
+          <th class="sortable-th" onclick="sortUdfa('pts')">Pts scored <span class="sort-arrow">${arrow('pts')}</span></th>
+        </tr></thead>
+        <tbody>${picksWithPts.map(p=>{
+          const pid=Object.entries(DB.playerMeta).find(([,m])=>`${m.first_name} ${m.last_name}`.toLowerCase()===p.player.toLowerCase())?.[0];
+          const nameEl=pid?`<span class="player-link" onclick="openPlayerModal('${pid}')">${p.player}</span>`:p.player;
+          return`<tr>
+            <td style="font-weight:500">${nameEl}</td>
+            <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
+            <td style="font-size:0.78rem;color:var(--text3)">${p.team||'—'}</td>
+            <td style="font-size:0.82rem">${p.mgr}</td>
+            <td class="mono" style="color:var(--gold)">$${p.bid}</td>
+            <td class="mono" style="color:${p.pts>50?'var(--teal)':p.pts>0?'var(--text2)':'var(--text3)'}">${p.pts>0?p.pts.toFixed(1):'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
       </table></div>
     </div>`;
   }).join('');
@@ -5299,21 +5346,23 @@ function renderMyDraft(){
   // Build combined pick list
   const allPicks=[];
 
-  // Sleeper draft picks
+  // Sleeper draft picks — filter by who PICKED them (roster_id of drafter)
   Object.entries(DB.draftPickMap).forEach(([k,v])=>{
-    const[yr,round,rosterId]=k.split('|');
+    const[yr,,]= k.split('|');
     const year=parseInt(yr);
     if(!filtered.includes(year))return;
     const season=DB.seasons.find(s=>s.year===year);
     if(!season)return;
-    const team=season.teams.find(t=>t.rosterId==rosterId);
-    if(team?.managerKey!==myKey)return;
+    // pickedByRosterId is who made the pick (the drafter)
+    const pickedByRid=v.pickedByRosterId??parseInt(k.split('|')[2]);
+    const team=season.teams.find(t=>t.rosterId===pickedByRid||t.rosterId===String(pickedByRid)||String(t.rosterId)===String(pickedByRid));
+    if(!team||team.managerKey!==myKey)return;
     const m=DB.playerMeta[v.playerId];
     const pos=m?.fantasy_positions?.[0]||'?';
     const myStarts=DB.myStarters.filter(s=>s.pid===v.playerId);
     const pts=myStarts.reduce((a,b)=>a+(b.points||0),0);
     const played=myStarts.length>0;
-    allPicks.push({year,round:parseInt(round),pickNo:v.pickNo,pid:v.playerId,name:v.playerName,pos,pts,starts:myStarts.length,played,source:'Draft',bid:null});
+    allPicks.push({year,round:v.round,pickNo:v.pickNo,pid:v.playerId,name:v.playerName,pos,pts,starts:myStarts.length,played,source:'Draft',bid:null});
   });
 
   // UDFA picks for this manager
@@ -5394,14 +5443,14 @@ function renderMyProbowl(){
   rows.sort((a,b)=>b.year-a.year||b.score-a.score);
   if(!rows.length){el.innerHTML='<div class="empty">No Pro Bowl selections found for your loaded seasons.</div>';return;}
   el.innerHTML=`<div class="tbl-wrap"><table>
-    <thead><tr><th>Year</th><th>Player</th><th>Pos</th><th>Team</th><th>Score</th><th>Award</th></tr></thead>
+    <thead><tr><th>Year</th><th>Player</th><th>Pos</th><th>Team</th><th>Score</th><th>Winner</th></tr></thead>
     <tbody>${rows.map(r=>`<tr>
       <td class="mono" style="color:var(--text3)">${r.year}</td>
       <td><span class="player-link" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
       <td><span class="badge ${pc[r.pos]||'bg-dim'}">${r.pos}</span></td>
       <td style="font-size:0.82rem;color:var(--text2)">${r.teamName}</td>
       <td class="mono">${r.score>0?r.score.toFixed(1):'—'}</td>
-      <td style="font-size:0.9rem">${r.mvp?'🦸‍♂️ MVP':''}${r.winner?'🏆':''}</td>
+      <td style="font-size:0.9rem">${r.winner?'🏆 Winner':r.mvp?'🦸‍♂️ MVP':''}</td>
     </tr>`).join('')}
     </tbody></table></div>`;
 }
@@ -5416,7 +5465,7 @@ function renderMyTimeline(){
   const YEARS=[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
   const champYears=Object.entries(CHAMPIONS).filter(([,m])=>m===myKey).map(([y])=>parseInt(y));
   const amolYears=Object.entries(AMOL_DHALIWAL).filter(([,m])=>m===myKey).map(([y])=>parseInt(y));
-  const binaYears=Object.entries(BINA_TURD).filter(([,m])=>m===myKey).map(([y])=>parseInt(y));
+  const binaYears=Object.entries(BINA_TURDS).filter(([,m])=>m===myKey).map(([y])=>parseInt(y));
 
   const rows=YEARS.map(yr=>{
     const season=DB.seasons.find(s=>s.year===yr);
@@ -5460,12 +5509,17 @@ function renderMyNfl(){
   const sortBy=document.getElementById('mynfl-sort')?.value||'appearances';
   if(!DB.myStarters.length){el.innerHTML='<div class="empty">Load your data first.</div>';return;}
 
-  // Build NFL team breakdown from playerMeta
+  // Build NFL team breakdown — use playerMeta team field per player
+  // Count appearances = total starter slots where that NFL team is represented
+  // Count unique = distinct player IDs from that team
   const byTeam={};
   DB.myStarters.forEach(s=>{
     const m=DB.playerMeta[s.pid];
-    if(!m||!m.team)return;
-    const nfl=m.team;
+    if(!m)return;
+    // Use all teams the player has ever been on (Sleeper stores current team only)
+    // So we look it up per starter entry — best we can do without historical data
+    const nfl=m.team||m.practice_team||null;
+    if(!nfl)return;
     if(!byTeam[nfl])byTeam[nfl]={team:nfl,appearances:0,players:new Set()};
     byTeam[nfl].appearances++;
     byTeam[nfl].players.add(s.pid);
@@ -5480,7 +5534,8 @@ function renderMyNfl(){
   const maxApp=rows.length?Math.max(...rows.map(r=>r.appearances)):1;
   if(!rows.length){el.innerHTML='<div class="empty">No data found.</div>';return;}
 
-  el.innerHTML=`<div class="tbl-wrap"><table>
+  el.innerHTML=`<p style="font-size:0.75rem;color:var(--text3);margin-bottom:0.75rem">Note: NFL team reflects each player's current team in Sleeper — historical team at time of start may differ for traded players.</p>
+  <div class="tbl-wrap"><table>
     <thead><tr><th>NFL Team</th><th>Appearances</th><th>Unique players</th><th></th></tr></thead>
     <tbody>${rows.map(r=>`<tr>
       <td style="font-weight:500">${r.team}</td>
