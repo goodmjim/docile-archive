@@ -1749,7 +1749,37 @@ const TEAM_CAPTAINS={
   ],
 };
 
-// ── DRAFT PICKS (hardcoded — Sleeper doesn't expose rookie draft data) ─────
+// ── SFA (SUPERFLEX AUCTION) — 2024 transition year ───────────
+// Non-UDFA auction picks from the 2024 rookie class during league's
+// transition to Superflex. Displayed as "SFA" in draft pages.
+const SFA_AUCTION={
+  2024:[
+    {mgr:'David',player:'Jermaine Burton',team:'CIN',pos:'WR',bid:32},
+    {mgr:'Kyle',player:'Kimani Vidal',team:'LAC',pos:'RB',bid:17},
+    {mgr:'Jared',player:"Ja'Lynn Polk",team:'NE',pos:'WR',bid:50},
+    {mgr:'Hinton',player:'Luke McCaffrey',team:'WAS',pos:'WR',bid:20},
+    {mgr:'Jon',player:'Bucky Irving',team:'TB',pos:'RB',bid:47},
+    {mgr:'Boone',player:'Malachi Corley',team:'NYJ',pos:'WR',bid:46},
+    {mgr:'Jon',player:'Trey Benson',team:'ARI',pos:'RB',bid:103},
+    {mgr:'Amol',player:"Ja'Tavion Sanders",team:'CAR',pos:'TE',bid:18},
+    {mgr:'Jared',player:'Xavier Legette',team:'CAR',pos:'WR',bid:81},
+    {mgr:'Jared',player:'Jalen McMillan',team:'TB',pos:'WR',bid:40},
+    {mgr:'Kyle',player:'Jaylen Wright',team:'MIA',pos:'RB',bid:51},
+    {mgr:'Lance',player:'Keon Coleman',team:'BUF',pos:'WR',bid:138},
+    {mgr:'Jimmy',player:'Troy Franklin',team:'DEN',pos:'WR',bid:38},
+    {mgr:'David',player:'Jonathan Brooks',team:'CAR',pos:'RB',bid:133},
+    {mgr:'Hinton',player:'Blake Corum',team:'LAR',pos:'RB',bid:135},
+    {mgr:'Brad',player:'Ben Sinnott',team:'WAS',pos:'TE',bid:40},
+    {mgr:'Jon',player:'Adonai Mitchell',team:'IND',pos:'WR',bid:80},
+    {mgr:'David',player:'Ricky Pearsall',team:'SF',pos:'WR',bid:101},
+    {mgr:'Declan',player:'Marshawn Lloyd',team:'GB',pos:'RB',bid:90},
+    {mgr:'Kyle',player:'Javon Baker',team:'NE',pos:'WR',bid:103},
+    {mgr:'Abhi',player:'Ladd McConkey',team:'LAC',pos:'WR',bid:149},
+    {mgr:'Lance',player:'Audric Estime',team:'DEN',pos:'RB',bid:56},
+    {mgr:'Jared',player:'Roman Wilson',team:'PIT',pos:'WR',bid:125},
+    {mgr:'Jimmy',player:'Braelon Allen',team:'NYJ',pos:'RB',bid:58},
+  ]
+};
 // ── ROOKIE DRAFT IDs (from Sleeper draft URLs) ───────────────
 const ROOKIE_DRAFT_IDS={
   2020:'516059875544244225',
@@ -1822,6 +1852,17 @@ async function loadAllDraftPicks(){
     console.warn(`[Draft] UDFA unmatched players: ${udfaUnmatched.length}`);
     console.table(udfaUnmatched);
   }
+  // Check SFA unmatched
+  const sfaUnmatchedAll=[];
+  Object.entries(SFA_AUCTION).forEach(([yr,picks])=>{
+    picks.forEach(p=>{
+      if(!lookupPid(p.player))sfaUnmatchedAll.push({year:parseInt(yr),name:p.player,mgr:p.mgr});
+    });
+  });
+  if(sfaUnmatchedAll.length){
+    console.warn(`[Draft] SFA unmatched players: ${sfaUnmatchedAll.length}`);
+    console.table(sfaUnmatchedAll);
+  }
 }
 
 // ── PLAYER NAME → PID LOOKUP ─────────────────────────────────
@@ -1855,6 +1896,14 @@ function buildPlayerNameMap(){
 function lookupPid(name){
   if(!name)return null;
   // Known aliases where archive name differs from Sleeper name
+  // Hardcoded PID overrides for players whose names differ between archive and Sleeper
+  const PID_OVERRIDES={
+    'gabriel davis':'6943',
+    'mike strachan':'7571',
+    'kalil pimpelton':'8150',
+  };
+  const normLower=name.toLowerCase().trim();
+  if(PID_OVERRIDES[normLower])return PID_OVERRIDES[normLower];
   const ALIASES={
     'gabriel davis':'gabe davis',
     'mike strachan':'michael strachan',
@@ -5250,14 +5299,18 @@ function renderDraft(){
     .flatMap(([yr,picks])=>picks
       .filter(p=>hasYear(activeDraftYrs,parseInt(yr))&&!lookupPid(p.player))
       .map(p=>({year:parseInt(yr),pick_no:'UDFA',name:p.player,pid:'?',mgr:p.mgr})));
-  const diagnosticHtml=(allUnmatched.length||udfaUnmatched.length)?`
+  const sfaUnmatched=Object.entries(SFA_AUCTION)
+    .flatMap(([yr,picks])=>picks
+      .filter(p=>hasYear(activeDraftYrs,parseInt(yr))&&!lookupPid(p.player))
+      .map(p=>({year:parseInt(yr),pick_no:'SFA',name:p.player,pid:'?',mgr:p.mgr})));
+  const diagnosticHtml=(allUnmatched.length||udfaUnmatched.length||sfaUnmatched.length)?`
     <div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.3);border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem">
       <div style="font-size:0.78rem;font-weight:600;color:var(--crimson);margin-bottom:0.5rem">
-        ⚠ ${allUnmatched.length+udfaUnmatched.length} players not found in Sleeper playerMeta (pts will be missing for these)
+        ⚠ ${allUnmatched.length+udfaUnmatched.length+sfaUnmatched.length} players not found in Sleeper playerMeta (pts will be missing for these)
       </div>
       <div class="tbl-wrap"><table style="font-size:0.75rem">
         <thead><tr><th>Year</th><th>Pick</th><th>Name in archive</th><th>Sleeper PID</th><th>Manager</th></tr></thead>
-        <tbody>${[...allUnmatched,...udfaUnmatched].map(u=>`<tr>
+        <tbody>${[...allUnmatched,...udfaUnmatched,...sfaUnmatched].map(u=>`<tr>
           <td class="mono">${u.year}</td><td class="mono">${u.pick_no}</td>
           <td style="font-weight:500">${u.name}</td>
           <td class="mono" style="color:var(--text3)">${u.pid}</td>
@@ -5272,7 +5325,11 @@ function renderDraft(){
       const pid=lookupPid(p.player);
       return{...p,pid,source:'UDFA',pickNo:9999,round:0};
     });
-    const allYrPicks=[...draftPicks,...udfaPicks];
+    const sfaPicks=(SFA_AUCTION[yr]||[]).map(p=>{
+      const pid=lookupPid(p.player);
+      return{...p,pid,source:'SFA',pickNo:9998,round:0};
+    });
+    const allYrPicks=[...draftPicks,...sfaPicks,...udfaPicks];
 
     if(!draftPicks.length&&!udfaPicks.length){
       return`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;font-size:0.82rem;color:var(--text2)">
@@ -5343,14 +5400,21 @@ function renderDraft(){
           const sCol=surplusNum>=0?'var(--teal)':'var(--crimson)';
           const pickLabel=p.source==='UDFA'
             ?`<span style="color:var(--gold)">UDFA $${p.bid}</span>`
+            :p.source==='SFA'
+            ?`<span style="color:var(--teal)">SFA $${p.bid}</span>`
             :`${Math.ceil(p.pickNo/12)}.${String(((p.pickNo-1)%12)+1).padStart(2,'0')}`;
+          const acqLabel=p.source==='UDFA'
+            ?'<span style="color:var(--gold)">UDFA</span>'
+            :p.source==='SFA'
+            ?'<span style="color:var(--teal)">SFA</span>'
+            :'Draft';
           return`<tr>
             <td class="mono" style="color:var(--text3);font-size:0.78rem">${pickLabel}</td>
             <td>${p.pid?`<span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.player}</span>`:p.player}</td>
             <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
             <td style="font-size:0.82rem">${p.mgr}</td>
             <td style="font-size:0.75rem;color:var(--text3)">${p.team||'—'}</td>
-            <td style="font-size:0.75rem">${p.source==='UDFA'?'<span style="color:var(--gold)">UDFA</span>':'Draft'}</td>
+            <td style="font-size:0.75rem">${acqLabel}</td>
             <td class="mono">${p.pts>0?p.pts.toFixed(1):'—'}</td>
             <td class="mono" style="color:${sCol}">${surplusNum>=0?'+':''}${surplusNum.toFixed(0)}</td>
           </tr>`;
@@ -5486,15 +5550,22 @@ function renderMyDraft(){
     });
   });
 
-  // UDFA picks for this manager
+  // UDFA picks
   filtered.forEach(yr=>{
     (UDFA_AUCTION[yr]||[]).filter(p=>p.mgr===myKey).forEach(p=>{
-      const nameLower=p.player.toLowerCase();
       const pid=lookupPid(p.player);
       const myStarts=pid?DB.myStarters.filter(s=>s.pid===pid):[];
       const pts=myStarts.reduce((a,b)=>a+(b.points||0),0);
-      const played=myStarts.length>0;
-      allPicks.push({year:yr,round:null,pickNo:null,pid:pid||null,name:p.player,pos:p.pos,pts,starts:myStarts.length,played,source:'UDFA',bid:p.bid,team:p.team});
+      allPicks.push({year:yr,round:null,pickNo:null,pid,name:p.player,pos:p.pos,
+        pts,starts:myStarts.length,played:myStarts.length>0,source:'UDFA',bid:p.bid,team:p.team});
+    });
+    // SFA picks (2024 Superflex Auction)
+    (SFA_AUCTION[yr]||[]).filter(p=>p.mgr===myKey).forEach(p=>{
+      const pid=lookupPid(p.player);
+      const myStarts=pid?DB.myStarters.filter(s=>s.pid===pid):[];
+      const pts=myStarts.reduce((a,b)=>a+(b.points||0),0);
+      allPicks.push({year:yr,round:null,pickNo:null,pid,name:p.player,pos:p.pos,
+        pts,starts:myStarts.length,played:myStarts.length>0,source:'SFA',bid:p.bid,team:p.team});
     });
   });
 
@@ -5527,7 +5598,7 @@ function renderMyDraft(){
         <td class="mono" style="color:var(--text3)">${p.year}</td>
         <td>${p.pid?`<span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.name}</span>`:p.name}</td>
         <td><span class="badge ${pc[p.pos]||'bg-dim'}">${p.pos}</span></td>
-        <td style="font-size:0.75rem">${p.source==='UDFA'?`<span style="color:var(--gold)">UDFA $${p.bid}</span>`:`<span style="color:var(--text3)">Rd ${p.round}</span>`}</td>
+        <td style="font-size:0.75rem">${p.source==='UDFA'?`<span style="color:var(--gold)">UDFA $${p.bid}</span>`:p.source==='SFA'?`<span style="color:var(--teal)">SFA $${p.bid}</span>`:`<span style="color:var(--text3)">Rd ${p.round}</span>`}</td>
         <td class="mono">${p.pts>0?p.pts.toFixed(1):'—'}</td>
         <td class="mono">${p.starts||'—'}</td>
         <td style="text-align:center">${p.played?'✓':''}</td>
