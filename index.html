@@ -1766,15 +1766,19 @@ const ROOKIE_DRAFT_IDS={
 // ── LOAD ROOKIE DRAFT PICKS FROM SLEEPER ─────────────────────
 async function loadAllDraftPicks(){
   DB.draftData={};
+  DB.draftUnmatched={}; // year -> [{pick_no, player_name, pid}] players with no playerMeta match
   await Promise.all(Object.entries(ROOKIE_DRAFT_IDS).map(async([yr,draftId])=>{
     const year=parseInt(yr);
     try{
       const picks=await apiFetch(`/draft/${draftId}/picks`);
       if(!Array.isArray(picks)||!picks.length){
-        console.warn(`[Draft] No picks for ${year} draft ${draftId}`);
+        console.warn(`[Draft] ${year}: API returned empty for draft ${draftId}`);
         return;
       }
+      console.log(`[Draft] ${year}: API returned ${picks.length} picks`);
       const season=DB.seasons.find(s=>s.year===year);
+      if(!season)console.warn(`[Draft] ${year}: no matching season loaded`);
+      const unmatched=[];
       DB.draftData[year]=picks.map(pick=>{
         const m=DB.playerMeta[pick.player_id];
         const playerName=m?`${m.first_name} ${m.last_name}`
@@ -1784,14 +1788,40 @@ async function loadAllDraftPicks(){
         const nflTeam=m?.team||pick.metadata?.team||'';
         const team=season?.teams.find(t=>String(t.rosterId)===String(pick.roster_id));
         const mgr=team?.managerKey||team?.name||'Roster '+pick.roster_id;
+        if(!m){
+          unmatched.push({pick_no:pick.pick_no,name:playerName,pid:pick.player_id,mgr});
+        }
         return{mgr,player:playerName,pid:pick.player_id,pos,team:nflTeam,
           round:pick.round,pickNo:pick.pick_no,source:'Draft'};
       }).sort((a,b)=>a.pickNo-b.pickNo);
-      console.log(`[Draft] ${year}: loaded ${DB.draftData[year].length} picks`);
+      DB.draftUnmatched[year]=unmatched;
+      if(unmatched.length){
+        console.warn(`[Draft] ${year}: ${unmatched.length} picks with no playerMeta match:`,
+          unmatched.map(u=>`${u.pick_no}. ${u.name} (pid:${u.pid})`).join(', '));
+      }
+      console.log(`[Draft] ${year}: loaded ${DB.draftData[year].length} picks, mgrs: ${[...new Set(DB.draftData[year].map(p=>p.mgr))].join(', ')}`);
     }catch(e){
-      console.warn(`[Draft] Failed to load ${year}:`,e.message);
+      console.error(`[Draft] ${year}: FAILED -`,e.message);
     }
   }));
+  // Build combined unmatched report
+  const allUnmatched=Object.entries(DB.draftUnmatched).flatMap(([yr,list])=>list.map(u=>({...u,year:parseInt(yr)})));
+  if(allUnmatched.length){
+    console.warn(`[Draft] Total unmatched across all years: ${allUnmatched.length}`);
+    console.table(allUnmatched);
+  }
+  // Also check UDFA unmatched
+  const udfaUnmatched=[];
+  Object.entries(UDFA_AUCTION).forEach(([yr,picks])=>{
+    picks.forEach(p=>{
+      const pid=lookupPid(p.player);
+      if(!pid)udfaUnmatched.push({year:parseInt(yr),name:p.player,mgr:p.mgr});
+    });
+  });
+  if(udfaUnmatched.length){
+    console.warn(`[Draft] UDFA unmatched players: ${udfaUnmatched.length}`);
+    console.table(udfaUnmatched);
+  }
 }
 
 // ── PLAYER NAME → PID LOOKUP ─────────────────────────────────
@@ -1918,8 +1948,9 @@ let DB = {
   username:'',myUserId:'',myTeamName:'',
   seasons:[],playerMeta:{},myStarters:[],allStarters:[],
   transactions:[],playerBios:{},
-  draftPickMap:{}, // kept for trade pick resolution
-  draftData:{}     // year -> [{mgr,player,pid,pos,team,round,pickNo,source}]
+  draftPickMap:{},
+  draftData:{},      // year -> [{mgr,player,pid,pos,team,round,pickNo,source}]
+  draftUnmatched:{}  // year -> [{pick_no,name,pid,mgr}] players missing from playerMeta
 };
 let activeYrs = new Set(), activeTeams = new Set();
 let standingsSort = {col:'wins', dir:-1};
@@ -2164,7 +2195,7 @@ async function startLoad(){
     const user=await apiFetch('/user/'+encodeURIComponent(username));
     if(!user?.user_id)return setSt('User not found. Check your Sleeper username.',true);
     DB.username=username;DB.myUserId=user.user_id;DB.myTeamName='';
-    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];DB.draftPickMap={};DB.draftData={};
+    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];DB.draftPickMap={};DB.draftData={};DB.draftUnmatched={};
     try{const b=localStorage.getItem('dl_bios');if(b)DB.playerBios=JSON.parse(b);}catch{}
     await fetchSharedData();
 
@@ -5197,8 +5228,32 @@ function renderDraft(){
   if(!filtered.length){el.innerHTML='<div class="empty">No draft seasons selected.</div>';return;}
   const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red',FB:'bg-dim'};
 
+  // Diagnostic: unmatched players
+  const allUnmatched=Object.entries(DB.draftUnmatched||{})
+    .flatMap(([yr,list])=>list.map(u=>({...u,year:parseInt(yr)})))
+    .filter(u=>activeDraftYrs.has(u.year))
+    .sort((a,b)=>a.year-b.year||a.pick_no-b.pick_no);
+  const udfaUnmatched=Object.entries(UDFA_AUCTION)
+    .flatMap(([yr,picks])=>picks
+      .filter(p=>activeDraftYrs.has(parseInt(yr))&&!lookupPid(p.player))
+      .map(p=>({year:parseInt(yr),pick_no:'UDFA',name:p.player,pid:'?',mgr:p.mgr})));
+  const diagnosticHtml=(allUnmatched.length||udfaUnmatched.length)?`
+    <div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.3);border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem">
+      <div style="font-size:0.78rem;font-weight:600;color:var(--crimson);margin-bottom:0.5rem">
+        ⚠ ${allUnmatched.length+udfaUnmatched.length} players not found in Sleeper playerMeta (pts will be missing for these)
+      </div>
+      <div class="tbl-wrap"><table style="font-size:0.75rem">
+        <thead><tr><th>Year</th><th>Pick</th><th>Name in archive</th><th>Sleeper PID</th><th>Manager</th></tr></thead>
+        <tbody>${[...allUnmatched,...udfaUnmatched].map(u=>`<tr>
+          <td class="mono">${u.year}</td><td class="mono">${u.pick_no}</td>
+          <td style="font-weight:500">${u.name}</td>
+          <td class="mono" style="color:var(--text3)">${u.pid}</td>
+          <td>${u.mgr}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`:'';
+
   const html=filtered.map(yr=>{
-    const draftPicks=DB.draftData[yr]||[];
     const udfaPicks=(UDFA_AUCTION[yr]||[]).map(p=>{
       const pid=lookupPid(p.player);
       return{...p,pid,source:'UDFA',pickNo:9999,round:0};
@@ -5290,7 +5345,7 @@ function renderDraft(){
       ${gradeHtml}
     </div>`;
   }).join('');
-  el.innerHTML=html||'<div class="empty">No data available.</div>';
+  el.innerHTML=diagnosticHtml+(html||'<div class="empty">No data available.</div>');
 }
 // ══════════════════════════════════════════════════════════════
 // UDFA AUCTION
