@@ -1854,8 +1854,19 @@ function buildPlayerNameMap(){
 
 function lookupPid(name){
   if(!name)return null;
+  // Known aliases where archive name differs from Sleeper name
+  const ALIASES={
+    'gabriel davis':'gabe davis',
+    'mike strachan':'michael strachan',
+    'kalil pimpelton':'kalil pimpleton', // check spelling
+    'at perry':'a.t. perry',
+    'jaret patterson':'j.d. mckissic', // if wrong
+  };
   const normalize=s=>s.toLowerCase().replace(/[.']/g,'').replace(/\s+jr\.?$/,'').replace(/\s+sr\.?$/,'').replace(/\s+ii+$/,'').replace(/\s+iv$/,'').trim();
   const norm=normalize(name);
+  // Check alias first
+  const aliasNorm=ALIASES[norm]?normalize(ALIASES[norm]):null;
+  if(aliasNorm&&playerNameMap[aliasNorm])return playerNameMap[aliasNorm];
   if(playerNameMap[norm])return playerNameMap[norm];
   // Try without last word (handles "Jr" in source data but not Sleeper)
   const parts=norm.split(' ');
@@ -5197,7 +5208,7 @@ function renderMyTrades(){
 function initDraftChips(elId, years, activeSet, onToggle){
   const el=document.getElementById(elId);
   if(!el||el.children.length)return;
-  el.innerHTML=years.map(y=>`<button class="yr-chip${activeSet.has(y)?' active':''}" onclick="${onToggle}(${y},this)">${y}</button>`).join('');
+  el.innerHTML=years.map(y=>`<button class="yr-chip${(activeSet.has(y)||activeSet.has(String(y)))?' active':''}" onclick="${onToggle}(${y},this)">${y}</button>`).join('');
 }
 
 let udfaSort={col:'bid',dir:-1};
@@ -5214,28 +5225,30 @@ function sortDraft(col){
   renderDraft();
 }
 function toggleDraftYr(yr,btn){
-  activeDraftYrs.has(yr)?activeDraftYrs.delete(yr):activeDraftYrs.add(yr);
-  btn.classList.toggle('active',activeDraftYrs.has(yr));
+  const y=parseInt(yr);
+  activeDraftYrs.has(y)?activeDraftYrs.delete(y):activeDraftYrs.add(y);
+  btn.classList.toggle('active',activeDraftYrs.has(y));
   renderDraft();
 }
 
 function renderDraft(){
   const el=document.getElementById('draft-content');
   const years=Object.keys(ROOKIE_DRAFT_IDS).map(Number).sort((a,b)=>b-a);
-  if(!activeDraftYrs.size)activeDraftYrs=new Set(years);
+  if(!activeDraftYrs.size)activeDraftYrs=new Set(years); // numbers
   initDraftChips('draft-yr-chips',years,activeDraftYrs,'toggleDraftYr');
-  const filtered=years.filter(y=>activeDraftYrs.has(y));
+  const filtered=years.filter(y=>activeDraftYrs.has(y)||activeDraftYrs.has(String(y)));
   if(!filtered.length){el.innerHTML='<div class="empty">No draft seasons selected.</div>';return;}
   const pc={QB:'bg-gold',RB:'bg-teal',WR:'bg-dim',TE:'bg-dim',K:'bg-dim',DEF:'bg-red',DST:'bg-red',FB:'bg-dim'};
 
   // Diagnostic: unmatched players
+  const hasYear=(set,y)=>set.has(y)||set.has(Number(y))||set.has(String(y));
   const allUnmatched=Object.entries(DB.draftUnmatched||{})
     .flatMap(([yr,list])=>list.map(u=>({...u,year:parseInt(yr)})))
-    .filter(u=>activeDraftYrs.has(u.year))
+    .filter(u=>hasYear(activeDraftYrs,u.year))
     .sort((a,b)=>a.year-b.year||a.pick_no-b.pick_no);
   const udfaUnmatched=Object.entries(UDFA_AUCTION)
     .flatMap(([yr,picks])=>picks
-      .filter(p=>activeDraftYrs.has(parseInt(yr))&&!lookupPid(p.player))
+      .filter(p=>hasYear(activeDraftYrs,parseInt(yr))&&!lookupPid(p.player))
       .map(p=>({year:parseInt(yr),pick_no:'UDFA',name:p.player,pid:'?',mgr:p.mgr})));
   const diagnosticHtml=(allUnmatched.length||udfaUnmatched.length)?`
     <div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.3);border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem">
