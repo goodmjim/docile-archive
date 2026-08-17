@@ -5887,6 +5887,7 @@ function renderDraft(){
     </table></div>`:'';
 
   const html=filtered.map(yr=>{
+    const draftPicks=DB.draftData[yr]||[];
     const udfaPicks=(UDFA_AUCTION[yr]||[]).map(p=>{
       const pid=lookupPid(p.player);
       return{...p,pid,source:'UDFA',pickNo:9999,round:0};
