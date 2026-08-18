@@ -5953,9 +5953,9 @@ function renderDraft(){
       // Find the rosterId of the manager who drafted this player in that year
       const team=season?.teams.find(t=>t.managerKey===p.mgr);
       const rosterId=team?.rosterId;
-      // Only count starts made for the drafting team
+      // Only count starts made for the drafting team FROM the draft year onward
       const startsForTeam=rosterId
-        ?DB.allStarters.filter(s=>s.pid===pid&&String(s.teamRosterId)===String(rosterId))
+        ?DB.allStarters.filter(s=>s.pid===pid&&String(s.teamRosterId)===String(rosterId)&&s.year>=year)
         :[];
       const pts=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
       const starts=startsForTeam.length;
@@ -6030,7 +6030,7 @@ function renderDraft(){
       const team=season?.teams.find(t=>t.managerKey===p.mgr);
       const rosterId=team?.rosterId;
       const startsForTeam=pid&&rosterId
-        ?DB.allStarters.filter(s=>s.pid===pid&&String(s.teamRosterId)===String(rosterId))
+        ?DB.allStarters.filter(s=>s.pid===pid&&String(s.teamRosterId)===String(rosterId)&&s.year>=yr)
         :[];
       const ptsForTeam=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
       return{...p,pid,pts:ptsForTeam,startsForTeam:startsForTeam.length};
@@ -6046,6 +6046,7 @@ function renderDraft(){
       pos:(a,b)=>a.pos.localeCompare(b.pos)*ddir,
       mgr:(a,b)=>a.mgr.localeCompare(b.mgr)*ddir,
       pts:(a,b)=>(a.pts-b.pts)*ddir,
+      starts:(a,b)=>((a.startsForTeam||0)-(b.startsForTeam||0))*ddir,
     };
     const sortedPicks=[...enriched].sort(dSortFn[col]||dSortFn.pickNo);
 
@@ -6057,7 +6058,7 @@ function renderDraft(){
       const team=season?.teams.find(t=>t.managerKey===p.mgr);
       const rosterId=team?.rosterId;
       const startsForTeam=rosterId
-        ?DB.allStarters.filter(s=>s.pid===p.pid&&String(s.teamRosterId)===String(rosterId))
+        ?DB.allStarters.filter(s=>s.pid===p.pid&&String(s.teamRosterId)===String(rosterId)&&s.year>=yr)
         :[];
       const teamPts=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
       if(!mgrPts[p.mgr])mgrPts[p.mgr]={pts:0,picks:0,starts:0};
@@ -6091,6 +6092,7 @@ function renderDraft(){
           <th class="sortable-th" onclick="sortDraft('pos')">Pos <span class="sort-arrow">${darrow('pos')}</span></th>
           <th class="sortable-th" onclick="sortDraft('mgr')">Manager <span class="sort-arrow">${darrow('mgr')}</span></th>
           <th>NFL Team</th><th>Acq.</th>
+          <th class="sortable-th" onclick="sortDraft('starts')">Starts <span class="sort-arrow">${darrow('starts')}</span></th>
           <th class="sortable-th" onclick="sortDraft('pts')">Pts <span class="sort-arrow">${darrow('pts')}</span></th>
         </tr></thead>
         <tbody>${sortedPicks.map(p=>{
@@ -6111,6 +6113,7 @@ function renderDraft(){
             <td style="font-size:0.82rem">${p.mgr}</td>
             <td style="font-size:0.75rem;color:var(--text3)">${p.team||'—'}</td>
             <td style="font-size:0.75rem">${acqLabel}</td>
+            <td class="mono">${p.startsForTeam||0}</td>
             <td class="mono">${p.pts>0?p.pts.toFixed(1):'—'}</td>
           </tr>`;
         }).join('')}</tbody>
@@ -6219,6 +6222,12 @@ function toggleMyDraftYr(yr,btn){
   renderMyDraft();
 }
 
+let myDraftSort={col:'pts',dir:-1};
+function sortMyDraft(col){
+  myDraftSort=myDraftSort.col===col?{col,dir:myDraftSort.dir*-1}:{col,dir:col==='year'||col==='round'?1:-1};
+  renderMyDraft();
+}
+
 function renderMyDraft(){
   const el=document.getElementById('mydraft-content');
   const myKey=sleeperToManagerKey(DB.username)||DB.username;
@@ -6264,16 +6273,26 @@ function renderMyDraft(){
     });
   });
 
-  allPicks.sort((a,b)=>b.pts-a.pts);
+  const mdCol=myDraftSort.col,mdDir=myDraftSort.dir;
+  const mdArrow=(c)=>mdCol===c?(mdDir===1?'↑':'↓'):'';
+  const mdSortFn={
+    year:(a,b)=>(a.year-b.year)*mdDir,
+    pos:(a,b)=>a.pos.localeCompare(b.pos)*mdDir,
+    acq:(a,b)=>a.source.localeCompare(b.source)*mdDir,
+    pts:(a,b)=>(a.pts-b.pts)*mdDir,
+    starts:(a,b)=>((a.starts||0)-(b.starts||0))*mdDir,
+    played:(a,b)=>((a.played?1:0)-(b.played?1:0))*mdDir,
+  };
+  allPicks.sort(mdSortFn[mdCol]||mdSortFn.pts);
 
   const total=allPicks.length;
   const played=allPicks.filter(p=>p.played).length;
   const posCounts={};allPicks.forEach(p=>{if(!posCounts[p.pos])posCounts[p.pos]=0;posCounts[p.pos]++;});
 
-  // Steals/busts (picks with most/least pts)
-  const graded=allPicks.filter(p=>p.pts>0);
+  // Steals/busts — always computed on pts desc regardless of current sort
+  const graded=[...allPicks].filter(p=>p.pts>0).sort((a,b)=>b.pts-a.pts);
   const steals=graded.slice(0,3);
-  const busts=allPicks.filter(p=>p.pts===0&&p.source==='Draft').slice(-3);
+  const busts=[...allPicks].filter(p=>p.pts===0&&p.source==='Draft').slice(0,3);
 
   el.innerHTML=`
     <div class="metrics" style="margin-bottom:1rem">
@@ -6288,7 +6307,15 @@ function renderMyDraft(){
       <div class="faller-card"><div class="rf-label">No pts scored</div>${busts.map(p=>`<div class="rf-item"><span>${p.name} <span style="font-size:0.68rem;color:var(--text3)">${p.year}</span></span><span class="rf-delta">0</span></div>`).join('')||'<div style="font-size:0.78rem;color:var(--text3)">None!</div>'}</div>
     </div>`:''}
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Year</th><th>Player</th><th>Pos</th><th>Acq.</th><th>Pts for you</th><th>Starts</th><th>Played</th></tr></thead>
+      <thead><tr>
+        <th class="sortable-th" onclick="sortMyDraft('year')">Year <span class="sort-arrow">${mdArrow('year')}</span></th>
+        <th>Player</th>
+        <th class="sortable-th" onclick="sortMyDraft('pos')">Pos <span class="sort-arrow">${mdArrow('pos')}</span></th>
+        <th class="sortable-th" onclick="sortMyDraft('acq')">Acq. <span class="sort-arrow">${mdArrow('acq')}</span></th>
+        <th class="sortable-th" onclick="sortMyDraft('pts')">Pts for you <span class="sort-arrow">${mdArrow('pts')||'↓'}</span></th>
+        <th class="sortable-th" onclick="sortMyDraft('starts')">Starts <span class="sort-arrow">${mdArrow('starts')}</span></th>
+        <th class="sortable-th" onclick="sortMyDraft('played')">Played <span class="sort-arrow">${mdArrow('played')}</span></th>
+      </tr></thead>
       <tbody>${allPicks.map(p=>`<tr>
         <td class="mono" style="color:var(--text3)">${p.year}</td>
         <td>${p.pid?`<span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.name}</span>`:p.name}</td>
