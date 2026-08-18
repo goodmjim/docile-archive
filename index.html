@@ -1879,6 +1879,8 @@ const SFA_AUCTION={
   ]
 };
 // ── ROOKIE DRAFT IDs (from Sleeper draft URLs) ───────────────
+const STARTUP_DRAFT_ID='447618261228449792'; // 2019 startup draft
+
 const ROOKIE_DRAFT_IDS={
   2020:'516059875544244225',
   2021:'652200603757408257',
@@ -1958,9 +1960,27 @@ async function loadAllDraftPicks(){
       if(!lookupPid(p.player))sfaUnmatchedAll.push({year:parseInt(yr),name:p.player,mgr:p.mgr});
     });
   });
-  if(sfaUnmatchedAll.length){
-    console.warn(`[Draft] SFA unmatched players: ${sfaUnmatchedAll.length}`);
-    console.table(sfaUnmatchedAll);
+  // Load 2019 startup draft
+  try{
+    const startupPicks=await apiFetch(`/draft/${STARTUP_DRAFT_ID}/picks`);
+    if(Array.isArray(startupPicks)&&startupPicks.length){
+      const season2019=DB.seasons.find(s=>s.year===2019);
+      DB.startupDraft=startupPicks.map(pick=>{
+        const m=DB.playerMeta[pick.player_id];
+        const playerName=m?`${m.first_name} ${m.last_name}`
+          :(pick.metadata?.first_name&&pick.metadata?.last_name
+            ?`${pick.metadata.first_name} ${pick.metadata.last_name}`:'Unknown');
+        const pos=m?.fantasy_positions?.[0]||pick.metadata?.position||'?';
+        const nflTeam=m?.team||pick.metadata?.team||'';
+        const team=season2019?.teams.find(t=>String(t.rosterId)===String(pick.roster_id));
+        const mgr=team?.managerKey||team?.name||'Roster '+pick.roster_id;
+        return{mgr,player:playerName,pid:pick.player_id,pos,team:nflTeam,
+          round:pick.round,pickNo:pick.pick_no,source:'Startup'};
+      }).sort((a,b)=>a.pickNo-b.pickNo);
+      console.log(`[Draft] Startup: loaded ${DB.startupDraft.length} picks`);
+    }
+  }catch(e){
+    console.warn('[Draft] Startup draft failed:',e.message);
   }
 }
 
@@ -2112,7 +2132,8 @@ let DB = {
   transactions:[],playerBios:{},
   draftPickMap:{},
   draftData:{},      // year -> [{mgr,player,pid,pos,team,round,pickNo,source}]
-  draftUnmatched:{}  // year -> [{pick_no,name,pid,mgr}] players missing from playerMeta
+  draftUnmatched:{}, // year -> [{pick_no,name,pid,mgr}]
+  startupDraft:[],   // [{mgr,player,pid,pos,team,round,pickNo,source:'Startup'}]
 };
 let activeYrs = new Set(), activeTeams = new Set();
 let standingsSort = {col:'wins', dir:-1};
@@ -2357,7 +2378,7 @@ async function startLoad(){
     const user=await apiFetch('/user/'+encodeURIComponent(username));
     if(!user?.user_id)return setSt('User not found. Check your Sleeper username.',true);
     DB.username=username;DB.myUserId=user.user_id;DB.myTeamName='';
-    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];DB.draftPickMap={};DB.draftData={};DB.draftUnmatched={};
+    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];DB.draftPickMap={};DB.draftData={};DB.draftUnmatched={};DB.startupDraft=[];
     try{const b=localStorage.getItem('dl_bios');if(b)DB.playerBios=JSON.parse(b);}catch{}
     await fetchSharedData();
 
@@ -2990,12 +3011,14 @@ function initPgChips(){
       };
       yrEl.appendChild(b);
     });
-    // Add UDFA and SFA as special chips
-    ['UDFA','SFA'].forEach(type=>{
+    // Add Startup, UDFA, SFA, FA as special chips
+    ['Startup','UDFA','SFA','FA'].forEach(type=>{
       const b=document.createElement('button');
       b.className='yr-chip';
       b.textContent=type;
-      b.style.color=type==='SFA'?'var(--teal)':'var(--gold)';
+      if(type==='SFA')b.style.color='var(--teal)';
+      else if(type==='UDFA'||type==='Startup')b.style.color='var(--gold)';
+      else if(type==='FA')b.style.color='var(--text3)';
       b.onclick=()=>{
         pgActiveYrs.has(type)?pgActiveYrs.delete(type):pgActiveYrs.add(type);
         b.classList.toggle('active',pgActiveYrs.has(type));
@@ -3061,6 +3084,10 @@ function buildPlayerGraphData(){
       const pid=lookupPid(p.player);
       if(pid&&!pidAcq[pid])pidAcq[pid]={year:parseInt(yr),round:'UDFA',source:'UDFA'};
     });
+  });
+  // Startup draft
+  (DB.startupDraft||[]).forEach(p=>{
+    if(p.pid&&!pidAcq[p.pid])pidAcq[p.pid]={year:2019,round:p.round,pickNo:p.pickNo,source:'Startup'};
   });
   Object.entries(SFA_AUCTION).forEach(([yr,picks])=>{
     picks.forEach(p=>{
@@ -3175,14 +3202,24 @@ function renderPlayerGraphs(){
     // Draft year filter (empty = show all)
     if(pgActiveYrs.size){
       const acq=d.acq;
-      if(!acq)return false; // no acq data, exclude when filter active
-      const yrMatch=pgActiveYrs.has(acq.year)||pgActiveYrs.has(acq.source);
-      if(!yrMatch)return false;
+      // FA: player with no acquisition record
+      const isFa=!acq;
+      if(isFa){
+        if(!pgActiveYrs.has('FA'))return false;
+      } else {
+        const yrMatch=pgActiveYrs.has(acq.year)||pgActiveYrs.has(acq.source);
+        if(!yrMatch)return false;
+      }
     }
     // Draft round filter (empty = show all)
     if(pgActiveRnds.size){
       const acq=d.acq;
-      if(!acq)return false;
+      if(!acq){
+        // FA — only show if no round filter would exclude them; skip FAs from round filter
+        return false;
+      }
+      // Startup picks use their round number but belong to 'Startup' source, not Rd 1/2/3
+      if(acq.source==='Startup')return false; // startup not filterable by round
       const rndKey=acq.source==='UDFA'?'UDFA':acq.source==='SFA'?'SFA':acq.round;
       if(!pgActiveRnds.has(rndKey))return false;
     }
@@ -3259,7 +3296,11 @@ function renderPlayerGraphs(){
             label:item=>{
               const d=item.raw;
               if(!d.name)return item.dataset.label; // overlay line
-              const acqStr=d.acq?(d.acq.source==='Draft'?`${d.acq.year} Rd ${d.acq.round} (#${d.acq.pickNo})`:`${d.acq.year} ${d.acq.source}`):'Undrafted';
+              const acqStr=d.acq
+                ?(d.acq.source==='Draft'?`${d.acq.year} Rd ${d.acq.round} (#${d.acq.pickNo})`
+                  :d.acq.source==='Startup'?`2019 Startup Rd ${d.acq.round} (#${d.acq.pickNo})`
+                  :`${d.acq.year} ${d.acq.source}`)
+                :'FA (undrafted)';
               const isInt=(k)=>['starts','potg','potw','probowls','alldocile','draftpick'].includes(k);
               return[
                 `${METRIC_LABELS[xKey]}: ${typeof d.x==='number'?d.x.toFixed(isInt(xKey)?0:1):'—'}`,
@@ -3656,11 +3697,14 @@ function renderPlayers(){
 // PLAYER MODAL
 // ══════════════════════════════════════════════════════════════
 function getPlayerAcquisition(pid){
-  // Search draft data
+  // Search rookie drafts
   for(const[yr,picks] of Object.entries(DB.draftData||{})){
-    const p=picks.find(pk=>pk.pid===pid||String(pk.pid)===String(pid));
+    const p=picks.find(pk=>String(pk.pid)===String(pid));
     if(p)return{type:'Draft',label:`${yr} Draft · Rd ${p.round}, Pick ${p.pickNo} · ${p.mgr}`};
   }
+  // Search startup draft
+  const su=(DB.startupDraft||[]).find(p=>String(p.pid)===String(pid));
+  if(su)return{type:'Startup',label:`2019 Startup · Rd ${su.round}, Pick ${su.pickNo} (#${su.pickNo}) · ${su.mgr}`};
   // Search SFA
   for(const[yr,picks] of Object.entries(SFA_AUCTION)){
     const p=picks.find(pk=>lookupPid(pk.player)===pid||String(lookupPid(pk.player))===String(pid));
@@ -3671,6 +3715,9 @@ function getPlayerAcquisition(pid){
     const p=picks.find(pk=>lookupPid(pk.player)===pid||String(lookupPid(pk.player))===String(pid));
     if(p)return{type:'UDFA',label:`${yr} UDFA Auction · $${p.bid} · ${p.mgr}`};
   }
+  // FA — player has starts but wasn't acquired through any known channel
+  const hasStarts=DB.allStarters.some(s=>String(s.pid)===String(pid));
+  if(hasStarts)return{type:'FA',label:'FA (free agent) — not drafted or auctioned'};
   return null;
 }
 function openPlayerModal(pid){
@@ -3714,7 +3761,7 @@ function openPlayerModal(pid){
 
   // Acquisition info
   const acq=getPlayerAcquisition(pid);
-  const acqColor=acq?.type==='Draft'?'var(--text2)':acq?.type==='SFA'?'var(--teal)':'var(--gold)';
+  const acqColor=acq?.type==='Draft'?'var(--text2)':acq?.type==='Startup'?'var(--gold)':acq?.type==='SFA'?'var(--teal)':acq?.type==='UDFA'?'var(--gold)':acq?.type==='FA'?'var(--text3)':'var(--text3)';
   const acqHtml=`<div style="margin-top:0.5rem;padding:6px 10px;background:var(--surface2);border-radius:6px;font-size:0.78rem">
     <span style="color:var(--text3);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em">Acquired via</span>
     <div style="color:${acqColor};margin-top:2px;font-weight:500">${acq?acq.label:'N/A — not drafted or auctioned'}</div>
@@ -5872,11 +5919,17 @@ function initDraftChips(elId, years, activeSet, onToggle){
 }
 
 let udfaSort={col:'bid',dir:-1};
-let draftSort={col:'pickNo',dir:1};  // dir:1 = ascending = pick 1 first
-let allTimeDraftSort={col:'pts',dir:-1}; // default: total pts descending
+let draftSort={col:'pickNo',dir:1};
+let allTimeDraftSort={col:'pts',dir:-1};
+let showStartupInLeaderboard=false;
 
 function sortAllTimeDraft(col){
   allTimeDraftSort=allTimeDraftSort.col===col?{col,dir:allTimeDraftSort.dir*-1}:{col,dir:-1};
+  renderDraft();
+}
+function toggleStartupLeaderboard(){
+  showStartupInLeaderboard=!showStartupInLeaderboard;
+  document.getElementById('startup-toggle-btn')?.classList.toggle('active',showStartupInLeaderboard);
   renderDraft();
 }
 
@@ -5941,30 +5994,33 @@ function renderDraft(){
 
   // All-time leaderboard — pts/starts scored FOR THE TEAM THAT DRAFTED each player
   const allTimeMgr={};
+  const addToLeaderboard=(pid,mgr,year)=>{
+    if(!pid)return;
+    const season=DB.seasons.find(s=>s.year===year);
+    const team=season?.teams.find(t=>t.managerKey===mgr);
+    const rosterId=team?.rosterId;
+    const startsForTeam=rosterId
+      ?DB.allStarters.filter(s=>s.pid===pid&&String(s.teamRosterId)===String(rosterId)&&s.year>=year)
+      :[];
+    const pts=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
+    if(!allTimeMgr[mgr])allTimeMgr[mgr]={pts:0,starts:0,picks:0};
+    allTimeMgr[mgr].pts+=pts;
+    allTimeMgr[mgr].starts+=startsForTeam.length;
+    allTimeMgr[mgr].picks++;
+  };
+
   Object.entries(DB.draftData||{}).forEach(([yr,picks])=>{
     const year=parseInt(yr);
-    const season=DB.seasons.find(s=>s.year===year);
     [...picks,
-     ...(UDFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player),source:'UDFA'})),
-     ...(SFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player),source:'SFA'}))
-    ].forEach(p=>{
-      const pid=p.pid;
-      if(!pid)return;
-      // Find the rosterId of the manager who drafted this player in that year
-      const team=season?.teams.find(t=>t.managerKey===p.mgr);
-      const rosterId=team?.rosterId;
-      // Only count starts made for the drafting team FROM the draft year onward
-      const startsForTeam=rosterId
-        ?DB.allStarters.filter(s=>s.pid===pid&&String(s.teamRosterId)===String(rosterId)&&s.year>=year)
-        :[];
-      const pts=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
-      const starts=startsForTeam.length;
-      if(!allTimeMgr[p.mgr])allTimeMgr[p.mgr]={pts:0,starts:0,picks:0};
-      allTimeMgr[p.mgr].pts+=pts;
-      allTimeMgr[p.mgr].starts+=starts;
-      allTimeMgr[p.mgr].picks++;
-    });
+     ...(UDFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player)})),
+     ...(SFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player)}))
+    ].forEach(p=>addToLeaderboard(p.pid,p.mgr,year));
   });
+
+  // Include startup picks if toggled
+  if(showStartupInLeaderboard){
+    (DB.startupDraft||[]).forEach(p=>addToLeaderboard(p.pid,p.mgr,2019));
+  }
 
   const atCol=allTimeDraftSort.col,atDir=allTimeDraftSort.dir;
   const atArrow=(c)=>atCol===c?(atDir===1?'↑':'↓'):'';
@@ -5982,6 +6038,9 @@ function renderDraft(){
     <div class="sh" style="margin-bottom:0.5rem">
       <h2 style="font-size:1rem">All-Time Draft Points Leaderboard</h2>
       <span class="sh-sub">Pts/starts scored by draftees FOR the team that drafted them</span>
+      <div class="sh-right">
+        <button id="startup-toggle-btn" class="yr-chip${showStartupInLeaderboard?' active':''}" onclick="toggleStartupLeaderboard()" style="font-size:0.7rem">+ 2019 Startup</button>
+      </div>
     </div>
     <div class="tbl-wrap" style="margin-bottom:1.5rem"><table>
       <thead><tr>
@@ -6001,7 +6060,7 @@ function renderDraft(){
       </tr>`).join('')}</tbody>
     </table></div>`:'';
 
-  const html=filtered.map(yr=>{
+  const htmlParts=filtered.map(yr=>{
     const draftPicks=DB.draftData[yr]||[];
     const udfaPicks=(UDFA_AUCTION[yr]||[]).map(p=>{
       const pid=lookupPid(p.player);
@@ -6120,8 +6179,40 @@ function renderDraft(){
       </table></div>
       ${ptsTableHtml}
     </div>`;
-  }).join('');
-  el.innerHTML=diagnosticHtml+allTimeHtml+(html||'<div class="empty">No data available.</div>');
+  });
+
+  // Insert startup section after 2020 entry (or at end if 2020 not in filtered)
+  const startupSection=(DB.startupDraft&&DB.startupDraft.length)?`
+    <div style="margin-bottom:2rem">
+      <div class="sh" style="margin-bottom:0.5rem">
+        <h2 style="font-size:1.1rem">2019 Startup Draft <span style="font-size:0.72rem;color:var(--text3);font-weight:400">${DB.startupDraft.length} picks · veterans + rookies</span></h2>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.75rem">
+        ${Object.entries(DB.startupDraft.reduce((a,p)=>{a[p.pos]=(a[p.pos]||0)+1;return a;},{})
+          .sort((a,b)=>b[1]-a[1])).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'badge-WR'}">${pos}: ${cnt}</span>`).join('')}
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Pick</th><th>Player</th><th>Pos</th><th>Manager</th><th>NFL Team</th></tr></thead>
+        <tbody>${DB.startupDraft.map(p=>`<tr>
+          <td class="mono" style="color:var(--text3);font-size:0.78rem">${Math.ceil(p.pickNo/12)}.${String(((p.pickNo-1)%12)+1).padStart(2,'0')}</td>
+          <td>${p.pid?`<span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.player}</span>`:p.player}</td>
+          <td><span class="badge ${pc[p.pos]||'badge-WR'}">${p.pos}</span></td>
+          <td style="font-size:0.82rem">${p.mgr}</td>
+          <td style="font-size:0.75rem;color:var(--text3)">${p.team||'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`:'';
+
+  const idx2020=filtered.indexOf(2020);
+  if(idx2020>=0){
+    // Insert startup after 2020 entry
+    htmlParts.splice(idx2020+1,0,startupSection);
+  } else {
+    // 2020 not visible — append at end
+    htmlParts.push(startupSection);
+  }
+
+  el.innerHTML=diagnosticHtml+allTimeHtml+(htmlParts.join('')||'<div class="empty">No data available.</div>');
 }
 // ══════════════════════════════════════════════════════════════
 // UDFA AUCTION
