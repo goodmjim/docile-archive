@@ -5918,8 +5918,11 @@ function initDraftChips(elId, years, activeSet, onToggle){
   el.innerHTML=years.map(y=>`<button class="yr-chip${(activeSet.has(y)||activeSet.has(String(y)))?' active':''}" onclick="${onToggle}(${y},this)">${y}</button>`).join('');
 }
 
-let udfaSort={col:'bid',dir:-1};
-let draftSort={col:'pickNo',dir:1};
+let startupSort={col:'pickNo',dir:1}; // default: draft order ascending
+function sortStartup(col){
+  startupSort=startupSort.col===col?{col,dir:startupSort.dir*-1}:{col,dir:col==='pickNo'?1:-1};
+  renderDraft();
+}
 let allTimeDraftSort={col:'pts',dir:-1};
 let showStartupInLeaderboard=false;
 
@@ -6181,28 +6184,59 @@ function renderDraft(){
     </div>`;
   });
 
-  // Insert startup section after 2020 entry (or at end if 2020 not in filtered)
-  const startupSection=(DB.startupDraft&&DB.startupDraft.length)?`
-    <div style="margin-bottom:2rem">
+  // Build startup section with pts/starts for drafting team (2019+ floor)
+  const startupSection=(()=>{
+    if(!DB.startupDraft||!DB.startupDraft.length)return'';
+    const season2019=DB.seasons.find(s=>s.year===2019);
+    const enrichedStartup=DB.startupDraft.map(p=>{
+      const team=season2019?.teams.find(t=>t.managerKey===p.mgr);
+      const rosterId=team?.rosterId;
+      const startsForTeam=p.pid&&rosterId
+        ?DB.allStarters.filter(s=>s.pid===p.pid&&String(s.teamRosterId)===String(rosterId)&&s.year>=2019)
+        :[];
+      const ptsForTeam=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
+      return{...p,pts:ptsForTeam,startsForTeam:startsForTeam.length};
+    });
+    const sc=startupSort.col,sd=startupSort.dir;
+    const sa=(c)=>sc===c?(sd===1?'↑':'↓'):'';
+    const sortedStartup=[...enrichedStartup].sort((a,b)=>{
+      if(sc==='pickNo')return(a.pickNo-b.pickNo)*sd;
+      if(sc==='pos')return a.pos.localeCompare(b.pos)*sd;
+      if(sc==='mgr')return a.mgr.localeCompare(b.mgr)*sd;
+      if(sc==='starts')return(a.startsForTeam-b.startsForTeam)*sd;
+      if(sc==='pts')return(a.pts-b.pts)*sd;
+      return(a.pickNo-b.pickNo)*sd;
+    });
+    const posCounts=enrichedStartup.reduce((a,p)=>{a[p.pos]=(a[p.pos]||0)+1;return a;},{});
+    return`<div style="margin-bottom:2rem">
       <div class="sh" style="margin-bottom:0.5rem">
         <h2 style="font-size:1.1rem">2019 Startup Draft <span style="font-size:0.72rem;color:var(--text3);font-weight:400">${DB.startupDraft.length} picks · veterans + rookies</span></h2>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.75rem">
-        ${Object.entries(DB.startupDraft.reduce((a,p)=>{a[p.pos]=(a[p.pos]||0)+1;return a;},{})).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'badge-WR'}">${pos}: ${cnt}</span>`).join('')}
+        ${Object.entries(posCounts).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'badge-WR'}">${pos}: ${cnt}</span>`).join('')}
       </div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Pick</th><th>Player</th><th>Pos</th><th>Manager</th><th>NFL Team</th></tr></thead>
-        <tbody>${DB.startupDraft.map(p=>`<tr>
+        <thead><tr>
+          <th class="sortable-th" onclick="sortStartup('pickNo')">Pick <span class="sort-arrow">${sa('pickNo')||'↑'}</span></th>
+          <th>Player</th>
+          <th class="sortable-th" onclick="sortStartup('pos')">Pos <span class="sort-arrow">${sa('pos')}</span></th>
+          <th class="sortable-th" onclick="sortStartup('mgr')">Manager <span class="sort-arrow">${sa('mgr')}</span></th>
+          <th>NFL Team</th>
+          <th class="sortable-th" onclick="sortStartup('starts')">Starts <span class="sort-arrow">${sa('starts')}</span></th>
+          <th class="sortable-th" onclick="sortStartup('pts')">Pts <span class="sort-arrow">${sa('pts')}</span></th>
+        </tr></thead>
+        <tbody>${sortedStartup.map(p=>`<tr>
           <td class="mono" style="color:var(--text3);font-size:0.78rem">${Math.ceil(p.pickNo/12)}.${String(((p.pickNo-1)%12)+1).padStart(2,'0')}</td>
           <td>${p.pid?`<span class="player-link" onclick="openPlayerModal('${p.pid}')">${p.player}</span>`:p.player}</td>
           <td><span class="badge ${pc[p.pos]||'badge-WR'}">${p.pos}</span></td>
           <td style="font-size:0.82rem">${p.mgr}</td>
           <td style="font-size:0.75rem;color:var(--text3)">${p.team||'—'}</td>
+          <td class="mono">${p.startsForTeam||0}</td>
+          <td class="mono">${p.pts>0?p.pts.toFixed(1):'—'}</td>
         </tr>`).join('')}</tbody>
       </table></div>
-    </div>`:'';
-
-  const idx2020=filtered.indexOf(2020);
+    </div>`;
+  })();
   if(idx2020>=0){
     // Insert startup after 2020 entry
     htmlParts.splice(idx2020+1,0,startupSection);
