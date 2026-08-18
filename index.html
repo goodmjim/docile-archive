@@ -6188,8 +6188,7 @@ function renderDraft(){
         <h2 style="font-size:1.1rem">2019 Startup Draft <span style="font-size:0.72rem;color:var(--text3);font-weight:400">${DB.startupDraft.length} picks · veterans + rookies</span></h2>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.75rem">
-        ${Object.entries(DB.startupDraft.reduce((a,p)=>{a[p.pos]=(a[p.pos]||0)+1;return a;},{})
-          .sort((a,b)=>b[1]-a[1])).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'badge-WR'}">${pos}: ${cnt}</span>`).join('')}
+        ${Object.entries(DB.startupDraft.reduce((a,p)=>{a[p.pos]=(a[p.pos]||0)+1;return a;},{})).sort((a,b)=>b[1]-a[1]).map(([pos,cnt])=>`<span class="badge ${pc[pos]||'badge-WR'}">${pos}: ${cnt}</span>`).join('')}
       </div>
       <div class="tbl-wrap"><table>
         <thead><tr><th>Pick</th><th>Player</th><th>Pos</th><th>Manager</th><th>NFL Team</th></tr></thead>
