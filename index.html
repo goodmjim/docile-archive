@@ -768,6 +768,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
             <option value="potw">POTW count</option>
             <option value="probowls">Pro Bowls</option>
             <option value="alldocile">All-Docile selections</option>
+            <option value="draftpick">Draft pick (overall)</option>
           </select>
         </div>
         <div>
@@ -781,6 +782,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
             <option value="potw">POTW count</option>
             <option value="probowls">Pro Bowls</option>
             <option value="alldocile">All-Docile selections</option>
+            <option value="draftpick">Draft pick (overall)</option>
           </select>
         </div>
         <div>
@@ -799,6 +801,14 @@ tbody tr.highlight td{background:var(--gold-dim)}
             <option value="20">20+ starts</option>
             <option value="40">40+ starts</option>
           </select>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Overlays</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:2px">
+            <button id="pg-xmean-btn" class="yr-chip" onclick="togglePgOverlay('xmean')" style="font-size:0.68rem">X mean</button>
+            <button id="pg-ymean-btn" class="yr-chip" onclick="togglePgOverlay('ymean')" style="font-size:0.68rem">Y mean</button>
+            <button id="pg-r2-btn" class="yr-chip" onclick="togglePgOverlay('r2')" style="font-size:0.68rem">R²</button>
+          </div>
         </div>
       </div>
       <div style="margin-bottom:0.5rem">
@@ -3043,7 +3053,7 @@ function buildPlayerGraphData(){
   const pidAcq={};  // pid -> {year, round, source}
   Object.entries(DB.draftData||{}).forEach(([yr,picks])=>{
     picks.forEach(p=>{
-      if(p.pid&&!pidAcq[p.pid])pidAcq[p.pid]={year:parseInt(yr),round:p.round,source:'Draft'};
+      if(p.pid&&!pidAcq[p.pid])pidAcq[p.pid]={year:parseInt(yr),round:p.round,pickNo:p.pickNo,source:'Draft'};
     });
   });
   Object.entries(UDFA_AUCTION).forEach(([yr,picks])=>{
@@ -3105,8 +3115,37 @@ function buildPlayerGraphData(){
 
 const METRIC_LABELS={
   starts:'Appearances',total:'Total Points',avg:'Pts/Game',best:'Best Game',
-  potg:'POTG',potw:'POTW',probowls:'Pro Bowls',alldocile:'All-Docile'
+  potg:'POTG',potw:'POTW',probowls:'Pro Bowls',alldocile:'All-Docile',
+  draftpick:'Draft Pick (Overall)'
 };
+
+let pgOverlays={xmean:false,ymean:false,r2:false};
+function togglePgOverlay(key){
+  pgOverlays[key]=!pgOverlays[key];
+  document.getElementById(`pg-${key}-btn`)?.classList.toggle('active',pgOverlays[key]);
+  renderPlayerGraphs();
+}
+
+// Linear regression helper
+function calcLinReg(pts){
+  const n=pts.length;
+  if(n<2)return null;
+  const sumX=pts.reduce((a,p)=>a+p.x,0);
+  const sumY=pts.reduce((a,p)=>a+p.y,0);
+  const sumXY=pts.reduce((a,p)=>a+p.x*p.y,0);
+  const sumX2=pts.reduce((a,p)=>a+p.x*p.x,0);
+  const sumY2=pts.reduce((a,p)=>a+p.y*p.y,0);
+  const denom=n*sumX2-sumX*sumX;
+  if(!denom)return null;
+  const m=(n*sumXY-sumX*sumY)/denom;
+  const b=(sumY-m*sumX)/n;
+  // R²
+  const yMean=sumY/n;
+  const ssTot=pts.reduce((a,p)=>a+Math.pow(p.y-yMean,2),0);
+  const ssRes=pts.reduce((a,p)=>a+Math.pow(p.y-(m*p.x+b),2),0);
+  const r2=ssTot?1-ssRes/ssTot:0;
+  return{m,b,r2,xMean:sumX/n,yMean};
+}
 
 const POS_COLORS={
   QB:'rgba(224,92,75,0.85)',RB:'rgba(46,204,113,0.85)',WR:'rgba(93,173,226,0.85)',
@@ -3157,12 +3196,15 @@ function renderPlayerGraphs(){
     const avg=d.starts?d.total/d.starts:0;
     const getVal=(key)=>{
       if(key==='avg')return avg;
+      if(key==='draftpick')return d.acq?.source==='Draft'?(d.acq.pickNo||null):null;
       return d[key]||0;
     };
-    return{...d,name,pos,avg,xVal:getVal(xKey),yVal:getVal(yKey)};
-  });
-
-  const canvas=document.getElementById('pg-canvas');
+    const xVal=getVal(xKey);
+    const yVal=getVal(yKey);
+    // Exclude players with null values (e.g. undrafted players on draftpick axis)
+    if(xVal===null||yVal===null)return null;
+    return{...d,name,pos,avg,xVal,yVal};
+  }).filter(Boolean);
   if(!canvas)return;
   if(pgChart){pgChart.destroy();pgChart=null;}
 
@@ -3177,6 +3219,13 @@ function renderPlayerGraphs(){
   Chart.defaults.font.size=11;
 
   if(chartType==='scatter'){
+    const allPts=points.map(p=>({x:p.xVal,y:p.yVal}));
+    const reg=calcLinReg(allPts);
+    const xMean=reg?.xMean??0;
+    const yMean=reg?.yMean??0;
+    const xMin=Math.min(...allPts.map(p=>p.x));
+    const xMax=Math.max(...allPts.map(p=>p.x));
+
     const datasets=[...pgActivePoses].filter(pos=>['QB','RB','WR','TE','K','DEF'].includes(pos)).map(pos=>({
       label:pos,
       data:points.filter(p=>(p.pos===pos||(pos==='DEF'&&(p.pos==='DEF'||p.pos==='DST')))).map(p=>({x:p.xVal,y:p.yVal,name:p.name,pid:p.pid,starts:p.starts,total:p.total,avg:p.avg,acq:p.acq})),
@@ -3184,21 +3233,35 @@ function renderPlayerGraphs(){
       pointRadius:5,pointHoverRadius:8,
     }));
 
+    // Overlay datasets
+    if(pgOverlays.xmean){
+      datasets.push({label:`X mean (${xMean.toFixed(1)})`,data:[{x:xMean,y:xMin<xMax?Math.min(...allPts.map(p=>p.y)):0},{x:xMean,y:Math.max(...allPts.map(p=>p.y))}],type:'line',borderColor:'rgba(212,175,55,0.7)',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,showLine:true,tension:0});
+    }
+    if(pgOverlays.ymean){
+      datasets.push({label:`Y mean (${yMean.toFixed(1)})`,data:[{x:xMin,y:yMean},{x:xMax,y:yMean}],type:'line',borderColor:'rgba(93,173,226,0.7)',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,showLine:true,tension:0});
+    }
+    if(pgOverlays.r2&&reg){
+      // Regression line
+      datasets.push({label:`Trend (R²=${reg.r2.toFixed(3)})`,data:[{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}],type:'line',borderColor:'rgba(46,204,113,0.8)',borderWidth:2,borderDash:[],pointRadius:0,fill:false,showLine:true,tension:0});
+    }
+
     pgChart=new Chart(ctx,{
       type:'scatter',
       data:{datasets},
       options:{
         responsive:true,maintainAspectRatio:false,
         plugins:{
-          legend:{position:'top',labels:{boxWidth:10,padding:12}},
+          legend:{position:'top',labels:{boxWidth:10,padding:12,filter:item=>!item.text.startsWith('_')}},
           tooltip:{callbacks:{
             title:items=>items[0]?.raw?.name||'',
             label:item=>{
               const d=item.raw;
-              const acqStr=d.acq?(d.acq.source==='Draft'?`${d.acq.year} Rd ${d.acq.round}`:`${d.acq.year} ${d.acq.source}`):'Undrafted';
+              if(!d.name)return item.dataset.label; // overlay line
+              const acqStr=d.acq?(d.acq.source==='Draft'?`${d.acq.year} Rd ${d.acq.round} (#${d.acq.pickNo})`:`${d.acq.year} ${d.acq.source}`):'Undrafted';
+              const isInt=(k)=>['starts','potg','potw','probowls','alldocile','draftpick'].includes(k);
               return[
-                `${METRIC_LABELS[xKey]}: ${typeof d.x==='number'?d.x.toFixed(xKey==='starts'||xKey==='potg'||xKey==='potw'||xKey==='probowls'||xKey==='alldocile'?0:1):'—'}`,
-                `${METRIC_LABELS[yKey]}: ${typeof d.y==='number'?d.y.toFixed(yKey==='starts'||yKey==='potg'||yKey==='potw'||yKey==='probowls'||yKey==='alldocile'?0:1):'—'}`,
+                `${METRIC_LABELS[xKey]}: ${typeof d.x==='number'?d.x.toFixed(isInt(xKey)?0:1):'—'}`,
+                `${METRIC_LABELS[yKey]}: ${typeof d.y==='number'?d.y.toFixed(isInt(yKey)?0:1):'—'}`,
                 `Starts: ${d.starts} · Avg: ${d.avg?.toFixed(1)}`,
                 `Acquired: ${acqStr}`,
               ];
@@ -3206,8 +3269,8 @@ function renderPlayerGraphs(){
           }},
         },
         scales:{
-          x:{title:{display:true,text:METRIC_LABELS[xKey]},grid:{color:gridColor}},
-          y:{title:{display:true,text:METRIC_LABELS[yKey]},grid:{color:gridColor}},
+          x:{title:{display:true,text:METRIC_LABELS[xKey]+(xKey==='draftpick'?' (lower = earlier)':'')},grid:{color:gridColor}},
+          y:{title:{display:true,text:METRIC_LABELS[yKey]+(yKey==='draftpick'?' (lower = earlier)':'')},grid:{color:gridColor}},
         },
         onClick:(evt,els)=>{
           if(els.length){
@@ -3217,6 +3280,14 @@ function renderPlayerGraphs(){
         },
       }
     });
+
+    // Show stats
+    const statsEl=document.getElementById('pg-stats');
+    if(statsEl){
+      const parts=[`${points.length} players shown`,'Click any point to open player card','Colors = position'];
+      if(reg)parts.push(`R² = ${reg.r2.toFixed(3)} (${reg.r2>0.7?'strong':reg.r2>0.4?'moderate':reg.r2>0.2?'weak':'no'} correlation)`);
+      statsEl.textContent=parts.join(' · ');
+    }
   } else {
     // Bar chart — sort by Y value, top 30
     const sorted=[...points].sort((a,b)=>b.yVal-a.yVal).slice(0,30);
@@ -3252,10 +3323,9 @@ function renderPlayerGraphs(){
         },
       }
     });
+    const statsEl2=document.getElementById('pg-stats');
+    if(statsEl2)statsEl2.textContent=`${points.length} players · top 30 shown · click bar to open player card`;
   }
-
-  const statsEl=document.getElementById('pg-stats');
-  if(statsEl)statsEl.textContent=`${points.length} players shown · Click any point or bar to open player card · Colors indicate position`;
 }
 
 // ══════════════════════════════════════════════════════════════
