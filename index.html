@@ -5800,7 +5800,13 @@ function initDraftChips(elId, years, activeSet, onToggle){
 }
 
 let udfaSort={col:'bid',dir:-1};
-let draftSort={col:'pickNo',dir:-1};
+let draftSort={col:'pickNo',dir:1};  // dir:1 = ascending = pick 1 first
+let allTimeDraftSort={col:'pts',dir:-1}; // default: total pts descending
+
+function sortAllTimeDraft(col){
+  allTimeDraftSort=allTimeDraftSort.col===col?{col,dir:allTimeDraftSort.dir*-1}:{col,dir:-1};
+  renderDraft();
+}
 
 function sortUdfa(col){
   udfaSort=udfaSort.col===col?{col,dir:udfaSort.dir*-1}:{col,dir:-1};
@@ -5861,28 +5867,65 @@ function renderDraft(){
       </table></div>
     </div>`:'';
 
-  // All-time totals across all loaded draft years
+  // All-time leaderboard — pts/starts scored FOR THE TEAM THAT DRAFTED each player
   const allTimeMgr={};
   Object.entries(DB.draftData||{}).forEach(([yr,picks])=>{
-    [...picks,...(UDFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player)})),
-     ...(SFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player)}))].forEach(p=>{
+    const year=parseInt(yr);
+    const season=DB.seasons.find(s=>s.year===year);
+    [...picks,
+     ...(UDFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player),source:'UDFA'})),
+     ...(SFA_AUCTION[yr]||[]).map(p=>({...p,pid:lookupPid(p.player),source:'SFA'}))
+    ].forEach(p=>{
       const pid=p.pid;
-      const pts=pid?DB.allStarters.filter(s=>s.pid===pid&&s.year>=parseInt(yr)).reduce((a,b)=>a+(b.points||0),0):0;
-      if(!allTimeMgr[p.mgr])allTimeMgr[p.mgr]={pts:0,picks:0};
-      allTimeMgr[p.mgr].pts+=pts;allTimeMgr[p.mgr].picks++;
+      if(!pid)return;
+      // Find the rosterId of the manager who drafted this player in that year
+      const team=season?.teams.find(t=>t.managerKey===p.mgr);
+      const rosterId=team?.rosterId;
+      // Only count starts made for the drafting team
+      const startsForTeam=rosterId
+        ?DB.allStarters.filter(s=>s.pid===pid&&String(s.teamRosterId)===String(rosterId))
+        :[];
+      const pts=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
+      const starts=startsForTeam.length;
+      if(!allTimeMgr[p.mgr])allTimeMgr[p.mgr]={pts:0,starts:0,picks:0};
+      allTimeMgr[p.mgr].pts+=pts;
+      allTimeMgr[p.mgr].starts+=starts;
+      allTimeMgr[p.mgr].picks++;
     });
   });
-  const allTimeSorted=Object.entries(allTimeMgr).sort((a,b)=>b[1].pts-a[1].pts);
+
+  const atCol=allTimeDraftSort.col,atDir=allTimeDraftSort.dir;
+  const atArrow=(c)=>atCol===c?(atDir===1?'↑':'↓'):'';
+  const atSortFn=(a,b)=>{
+    const [,da]=[a[0],a[1]],[,db]=[b[0],b[1]];
+    if(atCol==='pts')return(da.pts-db.pts)*atDir;
+    if(atCol==='picks')return(da.picks-db.picks)*atDir;
+    if(atCol==='starts')return(da.starts-db.starts)*atDir;
+    if(atCol==='ppstart')return((da.starts?da.pts/da.starts:0)-(db.starts?db.pts/db.starts:0))*atDir;
+    return(da.pts-db.pts)*atDir;
+  };
+  const allTimeSorted=Object.entries(allTimeMgr).sort(atSortFn);
+
   const allTimeHtml=allTimeSorted.length?`
-    <div class="sh" style="margin-bottom:0.5rem"><h2 style="font-size:1rem">All-Time Draft Points Leaderboard</h2><span class="sh-sub">Total pts from all draft + auction picks across all classes</span></div>
+    <div class="sh" style="margin-bottom:0.5rem">
+      <h2 style="font-size:1rem">All-Time Draft Points Leaderboard</h2>
+      <span class="sh-sub">Pts/starts scored by draftees FOR the team that drafted them</span>
+    </div>
     <div class="tbl-wrap" style="margin-bottom:1.5rem"><table>
-      <thead><tr><th>#</th><th>Manager</th><th>Total picks</th><th>Total pts</th><th>Avg per pick</th></tr></thead>
+      <thead><tr>
+        <th>#</th><th>Manager</th>
+        <th class="sortable-th" onclick="sortAllTimeDraft('picks')">Picks <span class="sort-arrow">${atArrow('picks')}</span></th>
+        <th class="sortable-th" onclick="sortAllTimeDraft('starts')">Starts for team <span class="sort-arrow">${atArrow('starts')}</span></th>
+        <th class="sortable-th" onclick="sortAllTimeDraft('pts')">Pts for team <span class="sort-arrow">${atArrow('pts')||'↓'}</span></th>
+        <th class="sortable-th" onclick="sortAllTimeDraft('ppstart')">Pts/start <span class="sort-arrow">${atArrow('ppstart')}</span></th>
+      </tr></thead>
       <tbody>${allTimeSorted.map(([mgr,d],i)=>`<tr>
         <td class="mono" style="color:var(--text3)">${i+1}</td>
         <td style="font-weight:500">${mgr}</td>
         <td class="mono">${d.picks}</td>
+        <td class="mono">${d.starts}</td>
         <td class="mono" style="color:var(--teal)">${d.pts.toFixed(1)}</td>
-        <td class="mono">${d.picks?(d.pts/d.picks).toFixed(1):'—'}</td>
+        <td class="mono">${d.starts?(d.pts/d.starts).toFixed(1):'—'}</td>
       </tr>`).join('')}</tbody>
     </table></div>`:'';
 
@@ -5907,11 +5950,18 @@ function renderDraft(){
       </div>`;
     }
 
-    // Enrich with pts scored
+    // Enrich with pts scored FOR THE DRAFTING TEAM
     const enriched=allYrPicks.map(p=>{
       const pid=p.pid||lookupPid(p.player);
-      const ptsAllTime=pid?DB.allStarters.filter(s=>s.pid===pid&&s.year>=yr).reduce((a,b)=>a+(b.points||0),0):0;
-      return{...p,pid,pts:ptsAllTime};
+      // Find the drafting team's rosterId in this year
+      const season=DB.seasons.find(s=>s.year===yr);
+      const team=season?.teams.find(t=>t.managerKey===p.mgr);
+      const rosterId=team?.rosterId;
+      const startsForTeam=pid&&rosterId
+        ?DB.allStarters.filter(s=>s.pid===pid&&String(s.teamRosterId)===String(rosterId))
+        :[];
+      const ptsForTeam=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
+      return{...p,pid,pts:ptsForTeam,startsForTeam:startsForTeam.length};
     });
 
     const draftOnly=enriched.filter(p=>p.source==='Draft');
@@ -5927,19 +5977,33 @@ function renderDraft(){
     };
     const sortedPicks=[...enriched].sort(dSortFn[col]||dSortFn.pickNo);
 
-    // Points by manager table
+    // Points by manager — for THIS year, pts scored for the drafting team
     const mgrPts={};
-    enriched.forEach(p=>{if(!mgrPts[p.mgr])mgrPts[p.mgr]={pts:0,picks:0};mgrPts[p.mgr].pts+=p.pts;mgrPts[p.mgr].picks++;});
+    const season=DB.seasons.find(s=>s.year===yr);
+    enriched.forEach(p=>{
+      if(!p.pid)return;
+      const team=season?.teams.find(t=>t.managerKey===p.mgr);
+      const rosterId=team?.rosterId;
+      const startsForTeam=rosterId
+        ?DB.allStarters.filter(s=>s.pid===p.pid&&String(s.teamRosterId)===String(rosterId))
+        :[];
+      const teamPts=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
+      if(!mgrPts[p.mgr])mgrPts[p.mgr]={pts:0,picks:0,starts:0};
+      mgrPts[p.mgr].pts+=teamPts;
+      mgrPts[p.mgr].starts+=startsForTeam.length;
+      mgrPts[p.mgr].picks++;
+    });
     const mgrsSorted=Object.entries(mgrPts).sort((a,b)=>b[1].pts-a[1].pts);
-    const ptsTableHtml=`<div class="sh" style="margin-top:1.25rem;margin-bottom:0.5rem"><h2 style="font-size:1rem">Points by Manager</h2><span class="sh-sub">Total pts scored by all picks from this draft class</span></div>
+    const ptsTableHtml=`<div class="sh" style="margin-top:1.25rem;margin-bottom:0.5rem"><h2 style="font-size:1rem">Manager Totals</h2><span class="sh-sub">Pts/starts scored by picks FOR the team that drafted them</span></div>
       <div class="tbl-wrap" style="margin-bottom:1.25rem"><table>
-        <thead><tr><th>#</th><th>Manager</th><th>Picks</th><th>Total pts</th><th>Avg per pick</th></tr></thead>
+        <thead><tr><th>#</th><th>Manager</th><th>Picks</th><th>Starts for team</th><th>Pts for team</th><th>Pts/start</th></tr></thead>
         <tbody>${mgrsSorted.map(([mgr,d],i)=>`<tr>
           <td class="mono" style="color:var(--text3)">${i+1}</td>
           <td style="font-weight:500">${mgr}</td>
           <td class="mono">${d.picks}</td>
+          <td class="mono">${d.starts}</td>
           <td class="mono" style="color:var(--teal)">${d.pts.toFixed(1)}</td>
-          <td class="mono">${d.picks?( d.pts/d.picks).toFixed(1):'—'}</td>
+          <td class="mono">${d.starts?(d.pts/d.starts).toFixed(1):'—'}</td>
         </tr>`).join('')}</tbody>
       </table></div>`;
 
