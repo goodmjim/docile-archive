@@ -5918,7 +5918,9 @@ function initDraftChips(elId, years, activeSet, onToggle){
   el.innerHTML=years.map(y=>`<button class="yr-chip${(activeSet.has(y)||activeSet.has(String(y)))?' active':''}" onclick="${onToggle}(${y},this)">${y}</button>`).join('');
 }
 
-let startupSort={col:'pickNo',dir:1}; // default: draft order ascending
+let udfaSort={col:'bid',dir:-1};
+let draftSort={col:'pickNo',dir:1};
+let startupSort={col:'pickNo',dir:1};
 function sortStartup(col){
   startupSort=startupSort.col===col?{col,dir:startupSort.dir*-1}:{col,dir:col==='pickNo'?1:-1};
   renderDraft();
