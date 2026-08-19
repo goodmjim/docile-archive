@@ -285,6 +285,12 @@ tbody tr.highlight td{background:var(--gold-dim)}
 .mu-team{flex:1;min-width:0}
 .mu-team.r{text-align:right}
 .mu-tname{font-size:0.8rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-head{font-size:0.68rem;color:var(--text3);margin-bottom:0.5rem}
+.mu-matchup{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.mu-side{flex:1;text-align:center}
+.mu-side.winner .mu-pts{color:var(--gold)}
+.mu-side.winner .mu-name{font-weight:600;color:var(--text)}
+.mu-name{font-size:0.78rem;color:var(--text2);margin-bottom:2px}
 .mu-pts{font-family:var(--font-display);font-size:1.5rem;letter-spacing:0.04em;line-height:1}
 .mu-pts.win{color:var(--gold)}
 .mu-vs{font-size:0.68rem;color:var(--text3);flex-shrink:0;padding:0 4px}
@@ -2054,6 +2060,44 @@ const ESPN_DATA={
   ]
 };
 
+// ── FINAL STANDINGS (playoff-determined, all years) ──────────
+const FINAL_STANDINGS={
+  2014:['Lance','Abhi','Declan','Jimmy','Brad','Callie','Colton','Amol','Boone','Hinton','Baldy','Steg'],
+  2015:['Lance','Jimmy','Colton','Baldy','Declan','Amol','Brad','Milan','Jack','Hinton','Boone','Abhi'],
+  2016:['Jimmy','Amol','Declan','Lance','Brad','Abhi','Boone','Hinton','Colton','Baldy','Jack','Thano'],
+  2017:['Declan','Amol','Jared','Boone','Jimmy','Abhi','Hinton','Lance','Kyle','Brad','Baldy','Colton'],
+  2018:['Declan','Amol','David','Kyle','Colton','Boone','Abhi','Jared','Lance','Brad','Hinton','Jimmy'],
+  2019:['Jared','Declan','Colton','Abhi','Amol','Hinton','Boone','David','Kyle','Jimmy','Brad','Lance'],
+  2020:['Jon','Hinton','Boone','Declan','Abhi','Jared','Lance','Amol','Kyle','David','Brad','Jimmy'],
+  2021:['David','Declan','Abhi','Hinton','Amol','Brad','Jon','Boone','Jimmy','Lance','Kyle','Jared'],
+  2022:['Kyle','David','Brad','Declan','Amol','Boone','Lance','Jimmy','Jared','Abhi','Jon','Hinton'],
+  2023:['David','Brad','Amol','Jimmy','Kyle','Declan','Abhi','Jared','Jon','Lance','Hinton','Boone'],
+  2024:['David','Jared','Declan','Kyle','Brad','Jimmy','Lance','Boone','Jon','Abhi','Amol','Hinton'],
+  2025:['Jared','David','Kyle','Lance','Declan','Jon','Boone','Jimmy','Brad','Abhi','Hinton','Amol'],
+};
+
+// ── ESPN ERA TEAM NAMES (2014-2018) ──────────────────────────
+const ESPN_TEAM_NAMES={
+  Abhi:   {2014:'SUCK MY ASS',2015:'SUCK MY ASS',2016:'SUCK MY ASS',2017:'SUCK MY ASS',2018:'SUCK MY ASS'},
+  Amol:   {2014:'Team No Shoulders',2015:'Yermam S. Bachs',2016:'The Erectile Dyfunctions',2017:'ADHD Boyz',2018:'Mad Men Watch Club'},
+  Boone:  {2014:'The Real Fam',2015:'Goodnight, Sweet Prince',2016:'OJ DIDNT DO IT GLOVE DIDNT FIT',2017:'#BringBack TheBrink',2018:'#BringBack TheBrink'},
+  Brad:   {2014:'I deserved the bye',2015:'Ride Or Die For Kim',2016:'Cucklan and the Farmturds',2017:'Cucklan Spankins',2018:'I deserved the bye'},
+  David:  {2018:'Team SCOOP'},
+  Declan: {2014:'I Kissed Your Shower Tile',2015:'Ass (Interim Name)',2016:'Demaryius Targs and Friends',2017:'GoodStrokeGame. HadToBust.',2018:'Fuck Your Baby'},
+  Hinton: {2014:'i kissed your dad',2015:'Titty Slickers',2016:'Titty Slickers',2017:'Titty Slickers',2018:'Titty Slickers'},
+  Jared:  {2017:'Jelly Beans',2018:'Belly Jeans'},
+  Jimmy:  {2014:'Hyde Park Sharks',2015:'Regular Season Champions',2016:'Charlie Batchelorette',2017:'Charlie Batchelorette',2018:'Charlie Batchelorette'},
+  Kyle:   {2017:"What's that Smell(y)?",2018:"What's that Smell(y)?"},
+  Lance:  {2014:'Titties (Interim Name)',2015:'Titties (Interim Name)',2016:'Titties (Interim Name)',2017:'Titties (Interim Name)',2018:'Titties (Interim Name)'},
+  Colton: {2014:'Team courtney matthews',2015:'Rachel and The 2nd Instagrams',2016:'Rachel and The 2nd Instagrams',2017:'Jimmy and the Epic Virgins',2018:'Jimmy and the Epic Virgins'},
+  Callie: {2014:'The Plant Hockey team'},
+  Milan:  {2015:'MILANg DICK'},
+  Steg:   {2014:'Titties For Wins'},
+  Thano:  {2016:'Hillary Cuntin'},
+  Jack:   {2015:'Martinique Bangers',2016:'Azeele ya Later'},
+  Baldy:  {2014:'flannel showers babe',2015:'flannel showers babe',2016:'flannel showers babe',2017:'flannel showers babe'},
+};
+
 // ══════════════════════════════════════════════════════════════
 // UDFA AUCTION DATA
 // ══════════════════════════════════════════════════════════════
@@ -3157,8 +3201,15 @@ function buildApp(){
     allManagerKeys.map(k=>`<button class="team-chip active" onclick="toggleTeam('${k.replace(/'/g,"\\'")}',this)">${k}</button>`).join('');
   // Matchup filters — still by team name for context
   const allWeeks=[...new Set(DB.seasons.flatMap(s=>Object.keys(s.matchupsByWeek).map(Number)))].sort((a,b)=>a-b);
-  document.getElementById('wk-sel').innerHTML='<option value="all">All weeks</option>'+allWeeks.map(w=>`<option value="${w}">Week ${w}</option>`).join('');
-  document.getElementById('tm-sel').innerHTML='<option value="all">All managers</option>'+allManagerKeys.map(k=>`<option value="${k}">${k}</option>`).join('');
+  // Matchup selects — combine ESPN + Sleeper weeks and managers
+  const espnMgrSet=new Set();
+  ESPN_DATA.matchups.forEach(([yr,wk,w,sw,sl,l])=>{espnMgrSet.add(w);espnMgrSet.add(l);});
+  const allWeeksSet=new Set([...Array.from({length:13},(_,i)=>i+1)]);
+  DB.seasons.forEach(s=>Object.keys(s.matchupsByWeek).forEach(w=>allWeeksSet.add(parseInt(w))));
+  const allMatchupWeeks=[...allWeeksSet].sort((a,b)=>a-b);
+  const allMuMgrs=[...new Set([...allManagerKeys,...espnMgrSet])].sort();
+  document.getElementById('wk-sel').innerHTML='<option value="all">All weeks</option>'+allMatchupWeeks.map(w=>`<option value="${w}">Week ${w}</option>`).join('');
+  document.getElementById('tm-sel').innerHTML='<option value="all">All managers</option>'+allMuMgrs.map(k=>`<option value="${k}">${k}</option>`).join('');
   // H2H selects — combine Sleeper managers + ESPN-era managers
   const espnMgrs=new Set();
   ESPN_DATA.matchups.forEach(([yr,wk,w,sw,sl,l])=>{espnMgrs.add(w);espnMgrs.add(l);});
@@ -4062,77 +4113,66 @@ function renderStandings(){
 // RENDER: MATCHUPS
 // ══════════════════════════════════════════════════════════════
 function renderMatchups(){
-  const el=document.getElementById('matchups-content');
-  const sSel=document.getElementById('matchup-season');
-  const wSel=document.getElementById('matchup-week');
-  if(!sSel||!wSel)return;
-
-  // Build year list: ESPN (2014-2018) + Sleeper
-  const sleeperYears=DB.seasons.map(s=>s.year);
-  const espnYears=[2014,2015,2016,2017,2018];
-  const allYears=[...new Set([...sleeperYears,...espnYears])].sort((a,b)=>b-a);
-
-  if(!sSel.children.length||sSel.options.length!==allYears.length+1){
-    sSel.innerHTML='<option value="all">All seasons</option>'+allYears.map(y=>`<option value="${y}">${y}</option>`).join('');
-  }
-
-  const selYear=sSel.value==='all'?null:parseInt(sSel.value);
-
-  // Determine matchups to show
-  let matchupCards=[];
-  const years=selYear?[selYear]:allYears;
-
-  years.forEach(yr=>{
-    const sleeperSeason=DB.seasons.find(s=>s.year===yr);
-    if(sleeperSeason){
-      // Sleeper era
-      Object.entries(sleeperSeason.matchupsByWeek).sort((a,b)=>b[0]-a[0]).forEach(([wk,mus])=>{
-        const byId={};
-        mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
-        Object.values(byId).forEach(pair=>{
-          if(pair.length<2)return;
-          const[a,b]=pair;
-          const tA=sleeperSeason.teams.find(t=>t.rosterId===a.roster_id);
-          const tB=sleeperSeason.teams.find(t=>t.rosterId===b.roster_id);
-          matchupCards.push({yr,wk:parseInt(wk),t1:tA?.managerKey||'?',s1:a.points||0,t2:tB?.managerKey||'?',s2:b.points||0,tie:false});
-        });
-      });
-    } else if(yr>=2014&&yr<=2018){
-      // ESPN era
-      const byWeek=getEspnMatchups(yr);
-      Object.entries(byWeek).sort((a,b)=>b[0]-a[0]).forEach(([wk,games])=>{
-        games.forEach(g=>{
-          matchupCards.push({yr,wk:parseInt(wk),t1:g.winner,s1:g.winnerScore,t2:g.loser,s2:g.loserScore,tie:g.tie});
-        });
-      });
-    }
-  });
-
-  // Week filter
-  const wks=[...new Set(matchupCards.map(m=>m.wk))].sort((a,b)=>b-a);
-  if(wSel.options.length!==wks.length+1){
-    wSel.innerHTML='<option value="all">All weeks</option>'+wks.map(w=>`<option value="${w}">Week ${w}</option>`).join('');
-  }
-  const selWk=wSel.value==='all'?null:parseInt(wSel.value);
-  if(selWk)matchupCards=matchupCards.filter(m=>m.wk===selWk);
-
-  matchupCards.sort((a,b)=>b.yr-a.yr||b.wk-a.wk);
+  const grid=document.getElementById('mu-grid');
+  const wf=document.getElementById('wk-sel').value;
+  const tf=document.getElementById('tm-sel').value;
   const myKey=sleeperToManagerKey(DB.username)||DB.username;
 
-  el.innerHTML=matchupCards.map(m=>{
-    const isMyGame=m.t1===myKey||m.t2===myKey;
-    const winner=m.tie?null:(m.s1>=m.s2?m.t1:m.t2);
-    return`<div class="matchup-card${isMyGame?' highlight':''}">
-      <div class="mu-meta">Week ${m.wk} · ${m.yr}${m.tie?' · <span style="color:var(--gold)">TIE</span>':''}</div>
-      <div class="mu-row">
-        <span class="mu-team${winner===m.t1?' mu-winner':''}">${m.t1}</span>
-        <span class="mu-score">${m.s1.toFixed(1)}</span>
-        <span class="mu-vs">vs</span>
-        <span class="mu-score">${m.s2.toFixed(1)}</span>
-        <span class="mu-team${winner===m.t2?' mu-winner':''}">${m.t2}</span>
+  // Build combined matchup list: ESPN + Sleeper
+  const cards=[];
+
+  // ESPN era
+  ESPN_DATA.matchups.forEach(([yr,wk,w,sw,sl,l,tie])=>{
+    cards.push({year:yr,week:wk,t1:w,s1:sw,t2:l,s2:sl,tie,
+      hasMe:w===myKey||l===myKey});
+  });
+
+  // Sleeper era
+  getSeasons().forEach(s=>{
+    Object.entries(s.matchupsByWeek).forEach(([wk,mus])=>{
+      const byId={};
+      mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+      Object.values(byId).forEach(pair=>{
+        if(pair.length<2)return;
+        const[a,b]=pair;
+        const tA=s.teams.find(t=>t.rosterId===a.roster_id);
+        const tB=s.teams.find(t=>t.rosterId===b.roster_id);
+        const labelA=tA?.managerKey||'?',labelB=tB?.managerKey||'?';
+        const hasMe=a.roster_id===s.myRosterId||b.roster_id===s.myRosterId;
+        cards.push({year:s.year,week:parseInt(wk),t1:labelA,s1:a.points||0,t2:labelB,s2:b.points||0,tie:false,hasMe});
+      });
+    });
+  });
+
+  // Apply filters
+  let filtered=cards;
+  if(wf!=='all')filtered=filtered.filter(c=>c.week===parseInt(wf));
+  if(tf!=='all')filtered=filtered.filter(c=>c.t1===tf||c.t2===tf);
+  filtered.sort((a,b)=>b.year-a.year||b.week-a.week);
+
+  if(!filtered.length){grid.innerHTML='<div class="empty">No matchups found.</div>';return;}
+
+  grid.innerHTML=filtered.map(c=>{
+    const aWin=c.tie?false:c.s1>=c.s2;
+    const bWin=c.tie?false:c.s2>c.s1;
+    const labelA=c.t1,labelB=c.t2;
+    const isEspn=c.year<=2018;
+    return`<div class="mu-card${c.hasMe?' me-game':''}">
+      <div class="mu-head">${c.year} · Week ${c.week}${c.tie?' · <span style="color:var(--gold)">TIE</span>':''}</div>
+      <div class="mu-matchup">
+        <div class="mu-side${aWin?' winner':''}">
+          <div class="mu-name">${labelA}</div>
+          <div class="mu-pts">${c.s1.toFixed(isEspn?1:2)}</div>
+        </div>
+        <div class="mu-vs">vs</div>
+        <div class="mu-side${bWin?' winner':''}">
+          <div class="mu-name">${labelB}</div>
+          <div class="mu-pts">${c.s2.toFixed(isEspn?1:2)}</div>
+        </div>
       </div>
+      <div class="mu-foot">${c.tie?'Tie game':`${aWin?labelA:labelB} wins · margin ${Math.abs(c.s1-c.s2).toFixed(isEspn?1:2)}`}</div>
     </div>`;
-  }).join('')||'<div class="empty">No matchups found.</div>';
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -7114,19 +7154,16 @@ function renderMyTimeline(){
     if(me){
       // Sleeper era (2019+)
       w=me.wins;l=me.losses;pf=me.pf;pa=me.pa;name=me.name||'—';
-      const ranked=[...season.teams].sort((a,b)=>b.wins-a.wins||b.pf-a.pf);
-      const idx=ranked.findIndex(t=>t.isMe);
-      if(idx>=0)finish=`#${idx+1} of ${ranked.length}`;
     } else if(yr>=2014&&yr<=2018){
       // ESPN era
       const rec=getEspnSeasonRecord(yr)[myKey];
-      if(rec){
-        w=rec.wins;l=rec.losses;pf=rec.pf;pa=rec.pa;
-        const finishOrder=ESPN_DATA.finishes[yr]||[];
-        const idx=finishOrder.indexOf(myKey);
-        if(idx>=0)finish=`#${idx+1} of ${finishOrder.length}`;
-      }
+      if(rec){w=rec.wins;l=rec.losses;pf=rec.pf;pa=rec.pa;}
+      name=ESPN_TEAM_NAMES[myKey]?.[yr]||'—';
     }
+    // Finish from FINAL_STANDINGS for all years
+    const finishOrder=FINAL_STANDINGS[yr]||[];
+    const fidx=finishOrder.indexOf(myKey);
+    if(fidx>=0)finish=`#${fidx+1} of ${finishOrder.length}`;
 
     return{yr,name,w,l,pf,pa,finish,trophies,loaded:me||yr<=2018};
   }).filter(r=>r.loaded);
