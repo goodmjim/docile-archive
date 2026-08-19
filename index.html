@@ -841,12 +841,16 @@ tbody tr.highlight td{background:var(--gold-dim)}
 
     <!-- STANDINGS -->
     <div class="panel" id="panel-standings">
-      <div class="sh"><h2>Standings</h2><span id="standings-sub" class="sh-sub"></span></div>
+      <div class="sh"><h2>Standings</h2>
+        <span id="standings-sub" class="sh-sub"></span>
+        <div class="sh-right"><button id="standings-dynasty-btn" class="yr-chip" onclick="toggleStandingsDynasty()">Dynasty only (2019+)</button></div>
+      </div>
       <div class="tbl-wrap"><table>
         <thead><tr>
           <th>#</th>
           <th>Manager</th>
           <th class="sortable-th" onclick="sortStandings('wins')" id="sth-wins">W–L <span class="sort-arrow">↓</span></th>
+          <th>T</th>
           <th class="sortable-th" onclick="sortStandings('pct')" id="sth-pct">Win % <span class="sort-arrow"></span></th>
           <th class="sortable-th" onclick="sortStandings('pf')" id="sth-pf">PF <span class="sort-arrow"></span></th>
           <th class="sortable-th" onclick="sortStandings('pa')" id="sth-pa">PA <span class="sort-arrow"></span></th>
@@ -1369,6 +1373,31 @@ const ALL_DOCILE = {
 };
 
 const PLAYOFF_RESULTS = [
+  {year:2014,rounds:[
+    {round:'Round 1',games:[{w:'Jimmy',ws:170,l:'Brad',ls:88,wSeed:6,lSeed:3},{w:'Lance',ws:110,l:'Callie',ls:95,wSeed:5,lSeed:4}],byes:['Declan','Abhi']},
+    {round:'Semis',games:[{w:'Abhi',ws:118,l:'Jimmy',ls:108,wSeed:2,lSeed:6},{w:'Lance',ws:122,l:'Declan',ls:81,wSeed:5,lSeed:1}]},
+    {round:'Docile Cup',games:[{w:'Lance',ws:92,l:'Abhi',ls:72,wSeed:5,lSeed:2}]}
+  ]},
+  {year:2015,rounds:[
+    {round:'Round 1',games:[{w:'Colton',ws:143,l:'Declan',ls:92,wSeed:6,lSeed:3},{w:'Baldy',ws:124,l:'Amol',ls:104,wSeed:5,lSeed:4}],byes:['Jimmy','Lance']},
+    {round:'Semis',games:[{w:'Jimmy',ws:128,l:'Baldy',ls:126,wSeed:1,lSeed:5},{w:'Lance',ws:132,l:'Colton',ls:98,wSeed:2,lSeed:6}]},
+    {round:'Docile Cup',games:[{w:'Lance',ws:143,l:'Jimmy',ls:140,wSeed:2,lSeed:1}]}
+  ]},
+  {year:2016,rounds:[
+    {round:'Round 1',games:[{w:'Declan',ws:90,l:'Abhi',ls:85,wSeed:3,lSeed:6},{w:'Lance',ws:151,l:'Brad',ls:95,wSeed:4,lSeed:5}],byes:['Jimmy','Amol']},
+    {round:'Semis',games:[{w:'Jimmy',ws:120,l:'Lance',ls:113,wSeed:1,lSeed:4},{w:'Amol',ws:135,l:'Declan',ls:98,wSeed:2,lSeed:3}]},
+    {round:'Docile Cup',games:[{w:'Jimmy',ws:105,l:'Amol',ls:99,wSeed:1,lSeed:2}]}
+  ]},
+  {year:2017,rounds:[
+    {round:'Round 1',games:[{w:'Amol',ws:125,l:'Jimmy',ls:87,wSeed:3,lSeed:6},{w:'Jared',ws:144,l:'Abhi',ls:91,wSeed:5,lSeed:4}],byes:['Declan','Boone']},
+    {round:'Semis',games:[{w:'Declan',ws:133,l:'Jared',ls:93,wSeed:1,lSeed:5},{w:'Amol',ws:137,l:'Boone',ls:117,wSeed:3,lSeed:2}]},
+    {round:'Docile Cup',games:[{w:'Declan',ws:121,l:'Amol',ls:85,wSeed:1,lSeed:3}]}
+  ]},
+  {year:2018,rounds:[
+    {round:'Round 1',games:[{w:'Amol',ws:100,l:'Colton',ls:82,wSeed:6,lSeed:3},{w:'Kyle',ws:100,l:'Boone',ls:90,wSeed:4,lSeed:5}],byes:['David','Declan']},
+    {round:'Semis',games:[{w:'Declan',ws:114,l:'Kyle',ls:93,wSeed:2,lSeed:4},{w:'Amol',ws:122,l:'David',ls:114,wSeed:6,lSeed:1}]},
+    {round:'Docile Cup',games:[{w:'Declan',ws:134,l:'Amol',ls:121,wSeed:2,lSeed:6}]}
+  ]},
   {year:2019,rounds:[
     {round:'Wild Card',games:[{w:'Jared',ws:148.44,l:'Amol',ls:108.00},{w:'Declan',ws:150.70,l:'Hinton',ls:145.28}]},
     {round:'Semis',games:[{w:'Jared',ws:176.82,l:'Abhi',ls:131.08},{w:'Declan',ws:157.68,l:'Colton',ls:124.20}]},
@@ -1621,6 +1650,409 @@ const PB_LEADERS = [
   {mgr:'Boone',count:13},{mgr:'Amol',count:12},{mgr:'Jon',count:10}
 ];
 
+
+// ── ESPN ERA MATCHUP DATA (2014-2018) ─────────────────────────
+const ESPN_DATA={
+  finishes:{
+    2014:['Lance','Abhi','Declan','Jimmy','Brad','Callie','Colton','Amol','Boone','Hinton','Baldy','Steg'],
+    2015:['Lance','Jimmy','Colton','Baldy','Declan','Amol','Brad','Milan','Jack','Hinton','Boone','Abhi'],
+    2016:['Jimmy','Amol','Declan','Lance','Brad','Abhi','Boone','Hinton','Colton','Baldy','Jack','Thano'],
+    2017:['Declan','Amol','Jared','Boone','Jimmy','Abhi','Hinton','Lance','Kyle','Brad','Baldy','Colton'],
+    2018:['Declan','Amol','David','Kyle','Colton','Boone','Abhi','Jared','Lance','Brad','Hinton','Jimmy'],
+  },
+  matchups:[
+    [2014,1,'Abhi',104.5,85.0,'Steg',false],
+    [2014,1,'Amol',117.5,103.0,'Colton',false],
+    [2014,1,'Baldy',91.5,70.5,'Hinton',false],
+    [2014,1,'Brad',95.5,94.5,'Boone',false],
+    [2014,1,'Callie',112.0,103.5,'Jimmy',false],
+    [2014,1,'Declan',112.0,92.5,'Lance',false],
+    [2014,2,'Abhi',132.0,113.0,'Baldy',false],
+    [2014,2,'Steg',105.0,104.0,'Amol',false],
+    [2014,2,'Callie',135.0,115.0,'Boone',false],
+    [2014,2,'Brad',102.0,98.0,'Lance',false],
+    [2014,2,'Hinton',131.0,115.0,'Colton',false],
+    [2014,2,'Declan',97.0,50.0,'Jimmy',false],
+    [2014,3,'Abhi',113.0,84.0,'Hinton',false],
+    [2014,3,'Amol',100.0,75.0,'Baldy',false],
+    [2014,3,'Boone',130.0,121.0,'Jimmy',false],
+    [2014,3,'Declan',101.0,93.0,'Brad',false],
+    [2014,3,'Callie',113.0,100.0,'Lance',false],
+    [2014,3,'Colton',114.0,87.0,'Steg',false],
+    [2014,4,'Abhi',94.0,51.0,'Colton',false],
+    [2014,4,'Amol',131.0,123.0,'Hinton',false],
+    [2014,4,'Steg',119.0,80.0,'Baldy',false],
+    [2014,4,'Boone',139.0,123.0,'Declan',false],
+    [2014,4,'Brad',123.0,117.0,'Callie',false],
+    [2014,4,'Jimmy',109.0,95.0,'Lance',false],
+    [2014,5,'Abhi',112.0,104.0,'Amol',false],
+    [2014,5,'Baldy',121.0,88.0,'Colton',false],
+    [2014,5,'Lance',134.0,120.0,'Boone',false],
+    [2014,5,'Jimmy',106.0,103.0,'Brad',false],
+    [2014,5,'Declan',147.0,106.0,'Callie',false],
+    [2014,5,'Hinton',95.0,68.0,'Steg',false],
+    [2014,6,'Abhi',156.0,125.0,'Boone',false],
+    [2014,6,'Lance',134.0,74.0,'Amol',false],
+    [2014,6,'Baldy',135.0,94.0,'Callie',false],
+    [2014,6,'Brad',121.0,116.0,'Steg',false],
+    [2014,6,'Colton',102.0,80.0,'Declan',false],
+    [2014,6,'Jimmy',163.0,122.0,'Hinton',false],
+    [2014,7,'Abhi',139.0,81.0,'Callie',false],
+    [2014,7,'Amol',103.0,81.0,'Jimmy',false],
+    [2014,7,'Declan',136.0,122.0,'Baldy',false],
+    [2014,7,'Boone',98.0,91.0,'Steg',false],
+    [2014,7,'Brad',85.0,83.0,'Hinton',false],
+    [2014,7,'Lance',138.0,118.0,'Colton',false],
+    [2014,8,'Declan',122.0,82.0,'Abhi',false],
+    [2014,8,'Brad',130.0,102.0,'Amol',false],
+    [2014,8,'Baldy',163.0,108.0,'Lance',false],
+    [2014,8,'Hinton',146.0,121.0,'Boone',false],
+    [2014,8,'Callie',129.0,116.0,'Steg',false],
+    [2014,8,'Jimmy',153.0,145.0,'Colton',false],
+    [2014,9,'Lance',127.0,101.0,'Abhi',false],
+    [2014,9,'Amol',111.0,107.0,'Boone',false],
+    [2014,9,'Jimmy',111.0,106.0,'Baldy',false],
+    [2014,9,'Brad',110.0,61.0,'Colton',false],
+    [2014,9,'Callie',156.0,107.0,'Hinton',false],
+    [2014,9,'Steg',91.0,86.0,'Declan',false],
+    [2014,10,'Abhi',138.0,72.0,'Jimmy',false],
+    [2014,10,'Callie',136.0,94.0,'Amol',false],
+    [2014,10,'Brad',109.0,87.0,'Baldy',false],
+    [2014,10,'Boone',118.0,106.0,'Colton',false],
+    [2014,10,'Declan',171.0,125.0,'Hinton',false],
+    [2014,10,'Lance',136.0,120.0,'Steg',false],
+    [2014,11,'Abhi',105.0,105.0,'Brad',true],
+    [2014,11,'Declan',120.0,91.0,'Amol',false],
+    [2014,11,'Boone',89.0,77.0,'Baldy',false],
+    [2014,11,'Colton',122.0,117.0,'Callie',false],
+    [2014,11,'Lance',105.0,76.0,'Hinton',false],
+    [2014,11,'Jimmy',119.0,116.0,'Steg',false],
+    [2014,12,'Abhi',147.0,103.0,'Boone',false],
+    [2014,12,'Lance',134.0,118.0,'Amol',false],
+    [2014,12,'Callie',110.0,92.0,'Baldy',false],
+    [2014,12,'Brad',102.0,102.0,'Steg',true],
+    [2014,12,'Declan',156.0,85.0,'Colton',false],
+    [2014,12,'Jimmy',137.0,118.0,'Hinton',false],
+    [2014,13,'Callie',142.0,90.0,'Abhi',false],
+    [2014,13,'Amol',136.0,94.0,'Jimmy',false],
+    [2014,13,'Declan',150.0,115.0,'Baldy',false],
+    [2014,13,'Boone',122.0,105.0,'Steg',false],
+    [2014,13,'Brad',176.0,120.0,'Hinton',false],
+    [2014,13,'Colton',163.0,87.0,'Lance',false],
+    [2015,1,'Abhi',113.0,113.0,'Jack',false],
+    [2015,1,'Amol',117.0,106.0,'Colton',false],
+    [2015,1,'Baldy',115.0,111.0,'Hinton',false],
+    [2015,1,'Boone',122.0,105.0,'Brad',false],
+    [2015,1,'Declan',154.0,125.0,'Lance',false],
+    [2015,1,'Jimmy',147.0,85.0,'Milan',false],
+    [2015,2,'Baldy',127.0,78.0,'Abhi',false],
+    [2015,2,'Amol',131.0,96.0,'Jack',false],
+    [2015,2,'Milan',119.0,75.0,'Boone',false],
+    [2015,2,'Lance',137.0,123.0,'Brad',false],
+    [2015,2,'Colton',111.0,89.0,'Hinton',false],
+    [2015,2,'Jimmy',118.0,84.0,'Declan',false],
+    [2015,3,'Abhi',151.0,147.0,'Hinton',false],
+    [2015,3,'Baldy',131.0,105.0,'Amol',false],
+    [2015,3,'Jimmy',141.0,104.0,'Boone',false],
+    [2015,3,'Declan',130.0,127.0,'Brad',false],
+    [2015,3,'Colton',168.0,106.0,'Jack',false],
+    [2015,3,'Lance',159.0,64.0,'Milan',false],
+    [2015,4,'Colton',113.0,110.0,'Abhi',false],
+    [2015,4,'Amol',122.0,84.0,'Hinton',false],
+    [2015,4,'Jack',92.0,86.0,'Baldy',false],
+    [2015,4,'Boone',120.0,95.0,'Declan',false],
+    [2015,4,'Milan',107.0,89.0,'Brad',false],
+    [2015,4,'Lance',103.0,95.0,'Jimmy',false],
+    [2015,5,'Amol',113.0,99.0,'Abhi',false],
+    [2015,5,'Baldy',142.0,120.0,'Colton',false],
+    [2015,5,'Boone',118.0,109.0,'Lance',false],
+    [2015,5,'Jimmy',112.0,107.0,'Brad',false],
+    [2015,5,'Declan',121.0,89.0,'Milan',false],
+    [2015,5,'Jack',131.0,98.0,'Hinton',false],
+    [2015,6,'Boone',108.0,85.0,'Abhi',false],
+    [2015,6,'Lance',125.0,99.0,'Amol',false],
+    [2015,6,'Baldy',143.0,85.0,'Milan',false],
+    [2015,6,'Jack',110.0,89.0,'Brad',false],
+    [2015,6,'Declan',145.0,135.0,'Colton',false],
+    [2015,6,'Jimmy',148.0,123.0,'Hinton',false],
+    [2015,7,'Abhi',105.0,48.0,'Milan',false],
+    [2015,7,'Amol',149.0,129.0,'Jimmy',false],
+    [2015,7,'Declan',137.0,94.0,'Baldy',false],
+    [2015,7,'Boone',127.0,70.0,'Jack',false],
+    [2015,7,'Brad',135.0,121.0,'Hinton',false],
+    [2015,7,'Lance',121.0,115.0,'Colton',false],
+    [2015,8,'Abhi',114.0,95.0,'Declan',false],
+    [2015,8,'Amol',154.0,125.0,'Brad',false],
+    [2015,8,'Baldy',129.0,121.0,'Lance',false],
+    [2015,8,'Hinton',114.0,94.0,'Boone',false],
+    [2015,8,'Jimmy',152.0,111.0,'Colton',false],
+    [2015,8,'Milan',100.0,98.0,'Jack',false],
+    [2015,9,'Lance',116.0,81.0,'Abhi',false],
+    [2015,9,'Amol',130.0,123.0,'Boone',false],
+    [2015,9,'Jimmy',114.0,96.0,'Baldy',false],
+    [2015,9,'Colton',190.0,142.0,'Brad',false],
+    [2015,9,'Declan',153.0,83.0,'Jack',false],
+    [2015,9,'Hinton',106.0,71.0,'Milan',false],
+    [2015,10,'Jimmy',110.0,84.0,'Abhi',false],
+    [2015,10,'Amol',146.0,49.0,'Milan',false],
+    [2015,10,'Brad',102.0,99.0,'Baldy',false],
+    [2015,10,'Colton',117.0,102.0,'Boone',false],
+    [2015,10,'Declan',128.0,102.0,'Hinton',false],
+    [2015,10,'Lance',108.0,98.0,'Jack',false],
+    [2015,11,'Brad',139.0,88.0,'Abhi',false],
+    [2015,11,'Declan',93.0,85.0,'Amol',false],
+    [2015,11,'Baldy',81.0,78.0,'Boone',false],
+    [2015,11,'Milan',77.0,68.0,'Colton',false],
+    [2015,11,'Lance',131.0,79.0,'Hinton',false],
+    [2015,11,'Jack',83.0,83.0,'Jimmy',true],
+    [2015,12,'Abhi',133.0,86.0,'Boone',false],
+    [2015,12,'Lance',132.0,121.0,'Amol',false],
+    [2015,12,'Baldy',132.0,114.0,'Milan',false],
+    [2015,12,'Jack',118.0,107.0,'Brad',false],
+    [2015,12,'Colton',129.0,111.0,'Declan',false],
+    [2015,12,'Jimmy',124.0,94.0,'Hinton',false],
+    [2015,13,'Abhi',94.0,93.0,'Milan',false],
+    [2015,13,'Jimmy',133.0,47.0,'Amol',false],
+    [2015,13,'Declan',111.0,0.0,'Baldy',false],
+    [2015,13,'Jack',134.0,125.0,'Boone',false],
+    [2015,13,'Brad',131.0,110.0,'Hinton',false],
+    [2015,13,'Lance',156.0,110.0,'Colton',false],
+    [2016,1,'Abhi',144.0,95.0,'Jack',false],
+    [2016,1,'Amol',157.0,96.0,'Colton',false],
+    [2016,1,'Hinton',136.0,113.0,'Baldy',false],
+    [2016,1,'Brad',141.0,97.0,'Boone',false],
+    [2016,1,'Declan',134.0,130.0,'Lance',false],
+    [2016,1,'Jimmy',139.0,100.0,'Thano',false],
+    [2016,2,'Baldy',108.0,99.0,'Abhi',false],
+    [2016,2,'Amol',122.0,94.0,'Jack',false],
+    [2016,2,'Boone',109.0,102.0,'Thano',false],
+    [2016,2,'Lance',120.0,104.0,'Brad',false],
+    [2016,2,'Colton',111.0,74.0,'Hinton',false],
+    [2016,2,'Jimmy',146.0,113.0,'Declan',false],
+    [2016,3,'Hinton',94.0,64.0,'Abhi',false],
+    [2016,3,'Amol',135.0,99.0,'Baldy',false],
+    [2016,3,'Boone',100.0,95.0,'Jimmy',false],
+    [2016,3,'Brad',144.0,99.0,'Declan',false],
+    [2016,3,'Colton',124.0,98.0,'Jack',false],
+    [2016,3,'Lance',168.0,91.0,'Thano',false],
+    [2016,4,'Colton',128.0,108.0,'Abhi',false],
+    [2016,4,'Amol',124.0,61.0,'Hinton',false],
+    [2016,4,'Jack',94.0,47.0,'Baldy',false],
+    [2016,4,'Declan',109.0,103.0,'Boone',false],
+    [2016,4,'Brad',130.0,122.0,'Thano',false],
+    [2016,4,'Jimmy',151.0,145.0,'Lance',false],
+    [2016,5,'Abhi',147.0,140.0,'Amol',false],
+    [2016,5,'Colton',92.0,83.0,'Baldy',false],
+    [2016,5,'Boone',142.0,118.0,'Lance',false],
+    [2016,5,'Jimmy',116.0,107.0,'Brad',false],
+    [2016,5,'Declan',144.0,100.0,'Thano',false],
+    [2016,5,'Hinton',118.0,69.0,'Jack',false],
+    [2016,6,'Abhi',105.0,104.0,'Boone',false],
+    [2016,6,'Amol',127.0,93.0,'Lance',false],
+    [2016,6,'Thano',106.0,80.0,'Baldy',false],
+    [2016,6,'Jack',107.0,69.0,'Brad',false],
+    [2016,6,'Declan',100.0,86.0,'Colton',false],
+    [2016,6,'Hinton',138.0,123.0,'Jimmy',false],
+    [2016,7,'Abhi',136.0,106.0,'Thano',false],
+    [2016,7,'Jimmy',148.0,137.0,'Amol',false],
+    [2016,7,'Declan',134.0,93.0,'Baldy',false],
+    [2016,7,'Jack',136.0,89.0,'Boone',false],
+    [2016,7,'Hinton',112.0,62.0,'Brad',false],
+    [2016,7,'Lance',115.0,84.0,'Colton',false],
+    [2016,8,'Declan',139.0,100.0,'Abhi',false],
+    [2016,8,'Brad',139.0,99.0,'Amol',false],
+    [2016,8,'Lance',114.0,107.0,'Baldy',false],
+    [2016,8,'Hinton',111.0,94.0,'Boone',false],
+    [2016,8,'Jimmy',103.0,88.0,'Colton',false],
+    [2016,8,'Thano',124.0,104.0,'Jack',false],
+    [2016,9,'Lance',123.0,88.0,'Abhi',false],
+    [2016,9,'Amol',135.0,113.0,'Boone',false],
+    [2016,9,'Jimmy',118.0,98.0,'Baldy',false],
+    [2016,9,'Colton',137.0,98.0,'Brad',false],
+    [2016,9,'Jack',124.0,100.0,'Declan',false],
+    [2016,9,'Hinton',126.0,116.0,'Thano',false],
+    [2016,10,'Abhi',126.0,121.0,'Jimmy',false],
+    [2016,10,'Amol',121.0,85.0,'Thano',false],
+    [2016,10,'Brad',119.0,82.0,'Baldy',false],
+    [2016,10,'Boone',160.0,115.0,'Colton',false],
+    [2016,10,'Declan',148.0,87.0,'Hinton',false],
+    [2016,10,'Lance',125.0,113.0,'Jack',false],
+    [2016,11,'Abhi',104.0,95.0,'Brad',false],
+    [2016,11,'Declan',113.0,96.0,'Amol',false],
+    [2016,11,'Baldy',107.0,96.0,'Boone',false],
+    [2016,11,'Colton',103.0,97.0,'Thano',false],
+    [2016,11,'Lance',142.0,77.0,'Hinton',false],
+    [2016,11,'Jimmy',103.0,96.0,'Jack',false],
+    [2016,12,'Boone',103.0,96.0,'Abhi',false],
+    [2016,12,'Lance',143.0,121.0,'Amol',false],
+    [2016,12,'Thano',102.0,100.0,'Baldy',false],
+    [2016,12,'Brad',170.0,108.0,'Jack',false],
+    [2016,12,'Declan',109.0,90.0,'Colton',false],
+    [2016,12,'Jimmy',120.0,75.0,'Hinton',false],
+    [2016,13,'Abhi',118.0,94.0,'Thano',false],
+    [2016,13,'Jimmy',113.0,105.0,'Amol',false],
+    [2016,13,'Declan',157.0,117.0,'Baldy',false],
+    [2016,13,'Boone',95.0,92.0,'Jack',false],
+    [2016,13,'Brad',122.0,67.0,'Hinton',false],
+    [2016,13,'Lance',131.0,125.0,'Colton',false],
+    [2017,1,'Amol',131.0,67.0,'Abhi',false],
+    [2017,1,'Jimmy',98.0,61.0,'Baldy',false],
+    [2017,1,'Boone',113.0,96.0,'Hinton',false],
+    [2017,1,'Brad',125.0,93.0,'Declan',false],
+    [2017,1,'Jared',118.0,86.0,'Colton',false],
+    [2017,1,'Lance',124.0,103.0,'Kyle',false],
+    [2017,2,'Abhi',132.0,106.0,'Brad',false],
+    [2017,2,'Amol',135.0,100.0,'Hinton',false],
+    [2017,2,'Baldy',129.0,67.0,'Jared',false],
+    [2017,2,'Boone',109.0,90.0,'Jimmy',false],
+    [2017,2,'Lance',123.0,76.0,'Colton',false],
+    [2017,2,'Kyle',116.0,107.0,'Declan',false],
+    [2017,3,'Abhi',122.0,105.0,'Boone',false],
+    [2017,3,'Brad',117.0,113.0,'Amol',false],
+    [2017,3,'Colton',89.0,80.0,'Baldy',false],
+    [2017,3,'Declan',138.0,136.0,'Lance',false],
+    [2017,3,'Hinton',141.0,80.0,'Jimmy',false],
+    [2017,3,'Kyle',126.0,98.0,'Jared',false],
+    [2017,4,'Baldy',137.0,100.0,'Abhi',false],
+    [2017,4,'Amol',102.0,82.0,'Jared',false],
+    [2017,4,'Declan',140.0,98.0,'Boone',false],
+    [2017,4,'Brad',105.0,73.0,'Colton',false],
+    [2017,4,'Hinton',95.0,88.0,'Kyle',false],
+    [2017,4,'Lance',132.0,96.0,'Jimmy',false],
+    [2017,5,'Abhi',87.0,76.0,'Colton',false],
+    [2017,5,'Amol',111.0,90.0,'Baldy',false],
+    [2017,5,'Lance',132.0,75.0,'Boone',false],
+    [2017,5,'Brad',125.0,98.0,'Jared',false],
+    [2017,5,'Declan',150.0,119.0,'Hinton',false],
+    [2017,5,'Kyle',107.0,84.0,'Jimmy',false],
+    [2017,6,'Lance',115.0,87.0,'Abhi',false],
+    [2017,6,'Amol',132.0,121.0,'Declan',false],
+    [2017,6,'Boone',106.0,87.0,'Baldy',false],
+    [2017,6,'Brad',122.0,91.0,'Kyle',false],
+    [2017,6,'Jimmy',119.0,85.0,'Colton',false],
+    [2017,6,'Jared',131.0,108.0,'Hinton',false],
+    [2017,7,'Declan',114.0,84.0,'Abhi',false],
+    [2017,7,'Kyle',150.0,97.0,'Amol',false],
+    [2017,7,'Hinton',105.0,99.0,'Baldy',false],
+    [2017,7,'Boone',109.0,107.0,'Colton',false],
+    [2017,7,'Lance',100.0,88.0,'Brad',false],
+    [2017,7,'Jimmy',133.0,130.0,'Jared',false],
+    [2017,8,'Abhi',121.0,86.0,'Kyle',false],
+    [2017,8,'Colton',101.0,78.0,'Amol',false],
+    [2017,8,'Declan',149.0,100.0,'Baldy',false],
+    [2017,8,'Jared',113.0,80.0,'Boone',false],
+    [2017,8,'Jimmy',128.0,95.0,'Brad',false],
+    [2017,8,'Hinton',132.0,102.0,'Lance',false],
+    [2017,9,'Abhi',130.0,85.0,'Hinton',false],
+    [2017,9,'Jimmy',102.0,94.0,'Amol',false],
+    [2017,9,'Baldy',126.0,92.0,'Lance',false],
+    [2017,9,'Boone',113.0,100.0,'Brad',false],
+    [2017,9,'Kyle',91.0,90.0,'Colton',false],
+    [2017,9,'Declan',118.0,105.0,'Jared',false],
+    [2017,10,'Jimmy',128.0,118.0,'Abhi',false],
+    [2017,10,'Boone',109.0,96.0,'Amol',false],
+    [2017,10,'Baldy',133.0,92.0,'Kyle',false],
+    [2017,10,'Hinton',90.0,88.0,'Brad',false],
+    [2017,10,'Declan',118.0,105.0,'Colton',false],
+    [2017,10,'Jared',131.0,91.0,'Lance',false],
+    [2017,11,'Abhi',133.0,123.0,'Jared',false],
+    [2017,11,'Amol',89.0,76.0,'Brad',false],
+    [2017,11,'Baldy',96.0,95.0,'Colton',false],
+    [2017,11,'Boone',165.0,97.0,'Kyle',false],
+    [2017,11,'Declan',131.0,91.0,'Lance',false],
+    [2017,11,'Hinton',146.0,120.0,'Jimmy',false],
+    [2017,12,'Abhi',132.0,70.0,'Brad',false],
+    [2017,12,'Amol',88.0,57.0,'Lance',false],
+    [2017,12,'Jared',79.0,77.0,'Baldy',false],
+    [2017,12,'Boone',131.0,126.0,'Jimmy',false],
+    [2017,12,'Colton',162.0,97.0,'Hinton',false],
+    [2017,12,'Declan',144.0,121.0,'Kyle',false],
+    [2017,13,'Amol',100.0,92.0,'Abhi',false],
+    [2017,13,'Baldy',117.0,93.0,'Brad',false],
+    [2017,13,'Boone',165.0,87.0,'Hinton',false],
+    [2017,13,'Jared',100.0,78.0,'Colton',false],
+    [2017,13,'Declan',128.0,102.0,'Jimmy',false],
+    [2017,13,'Kyle',120.0,101.0,'Lance',false],
+    [2018,1,'Amol',110.0,72.0,'Abhi',false],
+    [2018,1,'Hinton',153.0,95.0,'Boone',false],
+    [2018,1,'David',120.0,93.0,'Brad',false],
+    [2018,1,'Lance',131.0,105.0,'Colton',false],
+    [2018,1,'Declan',140.0,122.0,'Jimmy',false],
+    [2018,1,'Kyle',116.0,108.0,'Jared',false],
+    [2018,2,'Abhi',107.0,98.0,'Jimmy',false],
+    [2018,2,'Hinton',112.0,96.0,'Amol',false],
+    [2018,2,'Boone',147.0,134.0,'David',false],
+    [2018,2,'Jared',137.0,132.0,'Brad',false],
+    [2018,2,'Colton',126.0,113.0,'Declan',false],
+    [2018,2,'Kyle',136.0,130.0,'Lance',false],
+    [2018,3,'Boone',149.0,72.0,'Abhi',false],
+    [2018,3,'Amol',117.0,73.0,'Jimmy',false],
+    [2018,3,'Kyle',126.0,73.0,'Brad',false],
+    [2018,3,'Colton',158.0,111.0,'Jared',false],
+    [2018,3,'Hinton',136.0,123.0,'David',false],
+    [2018,3,'Lance',116.0,106.0,'Declan',false],
+    [2018,4,'Abhi',151.0,117.0,'Brad',false],
+    [2018,4,'Jared',133.0,108.0,'Amol',false],
+    [2018,4,'Declan',145.0,106.0,'Boone',false],
+    [2018,4,'Hinton',111.0,106.0,'Colton',false],
+    [2018,4,'Lance',158.0,139.0,'David',false],
+    [2018,4,'Kyle',153.0,93.0,'Jimmy',false],
+    [2018,5,'Abhi',138.0,116.0,'Kyle',false],
+    [2018,5,'Amol',99.0,86.0,'Brad',false],
+    [2018,5,'Boone',120.0,110.0,'Lance',false],
+    [2018,5,'David',142.0,137.0,'Colton',false],
+    [2018,5,'Declan',129.0,76.0,'Hinton',false],
+    [2018,5,'Jimmy',111.0,100.0,'Jared',false],
+    [2018,6,'Lance',129.0,99.0,'Abhi',false],
+    [2018,6,'Declan',151.0,143.0,'Amol',false],
+    [2018,6,'Boone',142.0,68.0,'Brad',false],
+    [2018,6,'Jimmy',129.0,107.0,'Colton',false],
+    [2018,6,'David',170.0,136.0,'Kyle',false],
+    [2018,6,'Jared',173.0,76.0,'Hinton',false],
+    [2018,7,'Declan',107.0,73.0,'Abhi',false],
+    [2018,7,'Amol',157.0,107.0,'Colton',false],
+    [2018,7,'Kyle',126.0,100.0,'Boone',false],
+    [2018,7,'Brad',105.0,85.0,'Hinton',false],
+    [2018,7,'David',179.0,135.0,'Jared',false],
+    [2018,7,'Jimmy',104.0,89.0,'Lance',false],
+    [2018,8,'Colton',138.0,136.0,'Abhi',false],
+    [2018,8,'Kyle',126.0,121.0,'Amol',false],
+    [2018,8,'Boone',127.0,124.0,'Jared',false],
+    [2018,8,'Declan',125.0,107.0,'Brad',false],
+    [2018,8,'David',112.0,52.0,'Jimmy',false],
+    [2018,8,'Hinton',122.0,105.0,'Lance',false],
+    [2018,9,'Abhi',136.0,125.0,'Hinton',false],
+    [2018,9,'David',130.0,73.0,'Amol',false],
+    [2018,9,'Boone',123.0,111.0,'Jimmy',false],
+    [2018,9,'Lance',118.0,93.0,'Brad',false],
+    [2018,9,'Colton',96.0,92.0,'Kyle',false],
+    [2018,9,'Declan',162.0,125.0,'Jared',false],
+    [2018,10,'Abhi',118.0,105.0,'David',false],
+    [2018,10,'Boone',128.0,103.0,'Amol',false],
+    [2018,10,'Colton',125.0,123.0,'Brad',false],
+    [2018,10,'Kyle',134.0,125.0,'Declan',false],
+    [2018,10,'Jimmy',133.0,118.0,'Hinton',false],
+    [2018,10,'Jared',129.0,129.0,'Lance',true],
+    [2018,11,'Jared',121.0,64.0,'Abhi',false],
+    [2018,11,'Amol',147.0,102.0,'Jimmy',false],
+    [2018,11,'Colton',120.0,93.0,'Boone',false],
+    [2018,11,'Brad',119.0,104.0,'Kyle',false],
+    [2018,11,'David',179.0,136.0,'Hinton',false],
+    [2018,11,'Declan',131.0,116.0,'Lance',false],
+    [2018,12,'Abhi',129.0,114.0,'Jimmy',false],
+    [2018,12,'Amol',130.0,127.0,'Lance',false],
+    [2018,12,'David',144.0,132.0,'Boone',false],
+    [2018,12,'Brad',148.0,109.0,'Jared',false],
+    [2018,12,'Colton',123.0,95.0,'Declan',false],
+    [2018,12,'Kyle',118.0,97.0,'Hinton',false],
+    [2018,13,'Amol',120.0,95.0,'Abhi',false],
+    [2018,13,'Boone',95.0,71.0,'Hinton',false],
+    [2018,13,'Brad',97.0,92.0,'Jimmy',false],
+    [2018,13,'Colton',133.0,75.0,'Lance',false],
+    [2018,13,'David',177.0,106.0,'Declan',false],
+    [2018,13,'Jared',110.0,109.0,'Kyle',false],
+  ]
+};
 
 // ══════════════════════════════════════════════════════════════
 // UDFA AUCTION DATA
@@ -1894,7 +2326,64 @@ const ROOKIE_DRAFT_IDS={
 // DB.draftData: year -> [{mgr, player, pid, pos, team, round, pickNo, source:'Draft'}]
 // Populated at load time from Sleeper API
 
-// ── LOAD ROOKIE DRAFT PICKS FROM SLEEPER ─────────────────────
+// ── ESPN ERA HELPERS ─────────────────────────────────────────
+// Build per-manager records for a given year from ESPN_DATA
+function getEspnSeasonRecord(year){
+  const records={};
+  ESPN_DATA.matchups.filter(m=>m[0]===year).forEach(([yr,wk,w,sw,sl,l,tie])=>{
+    if(!records[w])records[w]={wins:0,losses:0,ties:0,pf:0,pa:0,manager:w};
+    if(!records[l])records[l]={wins:0,losses:0,ties:0,pf:0,pa:0,manager:l};
+    records[w].pf+=sw; records[w].pa+=sl;
+    records[l].pf+=sl; records[l].pa+=sw;
+    if(tie){records[w].ties++;records[l].ties++;}
+    else{records[w].wins++;records[l].losses++;}
+  });
+  return records;
+}
+
+// Build week-by-week matchup list for a year
+function getEspnMatchups(year){
+  const byWeek={};
+  ESPN_DATA.matchups.filter(m=>m[0]===year).forEach(([yr,wk,w,sw,sl,l,tie])=>{
+    if(!byWeek[wk])byWeek[wk]=[];
+    byWeek[wk].push({winner:w,winnerScore:sw,loser:l,loserScore:sl,tie,week:wk,year});
+  });
+  return byWeek;
+}
+
+// All-time record between two managers (ESPN + Sleeper)
+function getAllTimeH2H(mgr1, mgr2){
+  let w1=0,l1=0,t=0;
+  // ESPN era
+  ESPN_DATA.matchups.forEach(([yr,wk,w,sw,sl,l,tie])=>{
+    const m1=(w===mgr1&&l===mgr2)||(w===mgr2&&l===mgr1);
+    if(!m1)return;
+    if(tie){t++;}
+    else if(w===mgr1)w1++;
+    else l1++;
+  });
+  // Sleeper era — use existing getH2HRecord if available
+  const sleeperH2H=getH2HRecord(mgr1,mgr2);
+  w1+=sleeperH2H.w1; l1+=sleeperH2H.w2;
+  return{w1,l1,t};
+}
+
+// Combined all-time record for a manager (ESPN + Sleeper)
+function getAllTimeRecord(mgr){
+  let wins=0,losses=0,ties=0,pf=0,pa=0;
+  // ESPN era
+  ESPN_DATA.matchups.forEach(([yr,wk,w,sw,sl,l,tie])=>{
+    if(w===mgr){pf+=sw;pa+=sl;if(tie)ties++;else wins++;}
+    else if(l===mgr){pf+=sl;pa+=sw;if(tie)ties++;else losses++;}
+  });
+  // Sleeper era
+  DB.seasons.forEach(s=>{
+    const team=s.teams.find(t=>t.managerKey===mgr);
+    if(!team)return;
+    wins+=team.wins;losses+=team.losses;pf+=team.pf;pa+=team.pa;
+  });
+  return{wins,losses,ties,pf,pa};
+}
 async function loadAllDraftPicks(){
   DB.draftData={};
   DB.draftUnmatched={}; // year -> [{pick_no, player_name, pid}] players with no playerMeta match
@@ -2670,11 +3159,14 @@ function buildApp(){
   const allWeeks=[...new Set(DB.seasons.flatMap(s=>Object.keys(s.matchupsByWeek).map(Number)))].sort((a,b)=>a-b);
   document.getElementById('wk-sel').innerHTML='<option value="all">All weeks</option>'+allWeeks.map(w=>`<option value="${w}">Week ${w}</option>`).join('');
   document.getElementById('tm-sel').innerHTML='<option value="all">All managers</option>'+allManagerKeys.map(k=>`<option value="${k}">${k}</option>`).join('');
-  // H2H selects — by manager key
-  const mgrOpts=allManagerKeys.map(k=>`<option value="${k}">${k}</option>`).join('');
+  // H2H selects — combine Sleeper managers + ESPN-era managers
+  const espnMgrs=new Set();
+  ESPN_DATA.matchups.forEach(([yr,wk,w,sw,sl,l])=>{espnMgrs.add(w);espnMgrs.add(l);});
+  const allH2HMgrs=[...new Set([...allManagerKeys,...espnMgrs])].sort();
+  const mgrOpts=allH2HMgrs.map(k=>`<option value="${k}">${k}</option>`).join('');
   document.getElementById('h2h-t1').innerHTML=mgrOpts;
   document.getElementById('h2h-t2').innerHTML=mgrOpts;
-  if(allManagerKeys.length>1)document.getElementById('h2h-t2').selectedIndex=1;
+  if(allH2HMgrs.length>1)document.getElementById('h2h-t2').selectedIndex=1;
   // Award year sel
   document.getElementById('award-yr-sel').innerHTML='<option value="all">All seasons</option>'+
     Object.keys(PLAYER_AWARDS).map(y=>`<option value="${y}">${y}</option>`).join('');
@@ -2747,11 +3239,10 @@ function renderMetrics(){
   const seasonV=document.getElementById('s-sel').value;
   const isAllTime=seasonV==='all';
 
-  let wins=0,losses=0,pf=0,pa=0;
-  seasons.forEach(s=>{
-    const me=s.teams.find(t=>t.isMe);
-    if(me){wins+=me.wins;losses+=me.losses;pf+=me.pf;pa+=me.pa;}
-  });
+  const myKey=sleeperToManagerKey(DB.username)||DB.myTeamName||DB.username||'You';
+  const combined=getAllTimeRecord(myKey);
+  const wins=combined.wins,losses=combined.losses,ties=combined.ties;
+  const pf=combined.pf,pa=combined.pa;
   const ppg=wins+losses>0?(pf/(wins+losses)).toFixed(1):0;
   const papg=wins+losses>0?(pa/(wins+losses)).toFixed(1):0;
   const myManagerKey=sleeperToManagerKey(DB.username)||DB.myTeamName||DB.username||'You';
@@ -2774,8 +3265,8 @@ function renderMetrics(){
     </div>
     <div class="metric gold">
       <div class="ml">My record</div>
-      <div class="mv">${wins}–${losses}</div>
-      <div class="ms">${wins+losses>0?((wins/(wins+losses))*100).toFixed(0)+'% win rate':''}</div>
+      <div class="mv">${wins}–${losses}${ties?`–${ties}`:''}</div>
+      <div class="ms">${wins+losses+ties>0?((wins/(wins+losses+ties))*100).toFixed(0)+'% win rate':''}</div>
     </div>`;
 
   // My Team context
@@ -3497,25 +3988,48 @@ function renderTimeline(){
 // ══════════════════════════════════════════════════════════════
 // RENDER: STANDINGS
 // ══════════════════════════════════════════════════════════════
+let standingsDynastyOnly=false;
+function toggleStandingsDynasty(){
+  standingsDynastyOnly=!standingsDynastyOnly;
+  document.getElementById('standings-dynasty-btn')?.classList.toggle('active',standingsDynastyOnly);
+  renderStandings();
+}
+
 function renderStandings(){
-  const seasons=getSeasons();
-  document.getElementById('standings-sub').textContent=document.getElementById('s-sel').value==='all'?
-    `All seasons · ${DB.seasons.length} years tracked`:`${document.getElementById('s-sel').value} season`;
-  const agg={};
-  seasons.forEach(s=>s.teams.forEach(t=>{
-    const key=t.managerKey||t.name;
-    if(!agg[key])agg[key]={wins:0,losses:0,pf:0,pa:0,isMe:t.isMe,manager:t.manager,managerKey:key,latestTeamName:t.name};
-    agg[key].wins+=t.wins;agg[key].losses+=t.losses;agg[key].pf+=t.pf;agg[key].pa+=t.pa;
-    agg[key].latestTeamName=t.name; // keep most recent team name
-    if(t.isMe)agg[key].isMe=true;
-  }));
-  const champCt={};
-  Object.entries(CHAMPIONS).forEach(([,m])=>champCt[m]=(champCt[m]||0)+1);
-  const rows=Object.entries(agg).map(([key,d])=>{
-    const g=d.wins+d.losses;
-    return{name:key,...d,pct:g?d.wins/g:0,titles:champCt[key]||0};
+  const body=document.getElementById('standings-body');
+  const sub=document.getElementById('standings-sub');
+  const champCt={};Object.values(CHAMPIONS).forEach(m=>champCt[m]=(champCt[m]||0)+1);
+
+  const mgrs={};
+  const addRecord=(mgr,w,l,t,pf,pa)=>{
+    if(!mgrs[mgr])mgrs[mgr]={managerKey:mgr,wins:0,losses:0,ties:0,pf:0,pa:0};
+    mgrs[mgr].wins+=w;mgrs[mgr].losses+=l;mgrs[mgr].ties+=t;
+    mgrs[mgr].pf+=pf;mgrs[mgr].pa+=pa;
+  };
+
+  if(!standingsDynastyOnly){
+    [2014,2015,2016,2017,2018].forEach(yr=>{
+      const rec=getEspnSeasonRecord(yr);
+      Object.values(rec).forEach(r=>addRecord(r.manager,r.wins,r.losses,r.ties,r.pf,r.pa));
+    });
+  }
+  DB.seasons.forEach(s=>{
+    s.teams.forEach(t=>{
+      const mgr=t.managerKey||t.name;
+      if(!mgr)return;
+      addRecord(mgr,t.wins,t.losses,0,t.pf,t.pa);
+    });
   });
-  // Sort
+
+  const myKey=sleeperToManagerKey(DB.username)||DB.username;
+  let rows=Object.values(mgrs).map(r=>({
+    ...r,isMe:r.managerKey===myKey,
+    pct:r.wins+r.losses+r.ties>0?r.wins/(r.wins+r.losses+r.ties):0,
+    titles:champCt[r.managerKey]||0
+  }));
+
+  if(sub)sub.textContent=standingsDynastyOnly?'Dynasty era · 2019–present':'All-time · 2014–present';
+
   const {col,dir}=standingsSort;
   rows.sort((a,b)=>{
     let av,bv;
@@ -3525,70 +4039,100 @@ function renderStandings(){
     else if(col==='pa'){av=a.pa;bv=b.pa;}
     else if(col==='titles'){av=a.titles;bv=b.titles;}
     else{av=a.wins;bv=b.wins;}
-    // (a-b)*dir: dir=-1 → descending (highest first), dir=1 → ascending
     return (av-bv)*dir||(b.pf-a.pf);
   });
-  const body=document.getElementById('standings-body');
-  if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty">No data loaded.</td></tr>';return;}
+
+  if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">No data loaded.</td></tr>';return;}
   body.innerHTML=rows.map((r,i)=>{
-    const g=r.wins+r.losses;const pct=g?(r.wins/g*100).toFixed(0):0;
-    const ct=champCt[r.managerKey]||0;
+    const g=r.wins+r.losses+r.ties;
+    const pct=g?(r.wins/g*100).toFixed(0):0;
     return`<tr class="${r.isMe?'highlight':''}">
       <td><span class="rank">${i+1}</span></td>
-      <td><div class="tcell"><div class="av${r.isMe?' me':''}">${getInitials(r.name)}</div>
-      <div><div class="tname${r.isMe?' me':''}">${r.name}${r.isMe?' ★':''}</div>
-      <div class="tmgr">${r.latestTeamName&&r.latestTeamName!==r.name?r.latestTeamName:r.manager}</div></div></div></td>
+      <td style="font-weight:500">${r.managerKey}</td>
       <td class="mono">${r.wins}–${r.losses}</td>
-      <td><div class="wbar"><div class="wtrack"><div class="wfill" style="width:${pct}%"></div></div><span class="mono" style="font-size:0.72rem">${pct}%</span></div></td>
-      <td class="mono">${r.pf.toFixed(1)}</td><td class="mono">${r.pa.toFixed(1)}</td>
-      <td>${ct?`<span class="badge bg-gold">🏆 ×${ct}</span>`:`<span class="badge bg-dim">—</span>`}</td>
+      <td class="mono">${r.ties||'—'}</td>
+      <td class="mono">${pct}%</td>
+      <td class="mono">${r.pf.toFixed(0)}</td>
+      <td class="mono">${r.pa.toFixed(0)}</td>
+      <td class="mono">${r.titles||'—'}</td>
     </tr>`;
   }).join('');
 }
 
-// ══════════════════════════════════════════════════════════════
 // RENDER: MATCHUPS
 // ══════════════════════════════════════════════════════════════
 function renderMatchups(){
-  const seasons=getSeasons();const wf=document.getElementById('wk-sel').value;const tf=document.getElementById('tm-sel').value;
-  const cards=[];
-  seasons.forEach(s=>{
-    const weeks=wf==='all'?Object.keys(s.matchupsByWeek):[wf];
-    weeks.forEach(w=>{
-      const mus=s.matchupsByWeek[w]||[];const byId={};
-      mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
-      Object.values(byId).forEach(pair=>{
-        if(pair.length<2)return;const[a,b]=pair;
-        const ta=s.teams.find(t=>t.rosterId===a.roster_id)||{name:'Team '+a.roster_id,managerKey:'',isMe:false};
-        const tb=s.teams.find(t=>t.rosterId===b.roster_id)||{name:'Team '+b.roster_id,managerKey:'',isMe:false};
-        if(tf!=='all'&&ta.managerKey!==tf&&tb.managerKey!==tf)return;
-        cards.push({year:s.year,week:parseInt(w),ta,tb,pa:a.points||0,pb:b.points||0,hasMe:ta.isMe||tb.isMe});
+  const el=document.getElementById('matchups-content');
+  const sSel=document.getElementById('matchup-season');
+  const wSel=document.getElementById('matchup-week');
+  if(!sSel||!wSel)return;
+
+  // Build year list: ESPN (2014-2018) + Sleeper
+  const sleeperYears=DB.seasons.map(s=>s.year);
+  const espnYears=[2014,2015,2016,2017,2018];
+  const allYears=[...new Set([...sleeperYears,...espnYears])].sort((a,b)=>b-a);
+
+  if(!sSel.children.length||sSel.options.length!==allYears.length+1){
+    sSel.innerHTML='<option value="all">All seasons</option>'+allYears.map(y=>`<option value="${y}">${y}</option>`).join('');
+  }
+
+  const selYear=sSel.value==='all'?null:parseInt(sSel.value);
+
+  // Determine matchups to show
+  let matchupCards=[];
+  const years=selYear?[selYear]:allYears;
+
+  years.forEach(yr=>{
+    const sleeperSeason=DB.seasons.find(s=>s.year===yr);
+    if(sleeperSeason){
+      // Sleeper era
+      Object.entries(sleeperSeason.matchupsByWeek).sort((a,b)=>b[0]-a[0]).forEach(([wk,mus])=>{
+        const byId={};
+        mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+        Object.values(byId).forEach(pair=>{
+          if(pair.length<2)return;
+          const[a,b]=pair;
+          const tA=sleeperSeason.teams.find(t=>t.rosterId===a.roster_id);
+          const tB=sleeperSeason.teams.find(t=>t.rosterId===b.roster_id);
+          matchupCards.push({yr,wk:parseInt(wk),t1:tA?.managerKey||'?',s1:a.points||0,t2:tB?.managerKey||'?',s2:b.points||0,tie:false});
+        });
       });
-    });
+    } else if(yr>=2014&&yr<=2018){
+      // ESPN era
+      const byWeek=getEspnMatchups(yr);
+      Object.entries(byWeek).sort((a,b)=>b[0]-a[0]).forEach(([wk,games])=>{
+        games.forEach(g=>{
+          matchupCards.push({yr,wk:parseInt(wk),t1:g.winner,s1:g.winnerScore,t2:g.loser,s2:g.loserScore,tie:g.tie});
+        });
+      });
+    }
   });
-  cards.sort((a,b)=>b.year-a.year||b.week-a.week);
-  const grid=document.getElementById('mu-grid');
-  if(!cards.length){grid.innerHTML='<div class="empty"><span class="ebig">—</span>No matchups found.</div>';return;}
-  grid.innerHTML=cards.map(c=>{
-    const aWin=c.pa>=c.pb;
-    const labelA=c.ta.managerKey||(c.ta.name);
-    const labelB=c.tb.managerKey||(c.tb.name);
-    return`<div class="mu-card${c.hasMe?' me-game':''}">
-      <div class="mu-meta">${c.year} · WK ${c.week}</div>
-      <div class="mu-teams">
-        <div class="mu-team">
-          <div class="mu-tname${c.ta.isMe?' me':''}">${labelA}${c.ta.isMe?' ★':''}</div>
-          <div style="font-size:0.65rem;color:var(--text3);margin-bottom:2px">${c.ta.name}</div>
-          <div class="mu-pts${aWin?' win':''}">${c.pa.toFixed(2)}</div></div>
-        <div class="mu-vs">vs</div>
-        <div class="mu-team r">
-          <div class="mu-tname${c.tb.isMe?' me':''}">${labelB}${c.tb.isMe?' ★':''}</div>
-          <div style="font-size:0.65rem;color:var(--text3);margin-bottom:2px">${c.tb.name}</div>
-          <div class="mu-pts${!aWin?' win':''}">${c.pb.toFixed(2)}</div></div>
+
+  // Week filter
+  const wks=[...new Set(matchupCards.map(m=>m.wk))].sort((a,b)=>b-a);
+  if(wSel.options.length!==wks.length+1){
+    wSel.innerHTML='<option value="all">All weeks</option>'+wks.map(w=>`<option value="${w}">Week ${w}</option>`).join('');
+  }
+  const selWk=wSel.value==='all'?null:parseInt(wSel.value);
+  if(selWk)matchupCards=matchupCards.filter(m=>m.wk===selWk);
+
+  matchupCards.sort((a,b)=>b.yr-a.yr||b.wk-a.wk);
+  const myKey=sleeperToManagerKey(DB.username)||DB.username;
+
+  el.innerHTML=matchupCards.map(m=>{
+    const isMyGame=m.t1===myKey||m.t2===myKey;
+    const winner=m.tie?null:(m.s1>=m.s2?m.t1:m.t2);
+    return`<div class="matchup-card${isMyGame?' highlight':''}">
+      <div class="mu-meta">Week ${m.wk} · ${m.yr}${m.tie?' · <span style="color:var(--gold)">TIE</span>':''}</div>
+      <div class="mu-row">
+        <span class="mu-team${winner===m.t1?' mu-winner':''}">${m.t1}</span>
+        <span class="mu-score">${m.s1.toFixed(1)}</span>
+        <span class="mu-vs">vs</span>
+        <span class="mu-score">${m.s2.toFixed(1)}</span>
+        <span class="mu-team${winner===m.t2?' mu-winner':''}">${m.t2}</span>
       </div>
-      <div class="mu-foot">${aWin?labelA:labelB} wins · margin ${Math.abs(c.pa-c.pb).toFixed(2)}</div>
     </div>`;
-  }).join('');
+  }).join('')||'<div class="empty">No matchups found.</div>';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3843,7 +4387,19 @@ function renderH2H(){
   const t2=document.getElementById('h2h-t2').value;
   const el=document.getElementById('h2h-content');
   if(t1===t2){el.innerHTML='<div class="empty">Select two different teams.</div>';return;}
-  const seasons=getSeasons();let t1w=0,t2w=0,ties=0;const gameRows=[];
+  let t1w=0,t2w=0,ties=0;const gameRows=[];
+
+  // ESPN era
+  ESPN_DATA.matchups.forEach(([yr,wk,w,sw,sl,l,tie])=>{
+    const isMatch=(w===t1&&l===t2)||(w===t2&&l===t1);
+    if(!isMatch)return;
+    const pt1=w===t1?sw:sl, pt2=w===t2?sw:sl;
+    if(tie)ties++;else if(pt1>pt2)t1w++;else t2w++;
+    gameRows.push({year:yr,week:wk,pt1,pt2,winner:tie?'Tie':pt1>pt2?t1:t2});
+  });
+
+  // Sleeper era
+  const seasons=getSeasons();
   seasons.forEach(s=>{
     Object.entries(s.matchupsByWeek).forEach(([w,mus])=>{
       const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
@@ -3852,7 +4408,6 @@ function renderH2H(){
         const ta=s.teams.find(t=>t.rosterId===a.roster_id);
         const tb=s.teams.find(t=>t.rosterId===b.roster_id);
         if(!ta||!tb)return;
-        // Match by managerKey (stable across seasons) instead of team name
         const isT1A=ta.managerKey===t1,isT1B=tb.managerKey===t1;
         const isT2A=ta.managerKey===t2,isT2B=tb.managerKey===t2;
         if(!((isT1A&&isT2B)||(isT1B&&isT2A)))return;
@@ -3863,6 +4418,7 @@ function renderH2H(){
       });
     });
   });
+
   gameRows.sort((a,b)=>b.year-a.year||b.week-a.week);
   el.innerHTML=`
     <div class="h2h-board">
@@ -3878,13 +4434,12 @@ function renderH2H(){
       <thead><tr><th>Season</th><th>Week</th><th>${t1}</th><th>${t2}</th><th>Result</th></tr></thead>
       <tbody>${gameRows.map(r=>`<tr>
         <td class="mono">${r.year}</td><td class="mono">Wk ${r.week}</td>
-        <td class="mono${r.winner===t1?' ':''}"><span${r.winner===t1?' style="color:var(--gold);font-weight:600"':''}>${r.pt1.toFixed(2)}</span></td>
-        <td class="mono${r.winner===t2?' ':''}"><span${r.winner===t2?' style="color:var(--gold);font-weight:600"':''}>${r.pt2.toFixed(2)}</span></td>
+        <td class="mono"><span${r.winner===t1?' style="color:var(--gold);font-weight:600"':''}>${r.pt1.toFixed(2)}</span></td>
+        <td class="mono"><span${r.winner===t2?' style="color:var(--gold);font-weight:600"':''}>${r.pt2.toFixed(2)}</span></td>
         <td><span class="badge ${r.winner===t1?'badge-QB':r.winner===t2?'badge-RB':'badge-WR'}">${r.winner}</span></td>
       </tr>`).join('')}</tbody>
-    </table></div>`:'<div class="empty">No direct matchups found in loaded seasons.</div>'}`;
+    </table></div>`:'<div class="empty">No direct matchups found.</div>'}`;
 }
-
 // ══════════════════════════════════════════════════════════════
 // RENDER: PLAYOFFS
 // ══════════════════════════════════════════════════════════════
@@ -3904,7 +4459,22 @@ function renderPlayoffs(){
   });
 
   function seedBadge(mgrName, year){
-    const seed=seedsByYear[year]?.[mgrName];
+    let seed=null;
+    if(year<=2018){
+      // Pull seed from hardcoded playoff data
+      const pr=PLAYOFF_RESULTS.find(p=>p.year===year);
+      if(pr){
+        pr.rounds.forEach(r=>{
+          r.games.forEach(g=>{
+            if(g.w===mgrName&&g.wSeed)seed=g.wSeed;
+            if(g.l===mgrName&&g.lSeed)seed=g.lSeed;
+          });
+          (r.byes||[]).forEach((b,i)=>{if(b===mgrName&&!seed)seed=i+1;});
+        });
+      }
+    } else {
+      seed=seedsByYear[year]?.[mgrName];
+    }
     if(!seed)return '';
     return `<span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text3);
       background:var(--surface2);border:1px solid var(--border2);border-radius:3px;
@@ -3912,19 +4482,26 @@ function renderPlayoffs(){
   }
 
   el.innerHTML=results.map(pr=>{
+    const isEspn=pr.year<=2018;
     return`<div style="margin-bottom:2.5rem">
       <div style="font-family:var(--font-display);font-size:1.2rem;letter-spacing:0.06em;color:var(--gold);margin-bottom:0.75rem;text-transform:uppercase">${pr.year} · Docile Cup</div>
       <div class="playoff-bracket">
         ${pr.rounds.map(round=>`<div>
           <div class="bracket-col-title">${round.round}</div>
+          ${(round.byes||[]).map(mgr=>`<div class="bracket-game" style="opacity:0.6">
+            <div class="bracket-team winner" style="display:flex;align-items:center;justify-content:space-between">
+              <span style="display:flex;align-items:center">${seedBadge(mgr,pr.year)}<span>${mgr}</span></span>
+              <span class="bracket-score" style="color:var(--text3);font-size:0.7rem">BYE</span>
+            </div>
+          </div>`).join('')}
           ${round.games.map(g=>`<div class="bracket-game${round.round==='Docile Cup'?' final':''}">
             <div class="bracket-team winner" style="display:flex;align-items:center;justify-content:space-between">
               <span style="display:flex;align-items:center">${seedBadge(g.w,pr.year)}<span>${g.w}</span></span>
-              <span class="bracket-score">${g.ws.toFixed(2)}</span>
+              <span class="bracket-score">${isEspn?g.ws.toFixed(1):g.ws.toFixed(2)}</span>
             </div>
             <div class="bracket-team" style="display:flex;align-items:center;justify-content:space-between">
               <span style="display:flex;align-items:center">${seedBadge(g.l,pr.year)}<span>${g.l}</span></span>
-              <span class="bracket-score">${g.ls.toFixed(2)}</span>
+              <span class="bracket-score">${isEspn?g.ls.toFixed(1):g.ls.toFixed(2)}</span>
             </div>
           </div>`).join('')}
         </div>`).join('')}
@@ -5774,39 +6351,52 @@ function renderMyScoring(){
 // ══════════════════════════════════════════════════════════════
 function renderMyH2H(){
   const el=document.getElementById('myh2h-content');
-  if(!DB.myStarters.length){el.innerHTML='<div class="empty">Load your data first.</div>';return;}
   const myKey=sleeperToManagerKey(DB.username)||DB.username;
-  // Get all managers
-  const mgrs=[...new Set(DB.seasons.flatMap(s=>s.teams.map(t=>t.managerKey)).filter(k=>k&&k!==myKey))].sort();
-  const records=mgrs.map(opp=>{
-    let w=0,l=0,games=[];
-    DB.seasons.forEach(s=>{
-      Object.entries(s.matchupsByWeek).forEach(([wk,mus])=>{
-        const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
-        Object.values(byId).forEach(pair=>{
-          if(pair.length<2)return;
-          const[a,b]=pair;
-          const ta=s.teams.find(t=>t.rosterId===a.roster_id);
-          const tb=s.teams.find(t=>t.rosterId===b.roster_id);
-          if(!ta||!tb)return;
-          const isMyA=ta.managerKey===myKey,isMyB=tb.managerKey===myKey;
-          const isOppA=ta.managerKey===opp,isOppB=tb.managerKey===opp;
-          if(!((isMyA&&isOppB)||(isMyB&&isOppA)))return;
-          const myPts=isMyA?a.points||0:b.points||0;
-          const oppPts=isOppA?a.points||0:b.points||0;
-          if(myPts>oppPts)w++;else l++;
-          games.push({year:s.year,week:parseInt(wk),myPts,oppPts,won:myPts>oppPts});
-        });
+  if(!myKey){el.innerHTML='<div class="empty">Load your data first.</div>';return;}
+
+  // Build all-time H2H from both ESPN and Sleeper data
+  const opponents={};
+  const addGame=(opp,myPts,oppPts,isTie)=>{
+    if(!opponents[opp])opponents[opp]={opp,w:0,l:0,t:0,games:[]};
+    opponents[opp].games.push({myPts,oppPts});
+    if(isTie)opponents[opp].t++;
+    else if(myPts>oppPts)opponents[opp].w++;
+    else opponents[opp].l++;
+  };
+
+  // ESPN era
+  ESPN_DATA.matchups.forEach(([yr,wk,w,sw,sl,l,tie])=>{
+    if(w===myKey)addGame(l,sw,sl,tie);
+    else if(l===myKey)addGame(w,sl,sw,tie);
+  });
+
+  // Sleeper era
+  DB.seasons.forEach(s=>{
+    const myTeam=s.teams.find(t=>t.isMe);
+    if(!myTeam)return;
+    Object.values(s.matchupsByWeek).forEach(weekMatchups=>{
+      const byId={};
+      weekMatchups.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
+      Object.values(byId).forEach(pair=>{
+        if(pair.length<2)return;
+        const myM=pair.find(m=>m.roster_id===s.myRosterId);
+        if(!myM)return;
+        const oppM=pair.find(m=>m.roster_id!==s.myRosterId);
+        if(!oppM)return;
+        const oppTeam=s.teams.find(t=>t.rosterId===oppM.roster_id);
+        const oppKey=oppTeam?.managerKey||oppTeam?.name;
+        if(!oppKey)return;
+        const myPts=myM.points||0,oppPts=oppM.points||0;
+        const isTie=myPts===oppPts&&myPts>0;
+        addGame(oppKey,myPts,oppPts,isTie);
       });
     });
-    return{opp,w,l,games};
-  }).filter(r=>r.w+r.l>0).sort((a,b)=>b.w+b.l-a.w-a.l);
+  });
 
-  const dir=myH2HSort.dir;
-  const col=myH2HSort.col;
-  const sorted=records.sort((a,b)=>{
-    const g1=a.w+a.l,g2=b.w+b.l;
-    const pct1=g1?a.w/g1:0,pct2=g2?b.w/g2:0;
+  const dir=myH2HSort.dir,col=myH2HSort.col;
+  const records=Object.values(opponents).sort((a,b)=>{
+    const g1=a.w+a.l+a.t,g2=b.w+b.l+b.t;
+    const pct1=g1?(a.w+a.t*0.5)/g1:0,pct2=g2?(b.w+b.t*0.5)/g2:0;
     const myAvg1=a.games.reduce((s,g)=>s+g.myPts,0)/(g1||1);
     const myAvg2=b.games.reduce((s,g)=>s+g.myPts,0)/(g2||1);
     const oppAvg1=a.games.reduce((s,g)=>s+g.oppPts,0)/(g1||1);
@@ -5816,26 +6406,29 @@ function renderMyH2H(){
     if(col==='pct')return(pct1-pct2)*dir;
     if(col==='myavg')return(myAvg1-myAvg2)*dir;
     if(col==='oppavg')return(oppAvg1-oppAvg2)*dir;
-    return(a.w-b.w)*dir;
+    return(b.w-a.w)*dir;
   });
+
   el.innerHTML=`<div class="tbl-wrap"><table>
     <thead><tr>
       <th>Opponent</th>
       <th class="sortable-th" onclick="sortMyH2H('w')" id="mhth-w">W <span class="sort-arrow">↓</span></th>
       <th class="sortable-th" onclick="sortMyH2H('l')" id="mhth-l">L <span class="sort-arrow"></span></th>
+      <th>T</th>
       <th class="sortable-th" onclick="sortMyH2H('pct')" id="mhth-pct">Win % <span class="sort-arrow"></span></th>
       <th class="sortable-th" onclick="sortMyH2H('myavg')" id="mhth-myavg">Avg scored <span class="sort-arrow"></span></th>
       <th class="sortable-th" onclick="sortMyH2H('oppavg')" id="mhth-oppavg">Avg allowed <span class="sort-arrow"></span></th>
     </tr></thead>
-    <tbody>${sorted.map(r=>{
-      const g=r.w+r.l;
+    <tbody>${records.map(r=>{
+      const g=r.w+r.l+r.t;
       const myAvg=r.games.reduce((a,b)=>a+b.myPts,0)/g;
       const oppAvg=r.games.reduce((a,b)=>a+b.oppPts,0)/g;
-      const pct=(r.w/g*100).toFixed(0);
+      const pct=((r.w+r.t*0.5)/g*100).toFixed(0);
       return`<tr>
         <td style="font-weight:500">${r.opp}</td>
         <td class="mono">${r.w}</td>
         <td class="mono">${r.l}</td>
+        <td class="mono">${r.t||'—'}</td>
         <td class="mono">${pct}%</td>
         <td class="mono">${myAvg.toFixed(1)}</td>
         <td class="mono">${oppAvg.toFixed(1)}</td>
@@ -5843,7 +6436,6 @@ function renderMyH2H(){
     }).join('')}
     </tbody></table></div>`;
 }
-
 // ══════════════════════════════════════════════════════════════
 // MY TEAM: MY TRADES
 // ══════════════════════════════════════════════════════════════
@@ -6516,15 +7108,28 @@ function renderMyTimeline(){
       ...(amolYears.includes(yr)?['😬']:[]),
       ...(binaYears.includes(yr)?['💩']:[]),
     ].join(' ');
-    // Finish: rank among all teams by wins then pf
-    let finish='—';
-    if(season){
+
+    let w='—',l='—',pf=null,pa=null,finish='—',name='—';
+
+    if(me){
+      // Sleeper era (2019+)
+      w=me.wins;l=me.losses;pf=me.pf;pa=me.pa;name=me.name||'—';
       const ranked=[...season.teams].sort((a,b)=>b.wins-a.wins||b.pf-a.pf);
       const idx=ranked.findIndex(t=>t.isMe);
       if(idx>=0)finish=`#${idx+1} of ${ranked.length}`;
+    } else if(yr>=2014&&yr<=2018){
+      // ESPN era
+      const rec=getEspnSeasonRecord(yr)[myKey];
+      if(rec){
+        w=rec.wins;l=rec.losses;pf=rec.pf;pa=rec.pa;
+        const finishOrder=ESPN_DATA.finishes[yr]||[];
+        const idx=finishOrder.indexOf(myKey);
+        if(idx>=0)finish=`#${idx+1} of ${finishOrder.length}`;
+      }
     }
-    return{yr,name:me?.name||'—',w:me?.wins??'—',l:me?.losses??'—',pf:me?.pf??null,pa:me?.pa??null,finish,trophies,loaded:!!me};
-  }).filter(r=>r.loaded||r.yr<2019);
+
+    return{yr,name,w,l,pf,pa,finish,trophies,loaded:me||yr<=2018};
+  }).filter(r=>r.loaded);
 
   el.innerHTML=`<div class="tbl-wrap"><table>
     <thead><tr><th>Year</th><th>Team name</th><th>Record</th><th>PF</th><th>PA</th><th>Finish</th><th></th></tr></thead>
