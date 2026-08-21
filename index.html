@@ -836,6 +836,11 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <div style="position:relative;width:100%;height:480px;background:var(--surface1);border:0.5px solid var(--border);border-radius:10px;padding:16px;box-sizing:border-box">
         <canvas id="pg-canvas"></canvas>
       </div>
+      <div id="pg-tap-info" style="display:none;margin-top:0.75rem;background:var(--surface1);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:0.82rem">
+        <div style="font-size:0.7rem;color:var(--text3);margin-bottom:4px">TAP AGAIN TO OPEN PLAYER CARD</div>
+        <div id="pg-tap-name" style="font-weight:600;color:var(--text);font-size:1rem;margin-bottom:6px"></div>
+        <div id="pg-tap-stats" style="color:var(--text2);line-height:1.7"></div>
+      </div>
       <div id="pg-stats" style="margin-top:0.75rem;font-size:0.75rem;color:var(--text3)"></div>
     </div>
 
@@ -3726,6 +3731,31 @@ const POS_COLORS={
   TE:'rgba(230,126,34,0.85)',K:'rgba(155,89,182,0.85)',DEF:'rgba(212,175,55,0.85)',DST:'rgba(212,175,55,0.85)'
 };
 
+function showPgTapInfo(d,xKey,yKey){
+  const panel=document.getElementById('pg-tap-info');
+  const nameEl=document.getElementById('pg-tap-name');
+  const statsEl=document.getElementById('pg-tap-stats');
+  if(!panel||!nameEl||!statsEl)return;
+  const isInt=(k)=>['starts','potg','potw','probowls','alldocile','draftpick'].includes(k);
+  const acqStr=d.acq
+    ?(d.acq.source==='Draft'?`${d.acq.year} Rd ${d.acq.round} (#${d.acq.pickNo})`
+      :d.acq.source==='Startup'?`2019 Startup Rd ${d.acq.round} (#${d.acq.pickNo})`
+      :`${d.acq.year} ${d.acq.source}`)
+    :'FA (free agent)';
+  nameEl.textContent=d.name;
+  statsEl.innerHTML=`
+    <span style="color:var(--text3)">${METRIC_LABELS[xKey]}:</span> ${typeof d.x==='number'?d.x.toFixed(isInt(xKey)?0:1):'—'}<br>
+    <span style="color:var(--text3)">${METRIC_LABELS[yKey]}:</span> ${typeof d.y==='number'?d.y.toFixed(isInt(yKey)?0:1):'—'}<br>
+    <span style="color:var(--text3)">Starts:</span> ${d.starts} &nbsp;·&nbsp; <span style="color:var(--text3)">Avg:</span> ${d.avg?.toFixed(1)}<br>
+    <span style="color:var(--text3)">Acquired:</span> ${acqStr}`;
+  panel.style.display='block';
+  // Auto-hide after 4 seconds if no second tap
+  clearTimeout(panel._hideTimer);
+  panel._hideTimer=setTimeout(()=>{
+    panel.style.display='none';
+  },4000);
+}
+
 function renderPlayerGraphs(){
   if(!DB.allStarters.length){
     document.getElementById('pg-stats').textContent='Load your data first.';return;
@@ -3836,13 +3866,18 @@ function renderPlayerGraphs(){
       data:{datasets},
       options:{
         responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'point',intersect:true},
         plugins:{
           legend:{position:'top',labels:{boxWidth:10,padding:12,filter:item=>!item.text.startsWith('_')}},
           tooltip:{callbacks:{
-            title:items=>items[0]?.raw?.name||'',
+            title:items=>{
+              // Show all players stacked at this point
+              const names=items.map(i=>i.raw?.name).filter(Boolean);
+              return names.length>1?names.join(' · '):names[0]||'';
+            },
             label:item=>{
               const d=item.raw;
-              if(!d.name)return item.dataset.label; // overlay line
+              if(!d.name)return item.dataset.label;
               const acqStr=d.acq
                 ?(d.acq.source==='Draft'?`${d.acq.year} Rd ${d.acq.round} (#${d.acq.pickNo})`
                   :d.acq.source==='Startup'?`2019 Startup Rd ${d.acq.round} (#${d.acq.pickNo})`
@@ -3855,6 +3890,13 @@ function renderPlayerGraphs(){
                 `Starts: ${d.starts} · Avg: ${d.avg?.toFixed(1)}`,
                 `Acquired: ${acqStr}`,
               ];
+            },
+            afterBody:items=>{
+              // If multiple players at same point, list all names after first
+              if(items.length>1){
+                return['─────────',...items.slice(1).map(i=>i.raw?.name).filter(Boolean).map(n=>`↑ ${n} (same point)`)];
+              }
+              return[];
             }
           }},
         },
@@ -3863,9 +3905,25 @@ function renderPlayerGraphs(){
           y:{title:{display:true,text:METRIC_LABELS[yKey]+(yKey==='draftpick'?' (lower = earlier)':'')},grid:{color:gridColor}},
         },
         onClick:(evt,els)=>{
-          if(els.length){
-            const d=pgChart.data.datasets[els[0].datasetIndex].data[els[0].index];
-            if(d.pid)openPlayerModal(d.pid);
+          if(!els.length)return;
+          const d=pgChart.data.datasets[els[0].datasetIndex].data[els[0].index];
+          if(!d.pid)return;
+          const isMobile='ontouchstart' in window;
+          if(isMobile){
+            const now=Date.now();
+            const last=canvas._lastTap||0;
+            const lastPid=canvas._lastTapPid||null;
+            if(now-last<400&&lastPid===d.pid){
+              // Double tap — open player card
+              canvas._lastTap=0;canvas._lastTapPid=null;
+              openPlayerModal(d.pid);
+            } else {
+              // First tap — show info panel
+              canvas._lastTap=now;canvas._lastTapPid=d.pid;
+              showPgTapInfo(d,xKey,yKey);
+            }
+          } else {
+            openPlayerModal(d.pid);
           }
         },
       }
