@@ -2524,12 +2524,12 @@ let playerNameMap={}; // normalized name → pid
 function buildPlayerNameMap(){
   playerNameMap={};
   const normalize=s=>s.toLowerCase()
-    .replace(/[.']/g,'')          // remove apostrophes, dots
-    .replace(/\s+jr\.?$/,'')      // strip Jr suffix
-    .replace(/\s+sr\.?$/,'')
-    .replace(/\s+ii+$/,'')        // strip II, III etc
-    .replace(/\s+iv$/,'')
-    .trim();
+    .replace(/\b([a-z])\.([a-z])\./g,'$1$2')  // A.J. → aj, T.Y. → ty
+    .replace(/\b([a-z])\.([a-z])\b/g,'$1$2')  // A.J → aj
+    .replace(/[.']/g,'')
+    .replace(/\s+jr\.?$/,'').replace(/\s+sr\.?$/,'')
+    .replace(/\s+ii+$/,'').replace(/\s+iv$/,'')
+    .replace(/\s+/g,' ').trim();
 
   Object.entries(DB.playerMeta).forEach(([pid,m])=>{
     if(!m.first_name||!m.last_name)return;
@@ -2566,7 +2566,12 @@ function lookupPid(name){
     'at perry':'a.t. perry',
     'jaret patterson':'j.d. mckissic', // if wrong
   };
-  const normalize=s=>s.toLowerCase().replace(/[.']/g,'').replace(/\s+jr\.?$/,'').replace(/\s+sr\.?$/,'').replace(/\s+ii+$/,'').replace(/\s+iv$/,'').trim();
+  const normalize=s=>s.toLowerCase()
+    .replace(/\b([a-z])\.([a-z])\./g,'$1$2')  // A.J. → aj, T.Y. → ty (before global period strip)
+    .replace(/\b([a-z])\.([a-z])\b/g,'$1$2')  // A.J → aj (period at end of word)
+    .replace(/[.']/g,'')
+    .replace(/\s+jr\.?$/,'').replace(/\s+sr\.?$/,'').replace(/\s+ii+$/,'').replace(/\s+iv$/,'')
+    .replace(/\s+/g,' ').trim();
   const norm=normalize(name);
   // Check alias first
   const aliasNorm=ALIASES[norm]?normalize(ALIASES[norm]):null;
