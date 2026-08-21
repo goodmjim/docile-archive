@@ -822,14 +822,17 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <div id="pg-pos-chips" class="yr-filter-row"></div>
       </div>
       <div style="margin-bottom:0.5rem">
-        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Draft year <span style="font-weight:400">(include only players from these classes, or all if none selected)</span></div>
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Season <span style="font-weight:400">(filter by which seasons' starts count)</span></div>
+        <div id="pg-season-chips" class="yr-filter-row"></div>
+      </div>
+      <div style="margin-bottom:0.5rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Draft year <span style="font-weight:400">(include only players from these classes)</span></div>
         <div id="pg-yr-chips" class="yr-filter-row"></div>
       </div>
       <div style="margin-bottom:0.5rem">
         <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Draft round <span style="font-weight:400">(1 = round 1 picks, UDFA/SFA shown separately)</span></div>
         <div id="pg-rnd-chips" class="yr-filter-row"></div>
       </div>
-      <div style="margin-bottom:1rem">
         <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Manager <span style="font-weight:400">(show only players used by)</span></div>
         <div id="pg-mgr-chips" class="yr-filter-row"></div>
       </div>
@@ -837,7 +840,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <canvas id="pg-canvas"></canvas>
       </div>
       <div id="pg-tap-info" style="display:none;margin-top:0.75rem;background:var(--surface1);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:0.82rem">
-        <div style="font-size:0.7rem;color:var(--text3);margin-bottom:4px">TAP AGAIN TO OPEN PLAYER CARD</div>
+        <div style="font-size:0.7rem;color:var(--text3);margin-bottom:4px">TAP NAME TO OPEN PLAYER CARD · TAP CHART TO DISMISS</div>
         <div id="pg-tap-name" style="font-weight:600;color:var(--text);font-size:1rem;margin-bottom:6px"></div>
         <div id="pg-tap-stats" style="color:var(--text2);line-height:1.7"></div>
       </div>
@@ -3245,12 +3248,14 @@ function renderAll(){
   renderMetrics();renderHome();renderStandings();renderMatchups();renderPlayers();renderH2H();renderPlayoffs();renderTrades();renderAwards();renderDocile();renderProbowl();renderHof();generateInsights();
   // Reset graph chip state so new data takes effect
   pgActiveMgrs=new Set();
-  pgActiveYrs=new Set();
-  pgActiveRnds=new Set();
+  pgActiveYrs=new Set(['ALL']);
+  pgActiveRnds=new Set(['ALL']);
+  pgActiveSeasons=new Set(['ALL']);
   document.getElementById('pg-mgr-chips').innerHTML='';
   document.getElementById('pg-pos-chips').innerHTML='';
   document.getElementById('pg-yr-chips').innerHTML='';
   document.getElementById('pg-rnd-chips').innerHTML='';
+  document.getElementById('pg-season-chips').innerHTML='';
   pgActivePoses=new Set(['QB','RB','WR','TE','K','DEF']);
   if(pgChart){pgChart.destroy();pgChart=null;}
 }
@@ -3525,14 +3530,51 @@ function renderHome(){
 let pgChart=null;
 let pgActivePoses=new Set(['QB','RB','WR','TE','K','DEF']);
 let pgActiveMgrs=new Set();
-let pgActiveYrs=new Set();   // empty = all years
-let pgActiveRnds=new Set();  // empty = all rounds
+let pgActiveYrs=new Set(['ALL']);   // ALL = show all draft years
+let pgActiveRnds=new Set(['ALL']);  // ALL = show all rounds
+let pgActiveSeasons=new Set(['ALL']); // ALL = show all seasons
+
+// Helper: build an "All + individual" chip row
+function buildChipRow(el, allItems, activeSet, labelFn, valueFn, styleFn, onChange){
+  if(!el||el.children.length)return;
+  // ALL chip
+  const allBtn=document.createElement('button');
+  allBtn.className='yr-chip'+(activeSet.has('ALL')?' active':'');
+  allBtn.textContent='All';
+  allBtn.onclick=()=>{
+    activeSet.clear();activeSet.add('ALL');
+    [...el.children].forEach(b=>b.classList.toggle('active',b===allBtn));
+    onChange();
+  };
+  el.appendChild(allBtn);
+  // Individual chips
+  allItems.forEach(item=>{
+    const val=valueFn?valueFn(item):item;
+    const b=document.createElement('button');
+    b.className='yr-chip'+((!activeSet.has('ALL')&&activeSet.has(val))?' active':'');
+    b.textContent=labelFn?labelFn(item):String(item);
+    if(styleFn)styleFn(b,item);
+    b.onclick=()=>{
+      if(activeSet.has('ALL'))activeSet.delete('ALL');
+      activeSet.has(val)?activeSet.delete(val):activeSet.add(val);
+      if(activeSet.size===0){activeSet.add('ALL');}
+      // Sync button states
+      [...el.children].forEach((btn,i)=>{
+        if(i===0)btn.classList.toggle('active',activeSet.has('ALL'));
+        else btn.classList.toggle('active',!activeSet.has('ALL')&&activeSet.has(valueFn?valueFn(allItems[i-1]):allItems[i-1]));
+      });
+      onChange();
+    };
+    el.appendChild(b);
+  });
+}
 
 function initPgChips(){
   const posEl=document.getElementById('pg-pos-chips');
   const mgrEl=document.getElementById('pg-mgr-chips');
   const yrEl=document.getElementById('pg-yr-chips');
   const rndEl=document.getElementById('pg-rnd-chips');
+  const snEl=document.getElementById('pg-season-chips');
 
   if(posEl&&!posEl.children.length){
     ['QB','RB','WR','TE','K','DEF'].forEach(pos=>{
@@ -3547,64 +3589,50 @@ function initPgChips(){
     });
   }
 
-  // Draft year chips — built from ROOKIE_DRAFT_IDS keys
+  // Draft year chips (with All)
   if(yrEl&&!yrEl.children.length){
     const knownYears=Object.keys(ROOKIE_DRAFT_IDS).map(Number);
     const loadedYears=DB.seasons.map(s=>s.year).filter(y=>y>=2020);
     const draftYears=[...new Set([...knownYears,...loadedYears])].sort((a,b)=>a-b);
-    draftYears.forEach(yr=>{
-      const b=document.createElement('button');
-      b.className='yr-chip';  // off by default = all years
-      b.textContent=String(yr);
-      b.onclick=()=>{
-        pgActiveYrs.has(yr)?pgActiveYrs.delete(yr):pgActiveYrs.add(yr);
-        b.classList.toggle('active',pgActiveYrs.has(yr));
-        renderPlayerGraphs();
-      };
-      yrEl.appendChild(b);
-    });
-    // Add Startup, UDFA, SFA, FA as special chips
-    ['Startup','UDFA','SFA','FA'].forEach(type=>{
-      const b=document.createElement('button');
-      b.className='yr-chip';
-      b.textContent=type;
-      if(type==='SFA')b.style.color='var(--teal)';
-      else if(type==='UDFA'||type==='Startup')b.style.color='var(--gold)';
-      else if(type==='FA')b.style.color='var(--text3)';
-      b.onclick=()=>{
-        pgActiveYrs.has(type)?pgActiveYrs.delete(type):pgActiveYrs.add(type);
-        b.classList.toggle('active',pgActiveYrs.has(type));
-        renderPlayerGraphs();
-      };
-      yrEl.appendChild(b);
-    });
+    const yrItems=[...draftYears,'Startup','UDFA','SFA','FA'];
+    buildChipRow(yrEl, yrItems, pgActiveYrs,
+      item=>String(item),
+      item=>item,
+      (b,item)=>{
+        if(item==='SFA')b.style.color='var(--teal)';
+        else if(item==='UDFA'||item==='Startup')b.style.color='var(--gold)';
+        else if(item==='FA')b.style.color='var(--text3)';
+      },
+      renderPlayerGraphs
+    );
   }
 
-  // Draft round chips — 1, 2, 3, UDFA, SFA
+  // Draft round chips (with All)
   if(rndEl&&!rndEl.children.length){
-    [1,2,3].forEach(rnd=>{
-      const b=document.createElement('button');
-      b.className='yr-chip';  // off by default = all rounds
-      b.textContent=`Rd ${rnd}`;
-      b.onclick=()=>{
-        pgActiveRnds.has(rnd)?pgActiveRnds.delete(rnd):pgActiveRnds.add(rnd);
-        b.classList.toggle('active',pgActiveRnds.has(rnd));
-        renderPlayerGraphs();
-      };
-      rndEl.appendChild(b);
-    });
-    ['UDFA','SFA'].forEach(type=>{
-      const b=document.createElement('button');
-      b.className='yr-chip';
-      b.textContent=type;
-      b.style.color=type==='SFA'?'var(--teal)':'var(--gold)';
-      b.onclick=()=>{
-        pgActiveRnds.has(type)?pgActiveRnds.delete(type):pgActiveRnds.add(type);
-        b.classList.toggle('active',pgActiveRnds.has(type));
-        renderPlayerGraphs();
-      };
-      rndEl.appendChild(b);
-    });
+    const rndItems=[1,2,3,'UDFA','SFA'];
+    buildChipRow(rndEl, rndItems, pgActiveRnds,
+      item=>typeof item==='number'?`Rd ${item}`:item,
+      item=>item,
+      (b,item)=>{
+        if(item==='SFA')b.style.color='var(--teal)';
+        else if(item==='UDFA')b.style.color='var(--gold)';
+      },
+      renderPlayerGraphs
+    );
+  }
+
+  // Season chips (with All) — which seasons' starts to include
+  if(snEl&&!snEl.children.length){
+    const allSeasons=[...new Set([
+      ...[2014,2015,2016,2017,2018], // ESPN era
+      ...DB.seasons.map(s=>s.year)
+    ])].sort((a,b)=>a-b);
+    buildChipRow(snEl, allSeasons, pgActiveSeasons,
+      item=>String(item),
+      item=>item,
+      (b,item)=>{ if(item<=2018)b.style.color='var(--text3)'; },
+      renderPlayerGraphs
+    );
   }
 
   if(mgrEl&&!mgrEl.children.length){
@@ -3648,9 +3676,12 @@ function buildPlayerGraphData(){
     });
   });
 
-  // Build per-pid stats from allStarters
+  // Build per-pid stats from allStarters, filtered by active seasons
   const byPid={};
-  DB.allStarters.forEach(s=>{
+  const startersToUse=pgActiveSeasons.has('ALL')
+    ?DB.allStarters
+    :DB.allStarters.filter(s=>pgActiveSeasons.has(s.year));
+  startersToUse.forEach(s=>{
     if(!byPid[s.pid])byPid[s.pid]={pid:s.pid,starts:0,total:0,best:0,potg:0,potw:0,probowls:0,alldocile:0,mgrs:new Set(),acq:pidAcq[s.pid]||null};
     byPid[s.pid].starts++;
     byPid[s.pid].total+=(s.points||0);
@@ -3742,18 +3773,15 @@ function showPgTapInfo(d,xKey,yKey){
       :d.acq.source==='Startup'?`2019 Startup Rd ${d.acq.round} (#${d.acq.pickNo})`
       :`${d.acq.year} ${d.acq.source}`)
     :'FA (free agent)';
-  nameEl.textContent=d.name;
+  nameEl.innerHTML=d.pid
+    ?`<span class="player-link" onclick="openPlayerModal('${d.pid}')" style="font-size:1rem;font-weight:600">${d.name}</span>`
+    :`<span style="font-size:1rem;font-weight:600">${d.name}</span>`;
   statsEl.innerHTML=`
     <span style="color:var(--text3)">${METRIC_LABELS[xKey]}:</span> ${typeof d.x==='number'?d.x.toFixed(isInt(xKey)?0:1):'—'}<br>
     <span style="color:var(--text3)">${METRIC_LABELS[yKey]}:</span> ${typeof d.y==='number'?d.y.toFixed(isInt(yKey)?0:1):'—'}<br>
     <span style="color:var(--text3)">Starts:</span> ${d.starts} &nbsp;·&nbsp; <span style="color:var(--text3)">Avg:</span> ${d.avg?.toFixed(1)}<br>
     <span style="color:var(--text3)">Acquired:</span> ${acqStr}`;
   panel.style.display='block';
-  // Auto-hide after 4 seconds if no second tap
-  clearTimeout(panel._hideTimer);
-  panel._hideTimer=setTimeout(()=>{
-    panel.style.display='none';
-  },4000);
 }
 
 function renderPlayerGraphs(){
@@ -3776,27 +3804,20 @@ function renderPlayerGraphs(){
     const pos=m?.fantasy_positions?.[0]||m?.position||'?';
     const posKey=(pos==='DST')?'DEF':pos;
     if(!pgActivePoses.has(posKey))return false;
-    // Draft year filter (empty = show all)
-    if(pgActiveYrs.size){
-      const acq=d.acq;
-      // FA: player with no acquisition record
-      const isFa=!acq;
-      if(isFa){
-        if(!pgActiveYrs.has('FA'))return false;
-      } else {
-        const yrMatch=pgActiveYrs.has(acq.year)||pgActiveYrs.has(acq.source);
-        if(!yrMatch)return false;
-      }
-    }
-    // Draft round filter (empty = show all)
-    if(pgActiveRnds.size){
+    // Draft year filter
+    if(!pgActiveYrs.has('ALL')){
       const acq=d.acq;
       if(!acq){
-        // FA — only show if no round filter would exclude them; skip FAs from round filter
-        return false;
+        if(!pgActiveYrs.has('FA'))return false;
+      } else {
+        if(!pgActiveYrs.has(acq.year)&&!pgActiveYrs.has(acq.source))return false;
       }
-      // Startup picks use their round number but belong to 'Startup' source, not Rd 1/2/3
-      if(acq.source==='Startup')return false; // startup not filterable by round
+    }
+    // Draft round filter
+    if(!pgActiveRnds.has('ALL')){
+      const acq=d.acq;
+      if(!acq)return false;
+      if(acq.source==='Startup')return false;
       const rndKey=acq.source==='UDFA'?'UDFA':acq.source==='SFA'?'SFA':acq.round;
       if(!pgActiveRnds.has(rndKey))return false;
     }
@@ -3905,23 +3926,17 @@ function renderPlayerGraphs(){
           y:{title:{display:true,text:METRIC_LABELS[yKey]+(yKey==='draftpick'?' (lower = earlier)':'')},grid:{color:gridColor}},
         },
         onClick:(evt,els)=>{
-          if(!els.length)return;
+          const isMobile='ontouchstart' in window;
+          if(!els.length){
+            // Tapped empty space — hide panel
+            const panel=document.getElementById('pg-tap-info');
+            if(panel)panel.style.display='none';
+            return;
+          }
           const d=pgChart.data.datasets[els[0].datasetIndex].data[els[0].index];
           if(!d.pid)return;
-          const isMobile='ontouchstart' in window;
           if(isMobile){
-            const now=Date.now();
-            const last=canvas._lastTap||0;
-            const lastPid=canvas._lastTapPid||null;
-            if(now-last<400&&lastPid===d.pid){
-              // Double tap — open player card
-              canvas._lastTap=0;canvas._lastTapPid=null;
-              openPlayerModal(d.pid);
-            } else {
-              // First tap — show info panel
-              canvas._lastTap=now;canvas._lastTapPid=d.pid;
-              showPgTapInfo(d,xKey,yKey);
-            }
+            showPgTapInfo(d,xKey,yKey);
           } else {
             openPlayerModal(d.pid);
           }
