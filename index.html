@@ -908,6 +908,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
       </div>
       <div class="tbl-wrap"><table>
         <thead><tr>
+          <th style="width:2rem;color:var(--text3)">#</th>
           <th>Player</th><th>Pos</th><th>NFL Team</th>
           <th class="sortable-th" onclick="sortPlayers('total')" id="pth-total">Total Pts <span class="sort-arrow">↓</span></th>
           <th class="sortable-th" onclick="sortPlayers('starts')" id="pth-starts">Starts <span class="sort-arrow"></span></th>
@@ -1157,6 +1158,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
       </div>
       <div class="tbl-wrap"><table>
         <thead><tr>
+          <th style="width:2rem;color:var(--text3)">#</th>
           <th>Player</th><th>Pos</th>
           <th class="sortable-th" onclick="sortMyScoring('total')" id="msth-total">Total Pts <span class="sort-arrow">↓</span></th>
           <th class="sortable-th" onclick="sortMyScoring('starts')" id="msth-starts">Starts <span class="sort-arrow"></span></th>
@@ -4326,10 +4328,9 @@ function renderPlayers(){
       const curRk=curRanks[r.pid];
       const prevRk=prevRanks[r.pid];
       if(!prevRk){
-        // Brand new to the rankings this week
         trendCell=`<span style="font-size:0.72rem;color:var(--teal);font-family:var(--font-mono);font-weight:600">NEW</span>`;
       } else if(curRk&&prevRk){
-        const delta=prevRk-curRk; // positive = rose in ranks (lower number = better)
+        const delta=prevRk-curRk;
         if(delta===0){
           trendCell=`<span style="font-size:0.72rem;color:var(--text3);font-family:var(--font-mono)">—</span>`;
         } else if(delta>0){
@@ -4339,11 +4340,11 @@ function renderPlayers(){
         }
       }
     } else {
-      // No week data — show points bar
       const bp=maxTotal>0?Math.round(r.total/maxTotal*100):0;
       trendCell=`<div class="pts-bar"><div class="pts-fill" style="width:${bp}%"></div></div>`;
     }
     return`<tr>
+      <td class="mono" style="color:var(--text3);font-size:0.75rem">${overallRank}</td>
       <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
       <td><span class="badge ${pc[r.pos]||'badge-WR'}">${r.pos}</span></td>
       <td class="mono" style="color:var(--text3);font-size:0.72rem">${r.nflTeam}</td>
@@ -6459,8 +6460,9 @@ function renderMyScoring(){
   rows.sort(sf[sortBy]||sf.total);
   const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
   const body=document.getElementById('myscoring-body');
-  if(!rows.length){body.innerHTML='<tr><td colspan="6" class="empty">No starters found.</td></tr>';return;}
-  body.innerHTML=rows.slice(0,200).map(r=>`<tr>
+  if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty">No starters found.</td></tr>';return;}
+  body.innerHTML=rows.slice(0,200).map((r,idx)=>`<tr>
+    <td class="mono" style="color:var(--text3);font-size:0.75rem">${idx+1}</td>
     <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
     <td><span class="badge ${pc[r.pos]||'badge-WR'}">${r.pos}</span></td>
     <td class="mono">${r.total.toFixed(1)}</td>
