@@ -590,8 +590,22 @@ tbody tr.highlight td{background:var(--gold-dim)}
   </div>
   <div class="setup-box">
     <div class="fg">
-      <label>Sleeper username</label>
-      <input id="inp-user" placeholder="e.g. turkmommy" autocomplete="off">
+      <label>Select your manager</label>
+      <select id="inp-user" style="width:100%;background:var(--surface1);color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:0.6rem 0.8rem;font-size:0.95rem;appearance:auto">
+        <option value="goodmjim">Jimmy</option>
+        <option value="bukkaabh">Abhi</option>
+        <option value="amol97">Amol</option>
+        <option value="boonefisher">Boone</option>
+        <option value="bradhaskell">Brad</option>
+        <option value="Mr1854">David</option>
+        <option value="KennethGoulet">Declan</option>
+        <option value="karpmcol">Hinton</option>
+        <option value="CarlCanary">Jared</option>
+        <option value="turkmommy">Jon</option>
+        <option value="kellykyl">Kyle</option>
+        <option value="Lanceesposito">Lance</option>
+        <option value="HILLARY4PRISON58">Colton (2019 and earlier)</option>
+      </select>
     </div>
     <div style="margin-bottom:1rem">
       <div class="slabel" style="margin-bottom:0.5rem">Seasons — pre-loaded</div>
@@ -2918,8 +2932,8 @@ function applySnapshot(snap){
 }
 
 async function startLoad(){
-  const username=document.getElementById('inp-user').value.trim();
-  if(!username)return setSt('Enter your Sleeper username.',true);
+  const username=document.getElementById('inp-user').value;
+  if(!username)return setSt('Please select a manager.',true);
   const rows=LEAGUE_SEASONS.filter(s=>selectedSeasons.has(s.year));
   if(!rows.length)return setSt('Select at least one season.',true);
   setSt('Looking up user…');setProg(5);
@@ -3114,7 +3128,7 @@ async function doRefresh(){
   if(!saved)return;
   try{
     const{username,selectedSeasons:ss}=JSON.parse(saved);
-    document.getElementById('inp-user').value=username||'';
+    if(username){const sel=document.getElementById('inp-user');if(sel)sel.value=username;}
     if(ss)selectedSeasons=new Set(ss);
     // Re-highlight pills
     LEAGUE_SEASONS.forEach(s=>{
@@ -7328,7 +7342,7 @@ try{
   const saved=localStorage.getItem('dl_config');
   if(saved){
     const{username,selectedSeasons:ss}=JSON.parse(saved);
-    if(username)document.getElementById('inp-user').value=username;
+    if(username){const sel=document.getElementById('inp-user');if(sel)sel.value=username;}
     if(ss){
       selectedSeasons=new Set(ss);
       // Re-apply pill states
