@@ -4494,14 +4494,25 @@ function openPlayerModal(pid){
     </div>`:'';
 
   document.getElementById('modal-body').innerHTML=`
-    <h3>${name}</h3>
-    <div class="modal-pos">${pos}${nflTeam?' · '+nflTeam:''}</div>
-    <div style="font-size:0.68rem;color:var(--text3);font-family:var(--font-mono);margin-bottom:0.75rem;display:flex;align-items:center;gap:6px">
-      <span>Sleeper ID: <span style="color:var(--text2);user-select:all">${pid}</span></span>
-      <button onclick="navigator.clipboard.writeText('${pid}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})"
-        style="background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);font-size:0.65rem;padding:1px 6px;cursor:pointer;font-family:var(--font-body)">Copy</button>
-      <span style="color:var(--border2)">·</span>
-      <span style="color:var(--text3)">Use this ID in the PlayerBios sheet</span>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:0.75rem">
+      <div style="position:relative;width:64px;height:64px;flex-shrink:0">
+        <img src="https://sleepercdn.com/content/nfl/players/thumb/${pid}.jpg"
+          alt="${name}"
+          style="width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:top;border:0.5px solid var(--border)"
+          onerror="this.style.display='none';document.getElementById('modal-silhouette-${pid}').style.display='flex'">
+        <div id="modal-silhouette-${pid}" style="display:none;width:64px;height:64px;border-radius:50%;background:var(--surface2);border:0.5px solid var(--border);align-items:center;justify-content:center;position:absolute;top:0;left:0">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="color:var(--text3)"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <h3 style="margin:0 0 3px">${name}</h3>
+        <div class="modal-pos" style="margin:0 0 4px">${pos}${nflTeam?' · '+nflTeam:''}</div>
+        <div style="font-size:0.68rem;color:var(--text3);font-family:var(--font-mono);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span>Sleeper ID: <span style="color:var(--text2);user-select:all">${pid}</span></span>
+          <button onclick="navigator.clipboard.writeText('${pid}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})"
+            style="background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);font-size:0.65rem;padding:1px 6px;cursor:pointer;font-family:var(--font-body)">Copy</button>
+        </div>
+      </div>
     </div>
     <div class="modal-stats">
       <div class="mstat"><div class="ml">Total Pts</div><div class="mv">${total.toFixed(0)}</div></div>
