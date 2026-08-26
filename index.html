@@ -2956,27 +2956,44 @@ async function startLoad(){
       if(snap){snapshots[year]=snap;console.log(`[Archive] Snapshot found for ${year}`);}
     }));
 
-    // Phase 2: load from Sleeper, fall back to snapshot if it fails
+    // Determine the current active season (highest year = still in progress)
+    const currentYear=Math.max(...rows.map(r=>parseInt(r.year)));
+
+    // Phase 2: load seasons — snapshot-first for completed years, API-first for current year
     for(let i=0;i<rows.length;i++){
       const{year,lid}=rows[i];
-      setSt(`Loading ${year} from Sleeper (${i+1}/${rows.length})…`);
+      const yr=parseInt(year);
+      const snap=snapshots[year];
+      const isCompleted=yr<currentYear;
+
+      setSt(`Loading ${year} (${i+1}/${rows.length})…`);
       setProg(12+(i/rows.length)*70);
-      try{
-        await loadSeason(year,lid);
-        // Also apply snapshot to fill any gaps Sleeper may have dropped
-        if(snapshots[year])applySnapshot(snapshots[year]);
-      }catch(e){
-        console.warn(`[Archive] Sleeper failed for ${year}:`,e.message);
-        const snap=snapshots[year];
-        if(snap){
-          setSt(`Sleeper unavailable for ${year} — using backup…`);
-          DB.seasons.push({year:parseInt(year),lid,league:{name:snap.leagueName},
-            teams:snap.teams,myRosterId:snap.myRosterId,
-            matchupsByWeek:snap.matchupsByWeek,
-            scoring:{},projByWeek:{},seedMap:snap.seedMap||{}});
-          applySnapshot(snap);
-        }else{
-          setSt(`Warning: ${year} failed and no backup exists.`);
+
+      if(isCompleted&&snap){
+        // Completed season with snapshot — use snapshot as source of truth, skip Sleeper
+        console.log(`[Archive] ${year}: using snapshot (completed season)`);
+        DB.seasons.push({year:yr,lid,league:{name:snap.leagueName},
+          teams:snap.teams,myRosterId:snap.myRosterId,
+          matchupsByWeek:snap.matchupsByWeek||{},
+          scoring:{},projByWeek:{},seedMap:snap.seedMap||{}});
+        applySnapshot(snap);
+      } else {
+        // Current season or no snapshot — load from Sleeper, use snapshot as fallback
+        try{
+          await loadSeason(year,lid);
+          if(snap)applySnapshot(snap); // supplement with any snapshot data
+        }catch(e){
+          console.warn(`[Archive] Sleeper failed for ${year}:`,e.message);
+          if(snap){
+            setSt(`Sleeper unavailable for ${year} — using backup…`);
+            DB.seasons.push({year:yr,lid,league:{name:snap.leagueName},
+              teams:snap.teams,myRosterId:snap.myRosterId,
+              matchupsByWeek:snap.matchupsByWeek||{},
+              scoring:{},projByWeek:{},seedMap:snap.seedMap||{}});
+            applySnapshot(snap);
+          }else{
+            setSt(`Warning: ${year} failed and no backup exists.`);
+          }
         }
       }
     }
