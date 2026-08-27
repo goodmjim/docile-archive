@@ -2594,6 +2594,9 @@ function lookupPid(name){
     'kalil pimpelton':'8248',
     'kalil pimpleton':'8248',
     'jonathon brooks':'11583',
+    'josh allen':'4984',        // QB Buffalo Bills
+    'dj moore':'4983',          // WR
+    'd.j. moore':'4983',
   };
   const normLower=name.toLowerCase().trim();
   if(PID_OVERRIDES[normLower])return PID_OVERRIDES[normLower];
@@ -4978,6 +4981,54 @@ function renderAwards(){
   } else {
     el.appendChild(pGrid);
   }
+
+  // All-Docile appearances leaderboard (always shown, not filtered by type)
+  const docileCount={};
+  Object.entries(ALL_DOCILE).forEach(([yr,data])=>{
+    if(!data)return;
+    ['t1','t2','t3'].forEach((tier,tidx)=>{
+      const team=data[tier];if(!team)return;
+      Object.values(team).forEach(val=>{
+        if(!val||val==='N/A'||val==='total'||typeof val==='number')return;
+        const raw=String(val).split(',')[0].trim();
+        const name=raw.replace(/^\[[^\]]+\]\s*/,'').trim();
+        if(!name)return;
+        if(!docileCount[name])docileCount[name]={t1:0,t2:0,t3:0,total:0,pid:lookupPid(name)};
+        docileCount[name][tier]++;
+        docileCount[name].total++;
+      });
+    });
+  });
+
+  const docileSorted=Object.entries(docileCount)
+    .filter(([,d])=>d.total>0)
+    .sort((a,b)=>b[1].total-a[1].total||b[1].t1-a[1].t1||b[1].t2-a[1].t2);
+
+  if(docileSorted.length){
+    const ldEl=document.createElement('div');
+    ldEl.innerHTML=`<div class="sh" style="margin-top:2rem;margin-bottom:0.75rem">
+      <h2 style="font-size:1.1rem">All-Docile Appearances Leaderboard</h2>
+      <span class="sh-sub">1st, 2nd, and 3rd team selections across all seasons</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>#</th><th>Player</th>
+        <th title="1st Team">🥇 1st</th>
+        <th title="2nd Team">🥈 2nd</th>
+        <th title="3rd Team">🥉 3rd</th>
+        <th>Total</th>
+      </tr></thead>
+      <tbody>${docileSorted.slice(0,30).map(([name,d],i)=>`<tr>
+        <td class="mono" style="color:var(--text3)">${i+1}</td>
+        <td>${d.pid?`<span class="player-link" onclick="openPlayerModal('${d.pid}')">${name}</span>`:name}</td>
+        <td class="mono">${d.t1||'—'}</td>
+        <td class="mono">${d.t2||'—'}</td>
+        <td class="mono">${d.t3||'—'}</td>
+        <td class="mono" style="color:var(--gold);font-weight:500">${d.total}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+    el.appendChild(ldEl);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -5244,6 +5295,7 @@ function switchTab(name){
   if(name==='tutorial')renderTutorial();
   if(name==='playergraphs')renderPlayerGraphs();
   if(name==='draft')renderDraft();
+  if(name==='awards'){renderAwards();}
   if(name==='udfa')renderUdfa();
   if(name==='mydraft')renderMyDraft();
   if(name==='myprobowl')renderMyProbowl();
