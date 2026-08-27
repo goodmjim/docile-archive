@@ -3304,8 +3304,8 @@ function renderAll(){
   pgActivePoses=new Set(['QB','RB','WR','TE','K','DEF']);
   if(pgChart){pgChart.destroy();pgChart=null;}
   // Reset award chips so they reinitialize with fresh data
-  awardsActiveYrs=new Set(['2025']);
-  awardsActiveTypes=new Set(['ALL']);
+  awardsActiveYrs='2025';
+  awardsActiveTypes='ALL';
   ['award-yr-chips','award-type-chips'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.innerHTML='';
   });
@@ -4863,48 +4863,37 @@ function renderTrades(){
 // ══════════════════════════════════════════════════════════════
 // RENDER: AWARDS
 // ══════════════════════════════════════════════════════════════
-let awardsActiveYrs=new Set(['2025']); // default to most recent completed season
-let awardsActiveTypes=new Set(['ALL']);
+let awardsActiveYrs='2025'; // single value, not a Set
+let awardsActiveTypes='ALL'; // single value
+let docileSort={col:'total',dir:-1};
+
+function sortDocile(col){
+  docileSort=docileSort.col===col?{col,dir:docileSort.dir*-1}:{col,dir:-1};
+  renderAwards();
+}
 
 function initAwardChips(){
   const yrEl=document.getElementById('award-yr-chips');
   const typeEl=document.getElementById('award-type-chips');
 
+  // Single-select year chips
   if(yrEl&&!yrEl.children.length){
     const years=Object.keys(PLAYER_AWARDS).sort((a,b)=>b-a);
-    // All chip
-    const allBtn=document.createElement('button');
-    allBtn.className='yr-chip'+(awardsActiveYrs.has('ALL')?' active':'');
-    allBtn.textContent='All';
-    allBtn.onclick=()=>{
-      awardsActiveYrs=new Set(['ALL']);
-      [...yrEl.children].forEach((b,i)=>b.classList.toggle('active',i===0));
-      renderAwards();
-    };
-    yrEl.appendChild(allBtn);
-    years.forEach(yr=>{
+    const allItems=[{key:'ALL',label:'All seasons'},...years.map(y=>({key:y,label:y}))];
+    allItems.forEach(item=>{
       const b=document.createElement('button');
-      b.className='yr-chip'+(!awardsActiveYrs.has('ALL')&&awardsActiveYrs.has(yr)?' active':'');
-      b.textContent=yr;
+      b.className='yr-chip'+(awardsActiveYrs===item.key?' active':'');
+      b.textContent=item.label;
       b.onclick=()=>{
-        if(awardsActiveYrs.has('ALL'))awardsActiveYrs=new Set();
-        awardsActiveYrs.has(yr)?awardsActiveYrs.delete(yr):awardsActiveYrs.add(yr);
-        if(!awardsActiveYrs.size)awardsActiveYrs=new Set(['ALL']);
-        [...yrEl.children].forEach((btn,i)=>{
-          if(i===0)btn.classList.toggle('active',awardsActiveYrs.has('ALL'));
-          else btn.classList.toggle('active',!awardsActiveYrs.has('ALL')&&awardsActiveYrs.has(years[i-1]));
-        });
+        awardsActiveYrs=item.key;
+        [...yrEl.children].forEach(btn=>btn.classList.toggle('active',btn.textContent===(item.label)));
         renderAwards();
       };
       yrEl.appendChild(b);
     });
-    // Set 2025 active by default
-    if(awardsActiveYrs.has('2025')){
-      allBtn.classList.remove('active');
-      [...yrEl.children].find(b=>b.textContent==='2025')?.classList.add('active');
-    }
   }
 
+  // Single-select award type chips
   if(typeEl&&!typeEl.children.length){
     const types=[
       {key:'ALL',label:'All awards'},
@@ -4916,23 +4905,13 @@ function initAwardChips(){
       {key:'slapdick',label:'Slapdick'},
       {key:'best_tx',label:'Best Transaction'},
     ];
-    types.forEach((t,i)=>{
+    types.forEach(t=>{
       const b=document.createElement('button');
-      b.className='yr-chip'+(awardsActiveTypes.has(t.key)?' active':'');
+      b.className='yr-chip'+(awardsActiveTypes===t.key?' active':'');
       b.textContent=t.label;
       b.onclick=()=>{
-        if(t.key==='ALL'){
-          awardsActiveTypes=new Set(['ALL']);
-          [...typeEl.children].forEach((btn,j)=>btn.classList.toggle('active',j===0));
-        } else {
-          if(awardsActiveTypes.has('ALL'))awardsActiveTypes=new Set();
-          awardsActiveTypes.has(t.key)?awardsActiveTypes.delete(t.key):awardsActiveTypes.add(t.key);
-          if(!awardsActiveTypes.size)awardsActiveTypes=new Set(['ALL']);
-          [...typeEl.children].forEach((btn,j)=>{
-            if(j===0)btn.classList.toggle('active',awardsActiveTypes.has('ALL'));
-            else btn.classList.toggle('active',!awardsActiveTypes.has('ALL')&&awardsActiveTypes.has(types[j].key));
-          });
-        }
+        awardsActiveTypes=t.key;
+        [...typeEl.children].forEach(btn=>btn.classList.toggle('active',btn.textContent===t.label));
         renderAwards();
       };
       typeEl.appendChild(b);
@@ -4949,12 +4928,11 @@ function renderAwards(){
     pb_mvp:'Pro Bowl MVP',mip:'MIP / Comeback POTY',slapdick:'Slapdick of the Year',best_tx:'Best Transaction'};
 
   const allYears=Object.keys(PLAYER_AWARDS).sort((a,b)=>b-a);
-  const years=awardsActiveYrs.has('ALL')?allYears:[...awardsActiveYrs].sort((a,b)=>b-a);
+  const years=awardsActiveYrs==='ALL'?allYears:[awardsActiveYrs];
 
-  // Helper: make player name clickable if we can find their PID
+  // Helper: make player name clickable
   const playerLink=(raw)=>{
     if(!raw||raw==='N/A')return raw||'—';
-    // Strip team tag [XXX]
     const name=raw.replace(/^\[[^\]]+\]\s*/,'').trim();
     const pid=lookupPid(name);
     if(pid)return`<span class="player-link" onclick="openPlayerModal('${pid}')">${name}</span>`;
@@ -4966,7 +4944,7 @@ function renderAwards(){
     const pa=PLAYER_AWARDS[yr];if(!pa)return;
     Object.entries(pa).forEach(([key,val])=>{
       if(!val||val==='N/A')return;
-      if(!awardsActiveTypes.has('ALL')&&!awardsActiveTypes.has(key))return;
+      if(awardsActiveTypes!=='ALL'&&awardsActiveTypes!==key)return;
       pGrid.innerHTML+=`<div class="award-card"><div class="award-icon">${ICONS[key]||'🎖️'}</div><div>
         <div class="award-type">${LABELS[key]||key}</div>
         <div class="award-winner">${playerLink(val)}</div>
@@ -4982,17 +4960,18 @@ function renderAwards(){
     el.appendChild(pGrid);
   }
 
-  // All-Docile appearances leaderboard (always shown, not filtered by type)
+  // All-Docile leaderboard — always shown, sits after the award cards
+  // (The All-Docile team listings are in the panel below via renderDocile)
   const docileCount={};
   Object.entries(ALL_DOCILE).forEach(([yr,data])=>{
     if(!data)return;
-    ['t1','t2','t3'].forEach((tier,tidx)=>{
+    ['t1','t2','t3'].forEach(tier=>{
       const team=data[tier];if(!team)return;
       Object.values(team).forEach(val=>{
         if(!val||val==='N/A'||val==='total'||typeof val==='number')return;
         const raw=String(val).split(',')[0].trim();
         const name=raw.replace(/^\[[^\]]+\]\s*/,'').trim();
-        if(!name)return;
+        if(!name||name==='total')return;
         if(!docileCount[name])docileCount[name]={t1:0,t2:0,t3:0,total:0,pid:lookupPid(name)};
         docileCount[name][tier]++;
         docileCount[name].total++;
@@ -5000,9 +4979,17 @@ function renderAwards(){
     });
   });
 
+  const dc=docileSort.col,dd=docileSort.dir;
+  const da=(c)=>dc===c?(dd===1?'↑':'↓'):'';
   const docileSorted=Object.entries(docileCount)
     .filter(([,d])=>d.total>0)
-    .sort((a,b)=>b[1].total-a[1].total||b[1].t1-a[1].t1||b[1].t2-a[1].t2);
+    .sort((a,b)=>{
+      const [,da1]=[a[0],a[1]],[,db1]=[b[0],b[1]];
+      if(dc==='t1')return(da1.t1-db1.t1)*dd;
+      if(dc==='t2')return(da1.t2-db1.t2)*dd;
+      if(dc==='t3')return(da1.t3-db1.t3)*dd;
+      return(da1.total-db1.total)*dd;
+    });
 
   if(docileSorted.length){
     const ldEl=document.createElement('div');
@@ -5013,10 +5000,10 @@ function renderAwards(){
     <div class="tbl-wrap"><table>
       <thead><tr>
         <th>#</th><th>Player</th>
-        <th title="1st Team">🥇 1st</th>
-        <th title="2nd Team">🥈 2nd</th>
-        <th title="3rd Team">🥉 3rd</th>
-        <th>Total</th>
+        <th class="sortable-th" onclick="sortDocile('t1')">🥇 1st <span class="sort-arrow">${da('t1')}</span></th>
+        <th class="sortable-th" onclick="sortDocile('t2')">🥈 2nd <span class="sort-arrow">${da('t2')}</span></th>
+        <th class="sortable-th" onclick="sortDocile('t3')">🥉 3rd <span class="sort-arrow">${da('t3')}</span></th>
+        <th class="sortable-th" onclick="sortDocile('total')">Total <span class="sort-arrow">${da('total')||'↓'}</span></th>
       </tr></thead>
       <tbody>${docileSorted.slice(0,30).map(([name,d],i)=>`<tr>
         <td class="mono" style="color:var(--text3)">${i+1}</td>
