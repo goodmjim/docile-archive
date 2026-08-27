@@ -3278,9 +3278,6 @@ function buildApp(){
   document.getElementById('h2h-t1').innerHTML=mgrOpts;
   document.getElementById('h2h-t2').innerHTML=mgrOpts;
   if(allH2HMgrs.length>1)document.getElementById('h2h-t2').selectedIndex=1;
-  // Award year sel
-  document.getElementById('award-yr-sel').innerHTML='<option value="all">All seasons</option>'+
-    Object.keys(PLAYER_AWARDS).map(y=>`<option value="${y}">${y}</option>`).join('');
   // Init mobile nav
   setSection('home');
   renderAll();
