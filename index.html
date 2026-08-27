@@ -3268,15 +3268,15 @@ function buildApp(){
   DB.seasons.forEach(s=>Object.keys(s.matchupsByWeek).forEach(w=>allWeeksSet.add(parseInt(w))));
   const allMatchupWeeks=[...allWeeksSet].sort((a,b)=>a-b);
   const allMuMgrs=[...new Set([...allManagerKeys,...espnMgrSet])].sort();
-  document.getElementById('wk-sel').innerHTML='<option value="all">All weeks</option>'+allMatchupWeeks.map(w=>`<option value="${w}">Week ${w}</option>`).join('');
-  document.getElementById('tm-sel').innerHTML='<option value="all">All managers</option>'+allMuMgrs.map(k=>`<option value="${k}">${k}</option>`).join('');
+  (document.getElementById('wk-sel')||{innerHTML:''}).innerHTML='<option value="all">All weeks</option>'+allMatchupWeeks.map(w=>`<option value="${w}">Week ${w}</option>`).join('');
+  (document.getElementById('tm-sel')||{innerHTML:''}).innerHTML='<option value="all">All managers</option>'+allMuMgrs.map(k=>`<option value="${k}">${k}</option>`).join('');
   // H2H selects — combine Sleeper managers + ESPN-era managers
   const espnMgrs=new Set();
   ESPN_DATA.matchups.forEach(([yr,wk,w,sw,sl,l])=>{espnMgrs.add(w);espnMgrs.add(l);});
   const allH2HMgrs=[...new Set([...allManagerKeys,...espnMgrs])].sort();
   const mgrOpts=allH2HMgrs.map(k=>`<option value="${k}">${k}</option>`).join('');
-  document.getElementById('h2h-t1').innerHTML=mgrOpts;
-  document.getElementById('h2h-t2').innerHTML=mgrOpts;
+  (document.getElementById('h2h-t1')||{innerHTML:''}).innerHTML=mgrOpts;
+  (document.getElementById('h2h-t2')||{innerHTML:''}).innerHTML=mgrOpts;
   if(allH2HMgrs.length>1)document.getElementById('h2h-t2').selectedIndex=1;
   // Init mobile nav
   setSection('home');
@@ -3463,7 +3463,7 @@ function renderMetrics(){
   if(isMyTeam)extra=myTeamMetrics+captainChip;
   else if(isLeague)extra=leagueMetrics;
 
-  document.getElementById('metrics').innerHTML=always+extra;
+  (document.getElementById('metrics')||{innerHTML:''}).innerHTML=always+extra;
 }
 
 let activeTab='home';
@@ -4512,7 +4512,7 @@ function openPlayerModal(pid){
       </div>
     </div>`:'';
 
-  document.getElementById('modal-body').innerHTML=`
+  (document.getElementById('modal-body')||{innerHTML:''}).innerHTML=`
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:0.75rem">
       <div style="position:relative;width:64px;height:64px;flex-shrink:0">
         <img src="https://sleepercdn.com/content/nfl/players/thumb/${pid}.jpg"
@@ -5932,7 +5932,7 @@ function renderPotg(){
   const totalPotg=log.length;
   const totalPotw=log.filter(e=>e.type==='POTW').length;
   const uniquePlayers=new Set(log.map(e=>e.pid)).size;
-  document.getElementById('potg-metrics').innerHTML=`
+  (document.getElementById('potg-metrics')||{innerHTML:''}).innerHTML=`
     <div class="metric gold"><div class="ml">Total POTGs</div><div class="mv">${totalPotg}</div></div>
     <div class="metric gold"><div class="ml">Total POTWs</div><div class="mv">${totalPotw}</div></div>
     <div class="metric teal"><div class="ml">Unique players</div><div class="mv">${uniquePlayers}</div></div>`;
