@@ -3298,13 +3298,17 @@ function renderAll(){
   pgActiveYrs=new Set(['ALL']);
   pgActiveRnds=new Set(['ALL']);
   pgActiveSeasons=new Set(['ALL']);
-  document.getElementById('pg-mgr-chips').innerHTML='';
-  document.getElementById('pg-pos-chips').innerHTML='';
-  document.getElementById('pg-yr-chips').innerHTML='';
-  document.getElementById('pg-rnd-chips').innerHTML='';
-  document.getElementById('pg-season-chips').innerHTML='';
+  ['pg-mgr-chips','pg-pos-chips','pg-yr-chips','pg-rnd-chips','pg-season-chips'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML='';
+  });
   pgActivePoses=new Set(['QB','RB','WR','TE','K','DEF']);
   if(pgChart){pgChart.destroy();pgChart=null;}
+  // Reset award chips so they reinitialize with fresh data
+  awardsActiveYrs=new Set(['2025']);
+  awardsActiveTypes=new Set(['ALL']);
+  ['award-yr-chips','award-type-chips'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML='';
+  });
 }
 
 function syncAllYrBtn(){
@@ -4224,7 +4228,7 @@ function renderStandings(){
     return (av-bv)*dir||(b.pf-a.pf);
   });
 
-  if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">No data loaded.</td></tr>';return;}
+  if(!rows.length){body.innerHTML='<tr><td colspan="10" class="empty">No data loaded.</td></tr>';return;}
   body.innerHTML=rows.map((r,i)=>{
     const g=r.wins+r.losses+r.ties;
     const pct=g?(r.wins/g*100).toFixed(0):0;
@@ -4937,8 +4941,9 @@ function initAwardChips(){
 }
 
 function renderAwards(){
-  initAwardChips();
   const el=document.getElementById('awards-content');
+  if(!el)return;
+  initAwardChips();
   const ICONS={mvp:'⭐',champ_mvp:'🏆',roty:'🌱',pb_mvp:'🏈',mip:'📈',slapdick:'🤦',best_tx:'💸'};
   const LABELS={mvp:'Docile League MVP',champ_mvp:'Docile Cup MVP',roty:'Rookie of the Year',
     pb_mvp:'Pro Bowl MVP',mip:'MIP / Comeback POTY',slapdick:'Slapdick of the Year',best_tx:'Best Transaction'};
