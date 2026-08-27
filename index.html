@@ -886,11 +886,15 @@ tbody tr.highlight td{background:var(--gold-dim)}
           <th class="sortable-th" onclick="sortStandings('pct')" id="sth-pct">Win % <span class="sort-arrow"></span></th>
           <th class="sortable-th" onclick="sortStandings('pf')" id="sth-pf">PF <span class="sort-arrow"></span></th>
           <th class="sortable-th" onclick="sortStandings('pa')" id="sth-pa">PA <span class="sort-arrow"></span></th>
-          <th class="sortable-th" onclick="sortStandings('titles')" id="sth-titles">Titles <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortStandings('titles')" id="sth-titles">🏆 <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortStandings('bina')" id="sth-bina" title="Bina Turd (Last Place)">💩 <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortStandings('dhaliwal')" id="sth-dhal" title="Amol Dhaliwal Award (Runner-up)">😬 <span class="sort-arrow"></span></th>
         </tr></thead>
         <tbody id="standings-body"></tbody>
       </table></div>
     </div>
+
+    <!-- STANDINGS note: team awards (Bina Turd, Dhaliwal) now shown in this table -->
 
     <!-- MATCHUPS -->
     <div class="panel" id="panel-matchups">
@@ -987,8 +991,14 @@ tbody tr.highlight td{background:var(--gold-dim)}
 
     <!-- AWARDS -->
     <div class="panel" id="panel-awards">
-      <div class="sh"><h2>Awards & Honors</h2>
-        <div class="sh-right"><select class="f-sel" id="award-yr-sel" onchange="renderAwards()"><option value="all">All seasons</option></select></div>
+      <div class="sh"><h2>Awards & Honors</h2></div>
+      <div style="margin-bottom:0.5rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Season</div>
+        <div id="award-yr-chips" class="yr-filter-row"></div>
+      </div>
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Award type</div>
+        <div id="award-type-chips" class="yr-filter-row"></div>
       </div>
       <div id="awards-content"></div>
       <div class="sh" style="margin-top:2rem"><h2>All-Docile Teams</h2>
@@ -4165,6 +4175,8 @@ function renderStandings(){
   const body=document.getElementById('standings-body');
   const sub=document.getElementById('standings-sub');
   const champCt={};Object.values(CHAMPIONS).forEach(m=>champCt[m]=(champCt[m]||0)+1);
+  const binaCt={};Object.values(BINA_TURDS).forEach(m=>binaCt[m]=(binaCt[m]||0)+1);
+  const dhaliwalCt={};Object.values(AMOL_DHALIWAL).forEach(m=>dhaliwalCt[m]=(dhaliwalCt[m]||0)+1);
 
   const mgrs={};
   const addRecord=(mgr,w,l,t,pf,pa)=>{
@@ -4191,7 +4203,9 @@ function renderStandings(){
   let rows=Object.values(mgrs).map(r=>({
     ...r,isMe:r.managerKey===myKey,
     pct:r.wins+r.losses+r.ties>0?r.wins/(r.wins+r.losses+r.ties):0,
-    titles:champCt[r.managerKey]||0
+    titles:champCt[r.managerKey]||0,
+    bina:binaCt[r.managerKey]||0,
+    dhaliwal:dhaliwalCt[r.managerKey]||0,
   }));
 
   if(sub)sub.textContent=standingsDynastyOnly?'Dynasty era · 2019–present':'All-time · 2014–present';
@@ -4204,6 +4218,8 @@ function renderStandings(){
     else if(col==='pf'){av=a.pf;bv=b.pf;}
     else if(col==='pa'){av=a.pa;bv=b.pa;}
     else if(col==='titles'){av=a.titles;bv=b.titles;}
+    else if(col==='bina'){av=a.bina;bv=b.bina;}
+    else if(col==='dhaliwal'){av=a.dhaliwal;bv=b.dhaliwal;}
     else{av=a.wins;bv=b.wins;}
     return (av-bv)*dir||(b.pf-a.pf);
   });
@@ -4221,6 +4237,8 @@ function renderStandings(){
       <td class="mono">${r.pf.toFixed(0)}</td>
       <td class="mono">${r.pa.toFixed(0)}</td>
       <td class="mono">${r.titles||'—'}</td>
+      <td class="mono">${r.bina||'—'}</td>
+      <td class="mono">${r.dhaliwal||'—'}</td>
     </tr>`;
   }).join('');
 }
@@ -4841,67 +4859,123 @@ function renderTrades(){
 // ══════════════════════════════════════════════════════════════
 // RENDER: AWARDS
 // ══════════════════════════════════════════════════════════════
+let awardsActiveYrs=new Set(['2025']); // default to most recent completed season
+let awardsActiveTypes=new Set(['ALL']);
+
+function initAwardChips(){
+  const yrEl=document.getElementById('award-yr-chips');
+  const typeEl=document.getElementById('award-type-chips');
+
+  if(yrEl&&!yrEl.children.length){
+    const years=Object.keys(PLAYER_AWARDS).sort((a,b)=>b-a);
+    // All chip
+    const allBtn=document.createElement('button');
+    allBtn.className='yr-chip'+(awardsActiveYrs.has('ALL')?' active':'');
+    allBtn.textContent='All';
+    allBtn.onclick=()=>{
+      awardsActiveYrs=new Set(['ALL']);
+      [...yrEl.children].forEach((b,i)=>b.classList.toggle('active',i===0));
+      renderAwards();
+    };
+    yrEl.appendChild(allBtn);
+    years.forEach(yr=>{
+      const b=document.createElement('button');
+      b.className='yr-chip'+(!awardsActiveYrs.has('ALL')&&awardsActiveYrs.has(yr)?' active':'');
+      b.textContent=yr;
+      b.onclick=()=>{
+        if(awardsActiveYrs.has('ALL'))awardsActiveYrs=new Set();
+        awardsActiveYrs.has(yr)?awardsActiveYrs.delete(yr):awardsActiveYrs.add(yr);
+        if(!awardsActiveYrs.size)awardsActiveYrs=new Set(['ALL']);
+        [...yrEl.children].forEach((btn,i)=>{
+          if(i===0)btn.classList.toggle('active',awardsActiveYrs.has('ALL'));
+          else btn.classList.toggle('active',!awardsActiveYrs.has('ALL')&&awardsActiveYrs.has(years[i-1]));
+        });
+        renderAwards();
+      };
+      yrEl.appendChild(b);
+    });
+    // Set 2025 active by default
+    if(awardsActiveYrs.has('2025')){
+      allBtn.classList.remove('active');
+      [...yrEl.children].find(b=>b.textContent==='2025')?.classList.add('active');
+    }
+  }
+
+  if(typeEl&&!typeEl.children.length){
+    const types=[
+      {key:'ALL',label:'All awards'},
+      {key:'mvp',label:'MVP'},
+      {key:'champ_mvp',label:'Champ MVP'},
+      {key:'roty',label:'ROTY'},
+      {key:'pb_mvp',label:'Pro Bowl MVP'},
+      {key:'mip',label:'MIP'},
+      {key:'slapdick',label:'Slapdick'},
+      {key:'best_tx',label:'Best Transaction'},
+    ];
+    types.forEach((t,i)=>{
+      const b=document.createElement('button');
+      b.className='yr-chip'+(awardsActiveTypes.has(t.key)?' active':'');
+      b.textContent=t.label;
+      b.onclick=()=>{
+        if(t.key==='ALL'){
+          awardsActiveTypes=new Set(['ALL']);
+          [...typeEl.children].forEach((btn,j)=>btn.classList.toggle('active',j===0));
+        } else {
+          if(awardsActiveTypes.has('ALL'))awardsActiveTypes=new Set();
+          awardsActiveTypes.has(t.key)?awardsActiveTypes.delete(t.key):awardsActiveTypes.add(t.key);
+          if(!awardsActiveTypes.size)awardsActiveTypes=new Set(['ALL']);
+          [...typeEl.children].forEach((btn,j)=>{
+            if(j===0)btn.classList.toggle('active',awardsActiveTypes.has('ALL'));
+            else btn.classList.toggle('active',!awardsActiveTypes.has('ALL')&&awardsActiveTypes.has(types[j].key));
+          });
+        }
+        renderAwards();
+      };
+      typeEl.appendChild(b);
+    });
+  }
+}
+
 function renderAwards(){
-  const v=document.getElementById('award-yr-sel').value;
-  const years=v==='all'?Object.keys(PLAYER_AWARDS).sort((a,b)=>b-a):[v];
+  initAwardChips();
   const el=document.getElementById('awards-content');
   const ICONS={mvp:'⭐',champ_mvp:'🏆',roty:'🌱',pb_mvp:'🏈',mip:'📈',slapdick:'🤦',best_tx:'💸'};
   const LABELS={mvp:'Docile League MVP',champ_mvp:'Docile Cup MVP',roty:'Rookie of the Year',
     pb_mvp:'Pro Bowl MVP',mip:'MIP / Comeback POTY',slapdick:'Slapdick of the Year',best_tx:'Best Transaction'};
-  el.innerHTML='';
-  // Team awards
-  const tEl=document.createElement('div');
-  tEl.innerHTML=`<div class="sh" style="margin-bottom:1rem"><h2 style="font-size:1.1rem">Team Awards</h2></div>`;
-  const tGrid=document.createElement('div');tGrid.className='awards-grid';
-  const tYears=v==='all'?Object.keys(CHAMPIONS).sort((a,b)=>b-a).slice(0,12):[v];
-  tYears.forEach(yr=>{
-    tGrid.innerHTML+=`
-      <div class="award-card"><div class="award-icon">🏆</div><div>
-        <div class="award-type">Docile League Champion</div>
-        <div class="award-winner">${CHAMPIONS[yr]||'—'}</div>
-        <div class="award-meta">${yr}</div>
-      </div></div>
-      <div class="award-card"><div class="award-icon">💩</div><div>
-        <div class="award-type">Bina Turd (Last Place)</div>
-        <div class="award-winner" style="color:var(--crimson)">${BINA_TURDS[yr]||'—'}</div>
-        <div class="award-meta">${yr}</div>
-      </div></div>
-      <div class="award-card"><div class="award-icon">😬</div><div>
-        <div class="award-type">Amol Dhaliwal "You Blew It"</div>
-        <div class="award-winner" style="color:var(--text2)">${AMOL_DHALIWAL[yr]||'—'}</div>
-        <div class="award-meta">${yr} · 2nd Place</div>
-      </div></div>`;
-  });
-  tEl.appendChild(tGrid);el.appendChild(tEl);
-  // Player awards
-  const pEl=document.createElement('div');
-  pEl.innerHTML=`<div class="sh" style="margin-top:1.5rem;margin-bottom:1rem"><h2 style="font-size:1.1rem">Player Awards</h2></div>`;
+
+  const allYears=Object.keys(PLAYER_AWARDS).sort((a,b)=>b-a);
+  const years=awardsActiveYrs.has('ALL')?allYears:[...awardsActiveYrs].sort((a,b)=>b-a);
+
+  // Helper: make player name clickable if we can find their PID
+  const playerLink=(raw)=>{
+    if(!raw||raw==='N/A')return raw||'—';
+    // Strip team tag [XXX]
+    const name=raw.replace(/^\[[^\]]+\]\s*/,'').trim();
+    const pid=lookupPid(name);
+    if(pid)return`<span class="player-link" onclick="openPlayerModal('${pid}')">${name}</span>`;
+    return name;
+  };
+
   const pGrid=document.createElement('div');pGrid.className='awards-grid';
   years.forEach(yr=>{
     const pa=PLAYER_AWARDS[yr];if(!pa)return;
     Object.entries(pa).forEach(([key,val])=>{
       if(!val||val==='N/A')return;
+      if(!awardsActiveTypes.has('ALL')&&!awardsActiveTypes.has(key))return;
       pGrid.innerHTML+=`<div class="award-card"><div class="award-icon">${ICONS[key]||'🎖️'}</div><div>
         <div class="award-type">${LABELS[key]||key}</div>
-        <div class="award-winner">${val}</div>
+        <div class="award-winner">${playerLink(val)}</div>
         <div class="award-meta">${yr}</div>
       </div></div>`;
     });
   });
-  pEl.appendChild(pGrid);el.appendChild(pEl);
-  // Championship count
-  const ccEl=document.createElement('div');
-  ccEl.innerHTML=`<div class="sh" style="margin-top:1.5rem;margin-bottom:1rem"><h2 style="font-size:1.1rem">Championship Count</h2></div>`;
-  const cc={};Object.values(CHAMPIONS).forEach(m=>cc[m]=(cc[m]||0)+1);
-  const maxC=Math.max(...Object.values(cc));
-  const sorted=Object.entries(cc).sort((a,b)=>b[1]-a[1]);
-  ccEl.innerHTML+=`<div class="champ-bars">${sorted.map(([name,c])=>`
-    <div class="cb-row">
-      <div class="cb-label">${name}</div>
-      <div class="cb-track"><div class="cb-fill" style="width:${Math.round(c/maxC*100)}%"></div></div>
-      <div class="cb-count">${c}</div>
-    </div>`).join('')}</div>`;
-  el.appendChild(ccEl);
+
+  el.innerHTML='';
+  if(!pGrid.innerHTML){
+    el.innerHTML='<div class="empty">No awards match the selected filters.</div>';
+  } else {
+    el.appendChild(pGrid);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -4916,9 +4990,12 @@ function renderDocile(){
   const renderTeam=(team,label,cls)=>{
     if(!team)return'';
     const rows=positions.filter(p=>team[p]&&team[p]!=='N/A').map(p=>{
-      const parts=team[p].split(',');const player=parts[0];const pts=parseFloat(parts[1])||0;
+      const parts=team[p].split(',');const raw=parts[0].trim();const pts=parseFloat(parts[1])||0;
+      const playerName=raw.replace(/^\[[^\]]+\]\s*/,'').trim();
+      const pid=lookupPid(playerName);
+      const nameHtml=pid?`<span class="player-link" onclick="openPlayerModal('${pid}')">${playerName}</span>`:playerName;
       return`<div class="docile-row"><div class="docile-pos">${posLabels[p]}</div>
-        <div><div class="docile-player">${player}</div></div>
+        <div><div class="docile-player">${nameHtml}</div></div>
         <div class="docile-pts">${pts.toFixed(1)}</div></div>`;
     }).join('');
     return`<div class="docile-team">
