@@ -4552,13 +4552,45 @@ function openPlayerModal(pid){
     ${awardsHtml}
     ${tradeHistoryHtml}
     <div class="modal-seasons">
-      <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;margin-top:0.75rem">Season breakdown</div>
+      <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;margin-top:0.75rem">Season breakdown <span style="font-weight:400;font-style:italic;color:var(--text3)">(tap season to expand game log)</span></div>
       <div class="tbl-wrap" style="margin:0"><table style="min-width:unset">
         <thead><tr><th>Season</th><th>Starts</th><th>Total</th><th>Avg</th><th>Manager(s)</th></tr></thead>
-        <tbody>${Object.entries(bySeason).sort((a,b)=>b[0]-a[0]).map(([yr,d])=>
-          `<tr><td class="mono">${yr}</td><td class="mono">${d.starts}</td>
-          <td class="mono">${d.pts.toFixed(1)}</td><td class="mono">${(d.pts/d.starts).toFixed(1)}</td>
-          <td style="font-size:0.75rem;color:var(--text2)">${[...d.managers].join(', ')}</td></tr>`).join('')}
+        <tbody>${Object.entries(bySeason).sort((a,b)=>b[0]-a[0]).map(([yr,d])=>{
+          const rowId=`gl-${pid}-${yr}`;
+          const games=DB.allStarters
+            .filter(s=>String(s.pid)===String(pid)&&s.year===parseInt(yr))
+            .sort((a,b)=>a.week-b.week);
+          const hasGames=games.length>0;
+          const gameLogRow=hasGames?`<tr id="${rowId}" style="display:none">
+            <td colspan="5" style="padding:0 8px 10px;background:var(--surface2)">
+              <table style="width:100%;font-size:0.73rem;border-collapse:collapse">
+                <thead><tr style="color:var(--text3)">
+                  <th style="text-align:left;padding:3px 6px">Wk</th>
+                  <th style="text-align:left;padding:3px 6px">Manager</th>
+                  <th style="text-align:right;padding:3px 6px">Pts</th>
+                </tr></thead>
+                <tbody>${games.map(g=>{
+                  const team=DB.seasons.find(s=>s.year===g.year)?.teams.find(t=>String(t.rosterId)===String(g.teamRosterId));
+                  const mgr=team?.managerKey||g.managerKey||'?';
+                  const pts=(g.points||0).toFixed(1);
+                  const isGood=(g.points||0)>=20,isBad=(g.points||0)<5&&(g.points||0)>0;
+                  return`<tr style="border-top:0.5px solid var(--border)">
+                    <td style="padding:3px 6px;color:var(--text3)">Wk ${g.week}</td>
+                    <td style="padding:3px 6px">${mgr}</td>
+                    <td style="padding:3px 6px;text-align:right;font-family:var(--font-mono);color:${isGood?'var(--teal)':isBad?'var(--crimson)':'var(--text)'};font-weight:${isGood?600:400}">${pts}</td>
+                  </tr>`;
+                }).join('')}</tbody>
+              </table>
+            </td>
+          </tr>`:'';
+          return`<tr style="${hasGames?'cursor:pointer':''}" onclick="${hasGames?`const r=document.getElementById('${rowId}');if(r){r.style.display=r.style.display==='none'?'table-row':'none';this.cells[0].querySelector('span').textContent=r.style.display==='none'?'▶':'▼'}`:''}">
+            <td class="mono">${yr}${hasGames?` <span style="font-size:0.6rem;color:var(--text3);margin-left:3px">▶</span>`:''}</td>
+            <td class="mono">${d.starts}</td>
+            <td class="mono">${d.pts.toFixed(1)}</td>
+            <td class="mono">${(d.pts/d.starts).toFixed(1)}</td>
+            <td style="font-size:0.75rem;color:var(--text2)">${[...d.managers].join(', ')}</td>
+          </tr>${gameLogRow}`;
+        }).join('')}
         </tbody>
       </table></div>
     </div>`;
@@ -5448,23 +5480,63 @@ function buildLeagueContext(){
         });
       });
     });
-    // Include top 30 most-started players' opponent breakdowns
-    const topPids=Object.entries(pAgg).sort((a,b)=>b[1].starts-a[1].starts).slice(0,30).map(([pid])=>pid);
-    topPids.forEach(pid=>{
+    // Player starts vs specific opponents — expanded to ALL players (min 2 starts)
+    lines.push('\nPLAYER PERFORMANCE BY OPPONENT (starters vs each opponent manager):');
+    Object.entries(pidOpponent).forEach(([pid,entries])=>{
+      if(entries.length<2)return;
       const m=DB.playerMeta[pid];
       const name=m?`${m.first_name} ${m.last_name}`:'PID:'+pid;
       const pos=m?.fantasy_positions?.[0]||'?';
-      const entries=pidOpponent[pid]||[];
-      // Group by opponent
       const byOpp={};
       entries.forEach(e=>{
-        if(!byOpp[e.opp])byOpp[e.opp]={starts:0,total:0,pts:[]};
-        byOpp[e.opp].starts++;byOpp[e.opp].total+=(e.pts||0);byOpp[e.opp].pts.push(e.pts??0);
+        if(!byOpp[e.opp])byOpp[e.opp]={starts:0,total:0,best:0};
+        byOpp[e.opp].starts++;
+        byOpp[e.opp].total+=(e.pts||0);
+        if((e.pts||0)>byOpp[e.opp].best)byOpp[e.opp].best=e.pts||0;
       });
       const oppSummary=Object.entries(byOpp).map(([opp,d])=>
-        `vs${opp}:${d.starts}st/${d.total.toFixed(0)}pts`).join(',');
+        `vs${opp}:${d.starts}st/${d.total.toFixed(0)}pts/best${d.best.toFixed(1)}`).join(',');
       if(oppSummary)lines.push(`  ${name}(${pos}): ${oppSummary}`);
     });
+
+    // Single-game highs per player per manager
+    lines.push('\nSINGLE-GAME HIGHS (best score each player posted for each manager):');
+    const pidMgrBest={};
+    DB.allStarters.forEach(s=>{
+      const k=`${s.pid}|${s.managerKey}`;
+      if(!pidMgrBest[k]||s.points>pidMgrBest[k].pts){
+        pidMgrBest[k]={pid:s.pid,mgr:s.managerKey,pts:s.points||0,year:s.year,week:s.week};
+      }
+    });
+    // Sort by pts descending, emit top entries
+    Object.values(pidMgrBest)
+      .filter(e=>e.pts>0)
+      .sort((a,b)=>b.pts-a.pts)
+      .forEach(e=>{
+        const m=DB.playerMeta[e.pid];
+        const name=m?`${m.first_name} ${m.last_name}`:'PID:'+e.pid;
+        const pos=m?.fantasy_positions?.[0]||'?';
+        lines.push(`  ${name}(${pos}) for ${e.mgr}: ${e.pts.toFixed(1)} pts (${e.year} Wk${e.week})`);
+      });
+
+    // Debut leaderboard — each player's first-ever start in the league
+    lines.push('\nLEAGUE DEBUTS (first start ever, sorted by points scored):');
+    const debuts={};
+    DB.allStarters.forEach(s=>{
+      if(!debuts[s.pid]||s.year<debuts[s.pid].year||(s.year===debuts[s.pid].year&&s.week<debuts[s.pid].week)){
+        debuts[s.pid]={pid:s.pid,mgr:s.managerKey,pts:s.points||0,year:s.year,week:s.week};
+      }
+    });
+    Object.values(debuts)
+      .filter(d=>d.pts>0)
+      .sort((a,b)=>b.pts-a.pts)
+      .slice(0,50)
+      .forEach(d=>{
+        const m=DB.playerMeta[d.pid];
+        const name=m?`${m.first_name} ${m.last_name}`:'PID:'+d.pid;
+        const pos=m?.fantasy_positions?.[0]||'?';
+        lines.push(`  ${name}(${pos}): ${d.pts.toFixed(1)} pts debut for ${d.mgr} (${d.year} Wk${d.week})`);
+      });
   }
 
   // Historical awards
