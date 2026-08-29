@@ -734,6 +734,10 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 12 21 12"/><polyline points="17 6 21 6"/><polyline points="17 18 21 18"/><line x1="13" y1="6" x2="13" y2="18"/><line x1="9" y1="9" x2="9" y2="15"/><polyline points="5 12 9 12"/><line x1="13" y1="6" x2="9" y2="9"/><line x1="13" y1="18" x2="9" y2="15"/></svg>
         Playoffs
       </button>
+      <button class="sb-item" onclick="switchTab('playoffscoring')" data-tab="playoffscoring">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="9" y1="17" x2="9" y2="9"/><line x1="13" y1="17" x2="13" y2="5"/><line x1="17" y1="17" x2="17" y2="13"/><line x1="5" y1="17" x2="5" y2="17"/><path d="M3 3l7 7 4-4 7 7"/></svg>
+        Playoff Scoring
+      </button>
       <button class="sb-item" onclick="switchTab('matchups')" data-tab="matchups">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
         Matchups
@@ -895,6 +899,42 @@ tbody tr.highlight td{background:var(--gold-dim)}
     </div>
 
     <!-- STANDINGS note: team awards (Bina Turd, Dhaliwal) now shown in this table -->
+
+    <!-- PLAYOFF PLAYER SCORING -->
+    <div class="panel" id="panel-playoffscoring">
+      <div class="sh"><h2>Playoff Player Scoring</h2><span class="sh-sub">Championship bracket only · 2019–present</span></div>
+      <div style="font-size:0.75rem;color:var(--text3);background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:1rem">
+        Only includes games from the championship bracket (round 1, semis, and finals). Consolation bracket and bye weeks excluded.
+      </div>
+      <div style="margin-bottom:0.5rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Season</div>
+        <div id="ps-yr-chips" class="yr-filter-row"></div>
+      </div>
+      <div style="margin-bottom:0.5rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Position</div>
+        <div id="ps-pos-chips" class="yr-filter-row"></div>
+      </div>
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Manager</div>
+        <div id="ps-mgr-chips" class="yr-filter-row"></div>
+      </div>
+      <div class="filters" style="margin-bottom:0.75rem;align-items:center">
+        <input class="s-input" id="ps-search" placeholder="Search player…" oninput="resetAndRenderPlayoffScoring()">
+        <div id="ps-pagination" style="margin-left:auto"></div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th style="width:2rem;color:var(--text3)">#</th>
+          <th>Player</th><th>Pos</th>
+          <th class="sortable-th" onclick="sortPlayoffScoring('total')" id="psth-total">Playoff Pts <span class="sort-arrow">↓</span></th>
+          <th class="sortable-th" onclick="sortPlayoffScoring('starts')" id="psth-starts">Games <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortPlayoffScoring('avg')" id="psth-avg">Avg <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortPlayoffScoring('best')" id="psth-best">Best <span class="sort-arrow"></span></th>
+          <th>Manager(s)</th>
+        </tr></thead>
+        <tbody id="ps-body"></tbody>
+      </table></div>
+    </div>
 
     <!-- MATCHUPS -->
     <div class="panel" id="panel-matchups">
@@ -4054,6 +4094,212 @@ function renderPlayerGraphs(){
 }
 
 // ══════════════════════════════════════════════════════════════
+// RENDER: PLAYOFF PLAYER SCORING
+// ══════════════════════════════════════════════════════════════
+let psSort={col:'total',dir:-1};
+let psPage=0;
+let psActiveYrs=new Set(['ALL']);
+let psActivePoses=new Set(['QB','RB','WR','TE','K','DEF']);
+let psActiveMgrs=new Set();
+const PS_PAGE_SIZE=50;
+
+// Playoff week schedule by year
+function getPlayoffWeeks(year){
+  if(year<=2020)return[14,15,16];    // 2019, 2020
+  return[15,16,17];                   // 2021-present
+}
+
+// Which roster IDs were in the championship bracket for a given year?
+// Uses PLAYOFF_RESULTS hardcoded data — these are the managers in rounds
+function getChampBracketManagers(year){
+  const pr=PLAYOFF_RESULTS.find(p=>p.year===year);
+  if(!pr)return new Set();
+  const mgrs=new Set();
+  pr.rounds.forEach(round=>{
+    round.games.forEach(g=>{mgrs.add(g.w);mgrs.add(g.l);});
+    (round.byes||[]).forEach(b=>mgrs.add(b));
+  });
+  return mgrs;
+}
+
+function sortPlayoffScoring(col){
+  psSort=psSort.col===col?{col,dir:psSort.dir*-1}:{col,dir:-1};
+  psPage=0;
+  renderPlayoffScoring();
+}
+function resetAndRenderPlayoffScoring(){psPage=0;renderPlayoffScoring();}
+
+function initPsChips(){
+  const yrEl=document.getElementById('ps-yr-chips');
+  const posEl=document.getElementById('ps-pos-chips');
+  const mgrEl=document.getElementById('ps-mgr-chips');
+
+  if(yrEl&&!yrEl.children.length){
+    const years=DB.seasons.map(s=>s.year).filter(y=>y>=2019).sort((a,b)=>b-a);
+    // All chip
+    const allBtn=document.createElement('button');
+    allBtn.className='yr-chip active';allBtn.textContent='All';
+    allBtn.onclick=()=>{
+      psActiveYrs=new Set(['ALL']);
+      [...yrEl.children].forEach((b,i)=>b.classList.toggle('active',i===0));
+      psPage=0;renderPlayoffScoring();
+    };
+    yrEl.appendChild(allBtn);
+    years.forEach(yr=>{
+      const b=document.createElement('button');
+      b.className='yr-chip';b.textContent=String(yr);
+      b.onclick=()=>{
+        if(psActiveYrs.has('ALL'))psActiveYrs=new Set();
+        psActiveYrs.has(yr)?psActiveYrs.delete(yr):psActiveYrs.add(yr);
+        if(!psActiveYrs.size)psActiveYrs=new Set(['ALL']);
+        [...yrEl.children].forEach((btn,i)=>{
+          if(i===0)btn.classList.toggle('active',psActiveYrs.has('ALL'));
+          else btn.classList.toggle('active',!psActiveYrs.has('ALL')&&psActiveYrs.has(years[i-1]));
+        });
+        psPage=0;renderPlayoffScoring();
+      };
+      yrEl.appendChild(b);
+    });
+  }
+
+  if(posEl&&!posEl.children.length){
+    ['QB','RB','WR','TE','K','DEF'].forEach(pos=>{
+      const b=document.createElement('button');
+      b.className='yr-chip active';b.textContent=pos;
+      b.onclick=()=>{
+        psActivePoses.has(pos)?psActivePoses.delete(pos):psActivePoses.add(pos);
+        b.classList.toggle('active',psActivePoses.has(pos));
+        psPage=0;renderPlayoffScoring();
+      };
+      posEl.appendChild(b);
+    });
+  }
+
+  if(mgrEl&&!mgrEl.children.length){
+    const mgrs=[...new Set(DB.seasons.flatMap(s=>s.teams.map(t=>t.managerKey)).filter(Boolean))].sort();
+    if(!psActiveMgrs.size)mgrs.forEach(m=>psActiveMgrs.add(m));
+    mgrs.forEach(mgr=>{
+      const b=document.createElement('button');
+      b.className='yr-chip active';b.textContent=mgr;
+      b.onclick=()=>{
+        psActiveMgrs.has(mgr)?psActiveMgrs.delete(mgr):psActiveMgrs.add(mgr);
+        b.classList.toggle('active',psActiveMgrs.has(mgr));
+        psPage=0;renderPlayoffScoring();
+      };
+      mgrEl.appendChild(b);
+    });
+  }
+}
+
+function renderPlayoffScoring(){
+  const body=document.getElementById('ps-body');
+  if(!body)return;
+  initPsChips();
+
+  const search=(document.getElementById('ps-search')?.value||'').toLowerCase();
+  const years=DB.seasons.map(s=>s.year).filter(y=>y>=2019);
+
+  // Build set of all playoff starts in championship bracket
+  const playoffStarts=[];
+  years.forEach(yr=>{
+    if(!psActiveYrs.has('ALL')&&!psActiveYrs.has(yr))return;
+    const weeks=getPlayoffWeeks(yr);
+    const champMgrs=getChampBracketManagers(yr);
+    if(!champMgrs.size)return;
+
+    // Get roster IDs for champ bracket managers this season
+    const season=DB.seasons.find(s=>s.year===yr);
+    if(!season)return;
+    const champRosterIds=new Set(
+      season.teams
+        .filter(t=>champMgrs.has(t.managerKey))
+        .map(t=>t.rosterId)
+    );
+
+    // For Round 1: only count managers who actually PLAYED (not byes)
+    // For Semis/Finals: all remaining bracket managers
+    const pr=PLAYOFF_RESULTS.find(p=>p.year===yr);
+    const r1Games=pr?.rounds.find(r=>r.round==='Round 1')?.games||[];
+    const r1Mgrs=new Set([...r1Games.flatMap(g=>[g.w,g.l])]);
+    const r1RosterIds=new Set(
+      season.teams.filter(t=>r1Mgrs.has(t.managerKey)).map(t=>t.rosterId)
+    );
+
+    weeks.forEach((wk,idx)=>{
+      // Week idx 0 = Round 1: only r1 teams
+      // Weeks idx 1,2 = Semis/Finals: all champ bracket teams
+      const validIds=idx===0?r1RosterIds:champRosterIds;
+
+      DB.allStarters
+        .filter(s=>s.year===yr&&s.week===wk&&validIds.has(s.teamRosterId))
+        .forEach(s=>playoffStarts.push({...s,round:idx===0?'R1':idx===1?'Semi':'Final'}));
+    });
+  });
+
+  // Aggregate by player
+  const agg={};
+  playoffStarts.forEach(s=>{
+    if(!agg[s.pid])agg[s.pid]={pid:s.pid,starts:0,total:0,best:0,mgrs:new Set()};
+    agg[s.pid].starts++;
+    agg[s.pid].total+=(s.points||0);
+    if((s.points||0)>agg[s.pid].best)agg[s.pid].best=s.points||0;
+    if(s.managerKey)agg[s.pid].mgrs.add(s.managerKey);
+  });
+
+  const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DEF',FB:'badge-RB'};
+
+  let rows=Object.values(agg).map(p=>{
+    const m=DB.playerMeta[p.pid];
+    const name=m?`${m.first_name} ${m.last_name}`:'PID:'+p.pid;
+    const pos=m?.fantasy_positions?.[0]||m?.position||'?';
+    const posKey=pos==='DST'?'DEF':pos;
+    return{...p,name,pos,posKey,avg:p.starts?p.total/p.starts:0};
+  });
+
+  // Filters
+  if(search)rows=rows.filter(r=>r.name.toLowerCase().includes(search));
+  rows=rows.filter(r=>psActivePoses.has(r.posKey));
+  if(psActiveMgrs.size)rows=rows.filter(r=>[...r.mgrs].some(m=>psActiveMgrs.has(m)));
+
+  // Sort
+  const {col,dir}=psSort;
+  rows.sort((a,b)=>{
+    if(col==='starts')return(a.starts-b.starts)*dir;
+    if(col==='avg')return(a.avg-b.avg)*dir;
+    if(col==='best')return(a.best-b.best)*dir;
+    return(a.total-b.total)*dir;
+  });
+
+  // Pagination
+  const total=rows.length;
+  const start=psPage*PS_PAGE_SIZE;
+  const totalPages=Math.ceil(total/PS_PAGE_SIZE);
+  const pageRows=rows.slice(start,start+PS_PAGE_SIZE);
+
+  body.innerHTML=pageRows.map((r,idx)=>`<tr>
+    <td class="mono" style="color:var(--text3);font-size:0.75rem">${start+idx+1}</td>
+    <td><span class="player-link" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
+    <td><span class="badge ${pc[r.pos]||'badge-WR'}">${r.pos}</span></td>
+    <td class="mono" style="color:var(--teal);font-weight:500">${r.total.toFixed(1)}</td>
+    <td class="mono">${r.starts}</td>
+    <td class="mono">${r.avg.toFixed(1)}</td>
+    <td class="mono">${r.best.toFixed(1)}</td>
+    <td style="font-size:0.75rem;color:var(--text2)">${[...r.mgrs].join(', ')}</td>
+  </tr>`).join('')||'<tr><td colspan="8" class="empty">No playoff data found for the selected filters.</td></tr>';
+
+  // Pagination controls
+  const pagCtrl=document.getElementById('ps-pagination');
+  if(pagCtrl){
+    if(totalPages<=1){pagCtrl.innerHTML=`<span style="font-size:0.78rem;color:var(--text3)">${total} players</span>`;return;}
+    pagCtrl.innerHTML=`<div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text2)">
+      <button class="yr-chip" onclick="if(psPage>0){psPage--;renderPlayoffScoring();}" ${psPage===0?'disabled style="opacity:0.4"':''}>←</button>
+      <span>${psPage+1} / ${totalPages}</span>
+      <button class="yr-chip" onclick="if(psPage<${totalPages-1}){psPage++;renderPlayoffScoring();}" ${psPage>=totalPages-1?'disabled style="opacity:0.4"':''}>→</button>
+    </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
 // RENDER: ARCHIVE TUTORIAL
 // ══════════════════════════════════════════════════════════════
 function renderTutorial(){
@@ -5284,7 +5530,7 @@ function renderHof(){
 // ══════════════════════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════════════════════
-const TABS=['home','standings','matchups','players','playergraphs','h2h','playoffs','trades','awards',
+const TABS=['home','standings','matchups','players','playergraphs','h2h','playoffs','playoffscoring','trades','awards',
   'probowl','hof','projections','potg','recap','search',
   'mylineup','myscoring','myh2h','mytrades','timeline',
   'draft','udfa','mydraft','myprobowl','mytimeline','mynfl','tutorial'];
@@ -5292,13 +5538,13 @@ const TABS=['home','standings','matchups','players','playergraphs','h2h','playof
 const SECTIONS={
   home:['home','recap','tutorial'],
   myteam:['myscoring','mytimeline','myh2h','mydraft','mytrades','mylineup','myprobowl','mynfl'],
-  league:['players','playergraphs','timeline','standings','h2h','draft','udfa','trades','hof','awards','potg','probowl','projections','playoffs','matchups'],
+  league:['players','playergraphs','timeline','standings','h2h','draft','udfa','trades','hof','awards','potg','probowl','projections','playoffs','playoffscoring','matchups'],
   search:['search']
 };
 const SECTION_LABELS={
   home:['Dashboard','Weekly Recap','Archive Tutorial'],
   myteam:['My Scoring','My Timeline','My H2H','My Draft','My Trades','All-Time Lineup','My Pro Bowlers','My NFL Breakdown'],
-  league:['Player Scoring','Player Graphs','Timeline','Standings','H2H','Draft','UDFA Auction','Trades','Hall of Fame','Awards','POTG','Pro Bowl','Projections','Playoffs','Matchups'],
+  league:['Player Scoring','Player Graphs','Timeline','Standings','H2H','Draft','UDFA Auction','Trades','Hall of Fame','Awards','POTG','Pro Bowl','Projections','Playoffs','Playoff Scoring','Matchups'],
   search:['Smart Search']
 };
 
@@ -5356,6 +5602,7 @@ function switchTab(name){
   if(name==='playergraphs')renderPlayerGraphs();
   if(name==='draft')renderDraft();
   if(name==='awards'){renderAwards();}
+  if(name==='playoffscoring')renderPlayoffScoring();
   if(name==='udfa')renderUdfa();
   if(name==='mydraft')renderMyDraft();
   if(name==='myprobowl')renderMyProbowl();
