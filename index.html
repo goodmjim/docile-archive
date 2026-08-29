@@ -4273,6 +4273,9 @@ function renderPlayoffScoring(){
   });
 
   console.log(`[PlayoffScoring] ${playoffStarts.length} total playoff starts found across ${years.length} seasons`);
+
+  // Aggregate by player
+  const agg={};
   playoffStarts.forEach(s=>{
     if(!agg[s.pid])agg[s.pid]={pid:s.pid,starts:0,total:0,best:0,mgrs:new Set()};
     agg[s.pid].starts++;
