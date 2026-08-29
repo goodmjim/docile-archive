@@ -4199,6 +4199,14 @@ function renderPlayoffScoring(){
   const search=(document.getElementById('ps-search')?.value||'').toLowerCase();
   const years=DB.seasons.map(s=>s.year).filter(y=>y>=2019);
 
+  // Build a helper: year+rosterId -> managerKey
+  const rosterToMgr={};
+  DB.seasons.forEach(s=>{
+    s.teams.forEach(t=>{
+      rosterToMgr[`${s.year}|${t.rosterId}`]=t.managerKey;
+    });
+  });
+
   // Build set of all playoff starts in championship bracket
   const playoffStarts=[];
   years.forEach(yr=>{
@@ -4213,31 +4221,30 @@ function renderPlayoffScoring(){
     const champRosterIds=new Set(
       season.teams
         .filter(t=>champMgrs.has(t.managerKey))
-        .map(t=>t.rosterId)
+        .map(t=>String(t.rosterId))
     );
 
     // For Round 1: only count managers who actually PLAYED (not byes)
-    // For Semis/Finals: all remaining bracket managers
     const pr=PLAYOFF_RESULTS.find(p=>p.year===yr);
     const r1Games=pr?.rounds.find(r=>r.round==='Round 1')?.games||[];
     const r1Mgrs=new Set([...r1Games.flatMap(g=>[g.w,g.l])]);
     const r1RosterIds=new Set(
-      season.teams.filter(t=>r1Mgrs.has(t.managerKey)).map(t=>t.rosterId)
+      season.teams.filter(t=>r1Mgrs.has(t.managerKey)).map(t=>String(t.rosterId))
     );
 
     weeks.forEach((wk,idx)=>{
-      // Week idx 0 = Round 1: only r1 teams
-      // Weeks idx 1,2 = Semis/Finals: all champ bracket teams
       const validIds=idx===0?r1RosterIds:champRosterIds;
 
       DB.allStarters
-        .filter(s=>s.year===yr&&s.week===wk&&validIds.has(s.teamRosterId))
-        .forEach(s=>playoffStarts.push({...s,round:idx===0?'R1':idx===1?'Semi':'Final'}));
+        .filter(s=>s.year===yr&&s.week===wk&&validIds.has(String(s.teamRosterId)))
+        .forEach(s=>{
+          const mgr=s.managerKey||rosterToMgr[`${yr}|${s.teamRosterId}`]||null;
+          playoffStarts.push({...s,managerKey:mgr,round:idx===0?'R1':idx===1?'Semi':'Final'});
+        });
     });
   });
 
-  // Aggregate by player
-  const agg={};
+  console.log(`[PlayoffScoring] ${playoffStarts.length} total playoff starts found across ${years.length} seasons`);
   playoffStarts.forEach(s=>{
     if(!agg[s.pid])agg[s.pid]={pid:s.pid,starts:0,total:0,best:0,mgrs:new Set()};
     agg[s.pid].starts++;
