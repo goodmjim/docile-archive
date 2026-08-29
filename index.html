@@ -3053,9 +3053,10 @@ async function startLoad(){
               const mus=await apiFetch(`/league/${lid}/matchups/${wk}`);
               if(Array.isArray(mus)&&mus.length){
                 season.matchupsByWeek[wk]=mus;
-                // Add to allStarters
+                // Add to playoffStarters — champ bracket only
                 mus.forEach(m=>{
                   if(!m.starters?.length)return;
+                  if(!isChampBracketMatchup(yr,wk,m.roster_id,season))return;
                   const team=season.teams.find(t=>t.rosterId===m.roster_id);
                   const mgr=team?.managerKey||'Roster '+m.roster_id;
                   m.starters.forEach(pid=>{
@@ -3197,9 +3198,16 @@ async function loadSeason(year,lid){
           isMe:matchup.roster_id===myRosterId,
           managerKey:team?.managerKey||'Unknown'};
         const isPlayoffWk=getPlayoffWeeks(parseInt(year)).includes(w);
-        if(isPlayoffWk){DB.playoffStarters.push(entry);}
-        else{DB.allStarters.push(entry);}
-        if(matchup.roster_id===myRosterId&&!isPlayoffWk)DB.myStarters.push(entry);
+        if(isPlayoffWk){
+          // Only push if this team is in the championship bracket
+          const localSeason={year:parseInt(year),teams};
+          if(isChampBracketMatchup(parseInt(year),w,matchup.roster_id,localSeason)){
+            DB.playoffStarters.push(entry);
+          }
+        } else {
+          DB.allStarters.push(entry);
+          if(matchup.roster_id===myRosterId)DB.myStarters.push(entry);
+        }
       });
     });
   });
