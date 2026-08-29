@@ -3006,7 +3006,7 @@ async function startLoad(){
     const user=await apiFetch('/user/'+encodeURIComponent(username));
     if(!user?.user_id)return setSt('User not found. Check your Sleeper username.',true);
     DB.username=username;DB.myUserId=user.user_id;DB.myTeamName='';
-    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];DB.draftPickMap={};DB.draftData={};DB.draftUnmatched={};DB.startupDraft=[];
+    DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.playoffStarters=[];DB.transactions=[];DB.draftPickMap={};DB.draftData={};DB.draftUnmatched={};DB.startupDraft=[];
     try{const b=localStorage.getItem('dl_bios');if(b)DB.playerBios=JSON.parse(b);}catch{}
     await fetchSharedData();
 
@@ -3057,7 +3057,7 @@ async function startLoad(){
                   m.starters.forEach(pid=>{
                     if(!pid||pid==='0')return;
                     const pts=m.players_points?.[pid]??m.starters_points?.[m.starters.indexOf(pid)]??0;
-                    DB.allStarters.push({pid,week:wk,year:yr,points:pts,
+                    DB.playoffStarters.push({pid,week:wk,year:yr,points:pts,
                       teamRosterId:m.roster_id,managerKey:mgr,isMe:m.roster_id===snap.myRosterId});
                   });
                 });
@@ -3192,8 +3192,10 @@ async function loadSeason(year,lid){
           teamName:team?.name||'Unknown',teamRosterId:matchup.roster_id,
           isMe:matchup.roster_id===myRosterId,
           managerKey:team?.managerKey||'Unknown'};
-        DB.allStarters.push(entry);
-        if(matchup.roster_id===myRosterId)DB.myStarters.push(entry);
+        const isPlayoffWk=getPlayoffWeeks(parseInt(year)).includes(w);
+        if(isPlayoffWk){DB.playoffStarters.push(entry);}
+        else{DB.allStarters.push(entry);}
+        if(matchup.roster_id===myRosterId&&!isPlayoffWk)DB.myStarters.push(entry);
       });
     });
   });
@@ -3267,7 +3269,7 @@ function goBack(){
 // ══════════════════════════════════════════════════════════════
 function loadDemo(){
   DB.username='demo';DB.myUserId='demo';DB.myTeamName='Jon';
-  DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.transactions=[];
+  DB.seasons=[];DB.myStarters=[];DB.allStarters=[];DB.playoffStarters=[];DB.transactions=[];
   try{const b=localStorage.getItem('dl_bios');if(b)DB.playerBios=JSON.parse(b);}catch{}
   const PM={'4046':{first_name:'Patrick',last_name:'Mahomes',fantasy_positions:['QB'],position:'QB',team:'KC'},
     '4034':{first_name:'Lamar',last_name:'Jackson',fantasy_positions:['QB'],position:'QB',team:'BAL'},
@@ -4243,16 +4245,12 @@ function renderPlayoffScoring(){
     const champMgrs=getChampBracketManagers(yr);
     const season=DB.seasons.find(s=>s.year===yr);
 
-    console.log(`[PS] ${yr}: champMgrs=${[...champMgrs].join(',')}, season=${!!season}, weeks=${weeks}`);
     if(!season)return;
 
     const champRosterIds=new Set(
       season.teams.filter(t=>champMgrs.has(t.managerKey)).map(t=>String(t.rosterId))
     );
-    console.log(`[PS] ${yr}: champRosterIds=${[...champRosterIds].join(',')}, allTeams=${season.teams.map(t=>t.managerKey+'='+t.rosterId).join(',')}`);
 
-    const sampleStarters=DB.allStarters.filter(s=>s.year===yr).slice(0,3);
-    console.log(`[PS] ${yr}: sample starters (year=${yr}):`, sampleStarters.map(s=>({wk:s.week,pid:s.pid,rid:s.teamRosterId})));
 
     const pr=PLAYOFF_RESULTS.find(p=>p.year===yr);
     const r1Games=pr?.rounds.find(r=>r.round==='Round 1')?.games||[];
@@ -4263,8 +4261,7 @@ function renderPlayoffScoring(){
 
     weeks.forEach((wk,idx)=>{
       const validIds=idx===0?r1RosterIds:champRosterIds;
-      const found=DB.allStarters.filter(s=>s.year===yr&&s.week===wk&&validIds.has(String(s.teamRosterId)));
-      console.log(`[PS] ${yr} wk${wk}: validIds=${[...validIds].join(',')}, found=${found.length}`);
+      const found=DB.playoffStarters.filter(s=>s.year===yr&&s.week===wk&&validIds.has(String(s.teamRosterId)));
       found.forEach(s=>{
         const mgr=s.managerKey||rosterToMgr[`${yr}|${s.teamRosterId}`]||null;
         playoffStarts.push({...s,managerKey:mgr,round:idx===0?'R1':idx===1?'Semi':'Final'});
