@@ -921,8 +921,8 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <div class="yr-filter-row" id="team-chips"></div>
       </div>
       <div class="filters">
-        <input class="s-input" id="p-search" placeholder="Search player…" oninput="renderPlayers()">
-        <select class="f-sel" id="p-pos" onchange="renderPlayers()">
+        <input class="s-input" id="p-search" placeholder="Search player…" oninput="resetAndRenderPlayers()">
+        <select class="f-sel" id="p-pos" onchange="resetAndRenderPlayers()">
           <option value="all">All positions</option>
           <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
         </select>
@@ -939,6 +939,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
         </tr></thead>
         <tbody id="players-body"></tbody>
       </table></div>
+      <div id="players-pagination"></div>
     </div>
 
     <!-- H2H -->
@@ -1177,8 +1178,8 @@ tbody tr.highlight td{background:var(--gold-dim)}
     <div class="panel" id="panel-myscoring">
       <div class="sh"><h2>My Scoring</h2><span class="sh-sub">All players you've started across loaded seasons</span></div>
       <div class="filters">
-        <input class="s-input" id="mys-search" placeholder="Search player…" oninput="renderMyScoring()">
-        <select class="f-sel" id="mys-pos" onchange="renderMyScoring()">
+        <input class="s-input" id="mys-search" placeholder="Search player…" oninput="resetAndRenderMyScoring()">
+        <select class="f-sel" id="mys-pos" onchange="resetAndRenderMyScoring()">
           <option value="all">All positions</option>
           <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
         </select>
@@ -1194,6 +1195,7 @@ tbody tr.highlight td{background:var(--gold-dim)}
         </tr></thead>
         <tbody id="myscoring-body"></tbody>
       </table></div>
+      <div id="myscoring-pagination"></div>
     </div>
 
     <div class="panel" id="panel-myh2h">
@@ -2721,9 +2723,13 @@ let probowlSort  = {col:'count', dir:-1};
 let myScoringSort = {col:'total', dir:-1};
 let playerScoringSort = {col:'total', dir:-1};
 let potgSort = {col:'potg', dir:-1};
+let playerScoringPage=0;
+let myScoringPage=0;
+const PAGE_SIZE=200;
 
 function sortMyScoring(col){
   myScoringSort=myScoringSort.col===col?{col,dir:myScoringSort.dir*-1}:{col,dir:-1};
+  myScoringPage=0; // reset to first page on sort
   ['total','starts','avg','best'].forEach(c=>{
     const th=document.getElementById('msth-'+c);if(!th)return;
     th.classList.toggle('active-sort',c===col);
@@ -2734,6 +2740,7 @@ function sortMyScoring(col){
 
 function sortPlayers(col){
   playerScoringSort=playerScoringSort.col===col?{col,dir:playerScoringSort.dir*-1}:{col,dir:-1};
+  playerScoringPage=0; // reset to first page on sort
   ['total','starts','avg','best'].forEach(c=>{
     const th=document.getElementById('pth-'+c);if(!th)return;
     th.classList.toggle('active-sort',c===col);
@@ -2742,6 +2749,8 @@ function sortPlayers(col){
   renderPlayers();
 }
 
+function resetAndRenderPlayers(){playerScoringPage=0;renderPlayers();}
+function resetAndRenderMyScoring(){myScoringPage=0;renderMyScoring();}
 function sortPotgTable(col){
   potgSort=potgSort.col===col?{col,dir:potgSort.dir*-1}:{col,dir:-1};
   ['potg','potw','best'].forEach(c=>{
@@ -3292,6 +3301,8 @@ function getSeasons(){
 }
 function onSeasonChange(){renderAll();}
 function renderAll(){
+  // Reset trade filters so they repopulate with current data
+  ['trade-yr-sel','trade-mgr-sel'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="all">All</option>';});
   renderMetrics();renderHome();renderStandings();renderMatchups();renderPlayers();renderH2H();renderPlayoffs();renderTrades();renderAwards();renderDocile();renderProbowl();renderHof();generateInsights();
   // Reset graph chip state so new data takes effect
   pgActiveMgrs=new Set();
@@ -4377,7 +4388,12 @@ function renderPlayers(){
   const trendTh=document.querySelector('#panel-players thead th:last-child');
   if(trendTh&&currentLabel)trendTh.textContent='vs prev wk';
 
-  body.innerHTML=rows.slice(0,200).map((r,idx)=>{
+  const totalRows=rows.length;
+  const start=playerScoringPage*PAGE_SIZE;
+  const pageRows=rows.slice(start,start+PAGE_SIZE);
+  const totalPages=Math.ceil(totalRows/PAGE_SIZE);
+
+  body.innerHTML=pageRows.map((r,idx)=>{
     const overallRank=idx+1;
     let trendCell='';
     if(curRanks&&prevRanks){
@@ -4400,7 +4416,7 @@ function renderPlayers(){
       trendCell=`<div class="pts-bar"><div class="pts-fill" style="width:${bp}%"></div></div>`;
     }
     return`<tr>
-      <td class="mono" style="color:var(--text3);font-size:0.75rem">${overallRank}</td>
+      <td class="mono" style="color:var(--text3);font-size:0.75rem">${start+idx+1}</td>
       <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
       <td><span class="badge ${pc[r.pos]||'badge-WR'}">${r.pos}</span></td>
       <td class="mono" style="color:var(--text3);font-size:0.72rem">${r.nflTeam}</td>
@@ -4411,11 +4427,19 @@ function renderPlayers(){
       <td>${trendCell}</td>
     </tr>`;
   }).join('');
+
+  // Pagination controls
+  const pagCtrl=document.getElementById('players-pagination');
+  if(pagCtrl){
+    if(totalPages<=1){pagCtrl.innerHTML='';return;}
+    pagCtrl.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:0.82rem;color:var(--text2)">
+      <button class="yr-chip${playerScoringPage===0?' disabled':''}" onclick="if(playerScoringPage>0){playerScoringPage--;renderPlayers();}" ${playerScoringPage===0?'disabled':''}>← Prev</button>
+      <span>Page ${playerScoringPage+1} of ${totalPages} &nbsp;·&nbsp; ${start+1}–${Math.min(start+PAGE_SIZE,totalRows)} of ${totalRows} players</span>
+      <button class="yr-chip${playerScoringPage>=totalPages-1?' disabled':''}" onclick="if(playerScoringPage<${totalPages-1}){playerScoringPage++;renderPlayers();}" ${playerScoringPage>=totalPages-1?'disabled':''}>Next →</button>
+    </div>`;
+  }
 }
 
-// ══════════════════════════════════════════════════════════════
-// PLAYER MODAL
-// ══════════════════════════════════════════════════════════════
 function getPlayerAcquisition(pid){
   // Search rookie drafts
   for(const[yr,picks] of Object.entries(DB.draftData||{})){
@@ -4760,12 +4784,17 @@ function renderPlayoffStandings(){
 // RENDER: TRADES
 // ══════════════════════════════════════════════════════════════
 function initTradeFilters(){
-  const years=[...new Set(DB.transactions.filter(t=>t.type==='trade').map(t=>t.year))].sort((a,b)=>b-a);
   const yrSel=document.getElementById('trade-yr-sel');
-  if(yrSel)yrSel.innerHTML='<option value="all">All seasons</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
-  const mgrs=[...new Set(DB.seasons.flatMap(s=>s.teams.map(t=>t.managerKey)).filter(Boolean))].sort();
   const mgrSel=document.getElementById('trade-mgr-sel');
-  if(mgrSel)mgrSel.innerHTML='<option value="all">All managers</option>'+mgrs.map(m=>`<option value="${m}">${m}</option>`).join('');
+  // Only populate if empty (don't reset on every renderTrades call)
+  if(yrSel&&yrSel.options.length<=1){
+    const years=[...new Set(DB.transactions.filter(t=>t.type==='trade').map(t=>t.year))].sort((a,b)=>b-a);
+    yrSel.innerHTML='<option value="all">All seasons</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  }
+  if(mgrSel&&mgrSel.options.length<=1){
+    const mgrs=[...new Set(DB.seasons.flatMap(s=>s.teams.map(t=>t.managerKey)).filter(Boolean))].sort();
+    mgrSel.innerHTML='<option value="all">All managers</option>'+mgrs.map(m=>`<option value="${m}">${m}</option>`).join('');
+  }
 }
 
 function resolvePickName(pick, tradeYear){
@@ -6696,8 +6725,11 @@ function renderMyScoring(){
   const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
   const body=document.getElementById('myscoring-body');
   if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty">No starters found.</td></tr>';return;}
-  body.innerHTML=rows.slice(0,200).map((r,idx)=>`<tr>
-    <td class="mono" style="color:var(--text3);font-size:0.75rem">${idx+1}</td>
+  const msTotal=rows.length;
+  const msStart=myScoringPage*PAGE_SIZE;
+  const msPages=Math.ceil(msTotal/PAGE_SIZE);
+  body.innerHTML=rows.slice(msStart,msStart+PAGE_SIZE).map((r,idx)=>`<tr>
+    <td class="mono" style="color:var(--text3);font-size:0.75rem">${msStart+idx+1}</td>
     <td><span class="player-link" style="font-weight:500" onclick="openPlayerModal('${r.pid}')">${r.name}</span></td>
     <td><span class="badge ${pc[r.pos]||'badge-WR'}">${r.pos}</span></td>
     <td class="mono">${r.total.toFixed(1)}</td>
@@ -6705,6 +6737,15 @@ function renderMyScoring(){
     <td class="mono">${r.avg.toFixed(1)}</td>
     <td class="mono">${r.best.toFixed(1)}</td>
   </tr>`).join('');
+  const msPag=document.getElementById('myscoring-pagination');
+  if(msPag){
+    if(msPages<=1){msPag.innerHTML='';return;}
+    msPag.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:0.82rem;color:var(--text2)">
+      <button class="yr-chip" onclick="if(myScoringPage>0){myScoringPage--;renderMyScoring();}" ${myScoringPage===0?'disabled':''}>← Prev</button>
+      <span>Page ${myScoringPage+1} of ${msPages} &nbsp;·&nbsp; ${msStart+1}–${Math.min(msStart+PAGE_SIZE,msTotal)} of ${msTotal} players</span>
+      <button class="yr-chip" onclick="if(myScoringPage<${msPages-1}){myScoringPage++;renderMyScoring();}" ${myScoringPage>=msPages-1?'disabled':''}>Next →</button>
+    </div>`;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
