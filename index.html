@@ -796,6 +796,8 @@ tbody tr.highlight td{background:var(--gold-dim)}
             <option value="probowls">Pro Bowls</option>
             <option value="alldocile">All-Docile selections</option>
             <option value="draftpick">Draft pick (overall)</option>
+            <option value="playoff_total">Playoff points</option>
+            <option value="playoff_starts">Playoff appearances</option>
           </select>
         </div>
         <div>
@@ -810,6 +812,8 @@ tbody tr.highlight td{background:var(--gold-dim)}
             <option value="probowls">Pro Bowls</option>
             <option value="alldocile">All-Docile selections</option>
             <option value="draftpick">Draft pick (overall)</option>
+            <option value="playoff_total">Playoff points</option>
+            <option value="playoff_starts">Playoff appearances</option>
           </select>
         </div>
         <div>
@@ -3814,11 +3818,18 @@ function buildPlayerGraphData(){
     ?DB.allStarters
     :DB.allStarters.filter(s=>pgActiveSeasons.has(s.year));
   startersToUse.forEach(s=>{
-    if(!byPid[s.pid])byPid[s.pid]={pid:s.pid,starts:0,total:0,best:0,potg:0,potw:0,probowls:0,alldocile:0,mgrs:new Set(),acq:pidAcq[s.pid]||null};
+    if(!byPid[s.pid])byPid[s.pid]={pid:s.pid,starts:0,total:0,best:0,potg:0,potw:0,probowls:0,alldocile:0,playoff_total:0,playoff_starts:0,mgrs:new Set(),acq:pidAcq[s.pid]||null};
     byPid[s.pid].starts++;
     byPid[s.pid].total+=(s.points||0);
     if((s.points||0)>byPid[s.pid].best)byPid[s.pid].best=s.points||0;
     if(s.managerKey)byPid[s.pid].mgrs.add(s.managerKey);
+  });
+
+  // Add playoff stats from DB.playoffStarters
+  DB.playoffStarters.forEach(s=>{
+    if(!byPid[s.pid])return; // only add to players who have regular season starts
+    byPid[s.pid].playoff_total+=(s.points||0);
+    byPid[s.pid].playoff_starts++;
   });
 
   // POTG/POTW counts
@@ -3858,7 +3869,8 @@ function buildPlayerGraphData(){
 const METRIC_LABELS={
   starts:'Appearances',total:'Total Points',avg:'Pts/Game',best:'Best Game',
   potg:'POTG',potw:'POTW',probowls:'Pro Bowls',alldocile:'All-Docile',
-  draftpick:'Draft Pick (Overall)'
+  draftpick:'Draft Pick (Overall)',
+  playoff_total:'Playoff Points',playoff_starts:'Playoff Appearances'
 };
 
 let pgOverlays={xmean:false,ymean:false,r2:false};
@@ -3899,7 +3911,7 @@ function showPgTapInfo(d,xKey,yKey){
   const nameEl=document.getElementById('pg-tap-name');
   const statsEl=document.getElementById('pg-tap-stats');
   if(!panel||!nameEl||!statsEl)return;
-  const isInt=(k)=>['starts','potg','potw','probowls','alldocile','draftpick'].includes(k);
+  const isInt=(k)=>['starts','potg','potw','probowls','alldocile','draftpick','playoff_starts'].includes(k);
   const acqStr=d.acq
     ?(d.acq.source==='Draft'?`${d.acq.year} Rd ${d.acq.round} (#${d.acq.pickNo})`
       :d.acq.source==='Startup'?`2019 Startup Rd ${d.acq.round} (#${d.acq.pickNo})`
@@ -3964,6 +3976,8 @@ function renderPlayerGraphs(){
     const getVal=(key)=>{
       if(key==='avg')return avg;
       if(key==='draftpick')return d.acq?.source==='Draft'?(d.acq.pickNo||null):null;
+      if(key==='playoff_total')return d.playoff_total||0;
+      if(key==='playoff_starts')return d.playoff_starts||0;
       return d[key]||0;
     };
     const xVal=getVal(xKey);
@@ -4036,7 +4050,7 @@ function renderPlayerGraphs(){
                   :d.acq.source==='Startup'?`2019 Startup Rd ${d.acq.round} (#${d.acq.pickNo})`
                   :`${d.acq.year} ${d.acq.source}`)
                 :'FA (undrafted)';
-              const isInt=(k)=>['starts','potg','potw','probowls','alldocile','draftpick'].includes(k);
+              const isInt=(k)=>['starts','potg','potw','probowls','alldocile','draftpick','playoff_starts'].includes(k);
               return[
                 `${METRIC_LABELS[xKey]}: ${typeof d.x==='number'?d.x.toFixed(isInt(xKey)?0:1):'—'}`,
                 `${METRIC_LABELS[yKey]}: ${typeof d.y==='number'?d.y.toFixed(isInt(yKey)?0:1):'—'}`,
