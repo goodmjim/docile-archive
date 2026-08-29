@@ -3039,6 +3039,33 @@ async function startLoad(){
           matchupsByWeek:snap.matchupsByWeek||{},
           scoring:{},projByWeek:{},seedMap:snap.seedMap||{}});
         applySnapshot(snap);
+        // Also fetch playoff weeks from Sleeper (not in snapshot)
+        const playoffWks=getPlayoffWeeks(yr);
+        const season=DB.seasons.find(s=>s.year===yr);
+        if(season){
+          await Promise.all(playoffWks.map(async wk=>{
+            if(season.matchupsByWeek[wk])return; // already have it
+            try{
+              const mus=await apiFetch(`/league/${lid}/matchups/${wk}`);
+              if(Array.isArray(mus)&&mus.length){
+                season.matchupsByWeek[wk]=mus;
+                // Add to allStarters
+                mus.forEach(m=>{
+                  if(!m.starters?.length)return;
+                  const team=season.teams.find(t=>t.rosterId===m.roster_id);
+                  const mgr=team?.managerKey||'Roster '+m.roster_id;
+                  m.starters.forEach(pid=>{
+                    if(!pid||pid==='0')return;
+                    const pts=m.players_points?.[pid]??m.starters_points?.[m.starters.indexOf(pid)]??0;
+                    DB.allStarters.push({pid,week:wk,year:yr,points:pts,
+                      teamRosterId:m.roster_id,managerKey:mgr,isMe:m.roster_id===snap.myRosterId});
+                  });
+                });
+              }
+            }catch(e){/* playoff week unavailable */}
+          }));
+          console.log(`[Archive] ${year}: playoff weeks loaded`);
+        }
       } else {
         // Current season or no snapshot — load from Sleeper, use snapshot as fallback
         try{
@@ -3103,7 +3130,8 @@ async function loadSeason(year,lid){
       isMe:r.roster_id===myRosterId};
   });
   const scoring=league.scoring_settings||{};
-  const weekCount=Math.max((parseInt(league.settings?.playoff_week_start||14)-1),13);
+  const playoffStart=parseInt(league.settings?.playoff_week_start||14);
+  const weekCount=Math.min(playoffStart+2, 18); // include all 3 playoff rounds (R1, Semis, Final)
   const weekNums=Array.from({length:weekCount},(_,i)=>i+1);
   // Only fetch projections for 2020+ (data reliability)
   const fetchProj=parseInt(year)>=2020;
@@ -4213,18 +4241,19 @@ function renderPlayoffScoring(){
     if(!psActiveYrs.has('ALL')&&!psActiveYrs.has(yr))return;
     const weeks=getPlayoffWeeks(yr);
     const champMgrs=getChampBracketManagers(yr);
-    if(!champMgrs.size)return;
-
-    // Get roster IDs for champ bracket managers this season
     const season=DB.seasons.find(s=>s.year===yr);
-    if(!season)return;
-    const champRosterIds=new Set(
-      season.teams
-        .filter(t=>champMgrs.has(t.managerKey))
-        .map(t=>String(t.rosterId))
-    );
 
-    // For Round 1: only count managers who actually PLAYED (not byes)
+    console.log(`[PS] ${yr}: champMgrs=${[...champMgrs].join(',')}, season=${!!season}, weeks=${weeks}`);
+    if(!season)return;
+
+    const champRosterIds=new Set(
+      season.teams.filter(t=>champMgrs.has(t.managerKey)).map(t=>String(t.rosterId))
+    );
+    console.log(`[PS] ${yr}: champRosterIds=${[...champRosterIds].join(',')}, allTeams=${season.teams.map(t=>t.managerKey+'='+t.rosterId).join(',')}`);
+
+    const sampleStarters=DB.allStarters.filter(s=>s.year===yr).slice(0,3);
+    console.log(`[PS] ${yr}: sample starters (year=${yr}):`, sampleStarters.map(s=>({wk:s.week,pid:s.pid,rid:s.teamRosterId})));
+
     const pr=PLAYOFF_RESULTS.find(p=>p.year===yr);
     const r1Games=pr?.rounds.find(r=>r.round==='Round 1')?.games||[];
     const r1Mgrs=new Set([...r1Games.flatMap(g=>[g.w,g.l])]);
@@ -4234,13 +4263,12 @@ function renderPlayoffScoring(){
 
     weeks.forEach((wk,idx)=>{
       const validIds=idx===0?r1RosterIds:champRosterIds;
-
-      DB.allStarters
-        .filter(s=>s.year===yr&&s.week===wk&&validIds.has(String(s.teamRosterId)))
-        .forEach(s=>{
-          const mgr=s.managerKey||rosterToMgr[`${yr}|${s.teamRosterId}`]||null;
-          playoffStarts.push({...s,managerKey:mgr,round:idx===0?'R1':idx===1?'Semi':'Final'});
-        });
+      const found=DB.allStarters.filter(s=>s.year===yr&&s.week===wk&&validIds.has(String(s.teamRosterId)));
+      console.log(`[PS] ${yr} wk${wk}: validIds=${[...validIds].join(',')}, found=${found.length}`);
+      found.forEach(s=>{
+        const mgr=s.managerKey||rosterToMgr[`${yr}|${s.teamRosterId}`]||null;
+        playoffStarts.push({...s,managerKey:mgr,round:idx===0?'R1':idx===1?'Semi':'Final'});
+      });
     });
   });
 
