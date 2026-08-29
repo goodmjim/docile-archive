@@ -920,12 +920,13 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem">Teams</div>
         <div class="yr-filter-row" id="team-chips"></div>
       </div>
-      <div class="filters">
+      <div class="filters" style="align-items:center">
         <input class="s-input" id="p-search" placeholder="Search player…" oninput="resetAndRenderPlayers()">
         <select class="f-sel" id="p-pos" onchange="resetAndRenderPlayers()">
           <option value="all">All positions</option>
           <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
         </select>
+        <div id="players-pagination" style="margin-left:auto"></div>
       </div>
       <div class="tbl-wrap"><table>
         <thead><tr>
@@ -939,7 +940,6 @@ tbody tr.highlight td{background:var(--gold-dim)}
         </tr></thead>
         <tbody id="players-body"></tbody>
       </table></div>
-      <div id="players-pagination"></div>
     </div>
 
     <!-- H2H -->
@@ -4349,7 +4349,8 @@ function buildWeeklyRanks(starters, sortBy){
     snapshots.push({year,week,rankMap});
   });
   return{current:snapshots[snapshots.length-1].rankMap, prev:snapshots[snapshots.length-2].rankMap,
-    currentLabel:`Wk ${snapshots[snapshots.length-1].week} ${snapshots[snapshots.length-1].year}`};
+    currentLabel:`Wk ${snapshots[snapshots.length-1].week} ${snapshots[snapshots.length-1].year}`,
+    latestWeek:{year:snapshots[snapshots.length-1].year, week:snapshots[snapshots.length-1].week}};
 }
 
 function renderPlayers(){
@@ -4376,8 +4377,16 @@ function renderPlayers(){
   const sf={total:(a,b)=>(a.total-b.total)*dir,starts:(a,b)=>(a.starts-b.starts)*dir,avg:(a,b)=>(a.avg-b.avg)*dir,best:(a,b)=>(a.best-b.best)*dir};
   rows.sort(sf[sortBy]||sf.total);
 
+  // Build debut map: pid -> {year, week} of first-ever start
+  const debutMap={};
+  starters.forEach(s=>{
+    if(!debutMap[s.pid]||s.year<debutMap[s.pid].year||(s.year===debutMap[s.pid].year&&s.week<debutMap[s.pid].week)){
+      debutMap[s.pid]={year:s.year,week:s.week};
+    }
+  });
+
   // Compute week-over-week rank movement
-  const {current:curRanks, prev:prevRanks, currentLabel} = buildWeeklyRanks(starters, sortBy);
+  const {current:curRanks, prev:prevRanks, currentLabel, latestWeek} = buildWeeklyRanks(starters, sortBy);
 
   const maxTotal=rows.length?Math.max(...rows.map(r=>r.total)):1;
   const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
@@ -4399,7 +4408,10 @@ function renderPlayers(){
     if(curRanks&&prevRanks){
       const curRk=curRanks[r.pid];
       const prevRk=prevRanks[r.pid];
-      if(!prevRk){
+      // NEW: only if player's debut was in the most recent week
+      const debut=debutMap[r.pid];
+      const isNewThisWeek=debut&&latestWeek&&debut.year===latestWeek.year&&debut.week===latestWeek.week;
+      if(isNewThisWeek){
         trendCell=`<span style="font-size:0.72rem;color:var(--teal);font-family:var(--font-mono);font-weight:600">NEW</span>`;
       } else if(curRk&&prevRk){
         const delta=prevRk-curRk;
@@ -4432,10 +4444,10 @@ function renderPlayers(){
   const pagCtrl=document.getElementById('players-pagination');
   if(pagCtrl){
     if(totalPages<=1){pagCtrl.innerHTML='';return;}
-    pagCtrl.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:0.82rem;color:var(--text2)">
-      <button class="yr-chip${playerScoringPage===0?' disabled':''}" onclick="if(playerScoringPage>0){playerScoringPage--;renderPlayers();}" ${playerScoringPage===0?'disabled':''}>← Prev</button>
-      <span>Page ${playerScoringPage+1} of ${totalPages} &nbsp;·&nbsp; ${start+1}–${Math.min(start+PAGE_SIZE,totalRows)} of ${totalRows} players</span>
-      <button class="yr-chip${playerScoringPage>=totalPages-1?' disabled':''}" onclick="if(playerScoringPage<${totalPages-1}){playerScoringPage++;renderPlayers();}" ${playerScoringPage>=totalPages-1?'disabled':''}>Next →</button>
+    pagCtrl.innerHTML=`<div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text2);white-space:nowrap">
+      <button class="yr-chip" onclick="if(playerScoringPage>0){playerScoringPage--;renderPlayers();}" ${playerScoringPage===0?'disabled style="opacity:0.4"':''}>←</button>
+      <span>${playerScoringPage+1} / ${totalPages}</span>
+      <button class="yr-chip" onclick="if(playerScoringPage<${totalPages-1}){playerScoringPage++;renderPlayers();}" ${playerScoringPage>=totalPages-1?'disabled style="opacity:0.4"':''}>→</button>
     </div>`;
   }
 }
