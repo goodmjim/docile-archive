@@ -4166,6 +4166,25 @@ function getChampBracketManagers(year){
   return mgrs;
 }
 
+// Is a given matchup (year, week, rosterId) part of the championship bracket?
+// Returns true for regular season weeks, and for playoff weeks only if the team was in the champ bracket
+function isChampBracketMatchup(year, week, rosterId, season){
+  const playoffWks=getPlayoffWeeks(year);
+  if(!playoffWks.includes(week))return true; // regular season — always include
+  const champMgrs=getChampBracketManagers(year);
+  if(!champMgrs.size)return true; // no bracket data — include by default
+  const team=season?.teams.find(t=>String(t.rosterId)===String(rosterId));
+  if(!team)return false;
+  // For round 1 week: only teams that actually played (not byes)
+  if(week===playoffWks[0]){
+    const pr=PLAYOFF_RESULTS.find(p=>p.year===year);
+    const r1Games=pr?.rounds.find(r=>r.round==='Round 1')?.games||[];
+    const r1Mgrs=new Set(r1Games.flatMap(g=>[g.w,g.l]));
+    return r1Mgrs.has(team.managerKey);
+  }
+  return champMgrs.has(team.managerKey);
+}
+
 function sortPlayoffScoring(col){
   psSort=psSort.col===col?{col,dir:psSort.dir*-1}:{col,dir:-1};
   psPage=0;
@@ -4573,16 +4592,20 @@ function renderMatchups(){
   // Sleeper era
   getSeasons().forEach(s=>{
     Object.entries(s.matchupsByWeek).forEach(([wk,mus])=>{
+      const weekNum=parseInt(wk);
       const byId={};
       mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
       Object.values(byId).forEach(pair=>{
         if(pair.length<2)return;
         const[a,b]=pair;
+        // Skip playoff weeks for non-championship-bracket teams
+        if(!isChampBracketMatchup(s.year,weekNum,a.roster_id,s)||
+           !isChampBracketMatchup(s.year,weekNum,b.roster_id,s))return;
         const tA=s.teams.find(t=>t.rosterId===a.roster_id);
         const tB=s.teams.find(t=>t.rosterId===b.roster_id);
         const labelA=tA?.managerKey||'?',labelB=tB?.managerKey||'?';
         const hasMe=a.roster_id===s.myRosterId||b.roster_id===s.myRosterId;
-        cards.push({year:s.year,week:parseInt(wk),t1:labelA,s1:a.points||0,t2:labelB,s2:b.points||0,tie:false,hasMe});
+        cards.push({year:s.year,week:weekNum,t1:labelA,s1:a.points||0,t2:labelB,s2:b.points||0,tie:false,hasMe});
       });
     });
   });
@@ -4952,9 +4975,12 @@ function renderH2H(){
   const seasons=getSeasons();
   seasons.forEach(s=>{
     Object.entries(s.matchupsByWeek).forEach(([w,mus])=>{
+      const weekNum=parseInt(w);
       const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
       Object.values(byId).forEach(pair=>{
         if(pair.length<2)return;const[a,b]=pair;
+        if(!isChampBracketMatchup(s.year,weekNum,a.roster_id,s)||
+           !isChampBracketMatchup(s.year,weekNum,b.roster_id,s))return;
         const ta=s.teams.find(t=>t.rosterId===a.roster_id);
         const tb=s.teams.find(t=>t.rosterId===b.roster_id);
         if(!ta||!tb)return;
@@ -4964,7 +4990,7 @@ function renderH2H(){
         const pt1=isT1A?a.points||0:b.points||0;
         const pt2=isT2A?a.points||0:b.points||0;
         if(pt1>pt2)t1w++;else if(pt2>pt1)t2w++;else ties++;
-        gameRows.push({year:s.year,week:parseInt(w),pt1,pt2,winner:pt1>pt2?t1:pt2>pt1?t2:'Tie'});
+        gameRows.push({year:s.year,week:weekNum,pt1,pt2,winner:pt1>pt2?t1:pt2>pt1?t2:'Tie'});
       });
     });
   });
@@ -7084,7 +7110,8 @@ function renderMyH2H(){
   DB.seasons.forEach(s=>{
     const myTeam=s.teams.find(t=>t.isMe);
     if(!myTeam)return;
-    Object.values(s.matchupsByWeek).forEach(weekMatchups=>{
+    Object.entries(s.matchupsByWeek).forEach(([wk,weekMatchups])=>{
+      const weekNum=parseInt(wk);
       const byId={};
       weekMatchups.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
       Object.values(byId).forEach(pair=>{
@@ -7093,6 +7120,9 @@ function renderMyH2H(){
         if(!myM)return;
         const oppM=pair.find(m=>m.roster_id!==s.myRosterId);
         if(!oppM)return;
+        // Skip playoff weeks where either team isn't in the champ bracket
+        if(!isChampBracketMatchup(s.year,weekNum,myM.roster_id,s)||
+           !isChampBracketMatchup(s.year,weekNum,oppM.roster_id,s))return;
         const oppTeam=s.teams.find(t=>t.rosterId===oppM.roster_id);
         const oppKey=oppTeam?.managerKey||oppTeam?.name;
         if(!oppKey)return;
