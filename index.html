@@ -4877,6 +4877,19 @@ function openPlayerModal(pid){
       </div>
     </div>`:'';
 
+  // Playoff stats for this player
+  const playoffAll=DB.playoffStarters.filter(s=>String(s.pid)===String(pid));
+  const playoffTotal=playoffAll.reduce((a,s)=>a+(s.points||0),0);
+  const playoffStarts=playoffAll.length;
+  const playoffAvg=playoffStarts?playoffTotal/playoffStarts:0;
+  const byPlayoffSeason={};
+  playoffAll.forEach(s=>{
+    if(!byPlayoffSeason[s.year])byPlayoffSeason[s.year]={pts:0,starts:0,managers:new Set()};
+    byPlayoffSeason[s.year].pts+=(s.points||0);
+    byPlayoffSeason[s.year].starts++;
+    byPlayoffSeason[s.year].managers.add(s.managerKey||s.teamName);
+  });
+
   (document.getElementById('modal-body')||{innerHTML:''}).innerHTML=`
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:0.75rem">
       <div style="position:relative;width:64px;height:64px;flex-shrink:0">
@@ -4906,10 +4919,14 @@ function openPlayerModal(pid){
       <div class="mstat"><div class="ml">${pos} Rank</div><div class="mv">#${posRk}</div></div>
       <div class="mstat"><div class="ml">Overall Rank</div><div class="mv">#${overallRk}</div></div>
     </div>
-    <div class="modal-bio" style="font-style:normal">
-      <div id="modal-bio-text" style="font-size:0.82rem;color:var(--text2);line-height:1.6;font-family:var(--font-body);white-space:pre-wrap">${bio||'<span style="color:var(--text3);font-style:italic">No notes yet.</span>'}</div>
-    </div>
-    <div style="font-size:0.68rem;color:var(--text3);margin-top:4px">${SHARED_SHEET_ID?'Notes are managed via the PlayerBios sheet.':'No shared sheet configured.'}</div>
+    ${playoffStarts>0?`<div style="margin-top:0.5rem">
+      <div style="font-size:0.65rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem">Playoff Stats (Championship bracket)</div>
+      <div class="modal-stats" style="grid-template-columns:repeat(3,1fr)">
+        <div class="mstat"><div class="ml">Playoff Pts</div><div class="mv" style="color:var(--teal)">${playoffTotal.toFixed(1)}</div></div>
+        <div class="mstat"><div class="ml">Playoff Starts</div><div class="mv" style="color:var(--teal)">${playoffStarts}</div></div>
+        <div class="mstat"><div class="ml">Playoff Avg</div><div class="mv" style="color:var(--teal)">${playoffAvg.toFixed(1)}</div></div>
+      </div>
+    </div>`:''}
     ${acqHtml}
     ${awardsHtml}
     ${tradeHistoryHtml}
@@ -4955,7 +4972,53 @@ function openPlayerModal(pid){
         }).join('')}
         </tbody>
       </table></div>
-    </div>`;
+    </div>
+    ${playoffStarts>0?`<div class="modal-seasons">
+      <div style="font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;margin-top:0.75rem">Playoff breakdown <span style="font-weight:400;font-style:italic;color:var(--text3)">(championship bracket · tap to expand)</span></div>
+      <div class="tbl-wrap" style="margin:0"><table style="min-width:unset">
+        <thead><tr><th>Season</th><th>Games</th><th>Total</th><th>Avg</th><th>Manager(s)</th></tr></thead>
+        <tbody>${Object.entries(byPlayoffSeason).sort((a,b)=>b[0]-a[0]).map(([yr,d])=>{
+          const rowId=`pgl-${pid}-${yr}`;
+          const pgames=DB.playoffStarters
+            .filter(s=>String(s.pid)===String(pid)&&s.year===parseInt(yr))
+            .sort((a,b)=>a.week-b.week);
+          const hasPGames=pgames.length>0;
+          const playoffLogRow=hasPGames?`<tr id="${rowId}" style="display:none">
+            <td colspan="5" style="padding:0 8px 10px;background:var(--surface2)">
+              <table style="width:100%;font-size:0.73rem;border-collapse:collapse">
+                <thead><tr style="color:var(--text3)">
+                  <th style="text-align:left;padding:3px 6px">Wk</th>
+                  <th style="text-align:left;padding:3px 6px">Round</th>
+                  <th style="text-align:left;padding:3px 6px">Manager</th>
+                  <th style="text-align:right;padding:3px 6px">Pts</th>
+                </tr></thead>
+                <tbody>${pgames.map(g=>{
+                  const wks=getPlayoffWeeks(parseInt(yr));
+                  const round=g.week===wks[0]?'R1':g.week===wks[1]?'Semi':'Final';
+                  const mgr=g.managerKey||'?';
+                  const pts=(g.points||0).toFixed(1);
+                  const isGood=(g.points||0)>=20,isBad=(g.points||0)<5&&(g.points||0)>0;
+                  return`<tr style="border-top:0.5px solid var(--border)">
+                    <td style="padding:3px 6px;color:var(--text3)">Wk ${g.week}</td>
+                    <td style="padding:3px 6px;color:var(--teal);font-size:0.7rem">${round}</td>
+                    <td style="padding:3px 6px">${mgr}</td>
+                    <td style="padding:3px 6px;text-align:right;font-family:var(--font-mono);color:${isGood?'var(--teal)':isBad?'var(--crimson)':'var(--text)'};font-weight:${isGood?600:400}">${pts}</td>
+                  </tr>`;
+                }).join('')}</tbody>
+              </table>
+            </td>
+          </tr>`:'';
+          return`<tr style="${hasPGames?'cursor:pointer':''}" onclick="${hasPGames?`const r=document.getElementById('${rowId}');if(r){r.style.display=r.style.display==='none'?'table-row':'none';this.cells[0].querySelector('span').textContent=r.style.display==='none'?'▶':'▼'}`:''}">
+            <td class="mono" style="color:var(--teal)">${yr}${hasPGames?` <span style="font-size:0.6rem;margin-left:3px">▶</span>`:''}</td>
+            <td class="mono">${d.starts}</td>
+            <td class="mono">${d.pts.toFixed(1)}</td>
+            <td class="mono">${(d.pts/d.starts).toFixed(1)}</td>
+            <td style="font-size:0.75rem;color:var(--text2)">${[...d.managers].join(', ')}</td>
+          </tr>${playoffLogRow}`;
+        }).join('')}
+        </tbody>
+      </table></div>
+    </div>`:''}`;
   document.getElementById('player-modal').style.display='flex';
 }
 function closeModal(){document.getElementById('player-modal').style.display='none';}
@@ -6303,6 +6366,8 @@ function computePotgData(yearFilter='all'){
   seasons.forEach(s=>{
     Object.entries(s.matchupsByWeek).forEach(([w,mus])=>{
       const week=parseInt(w);
+      // Skip playoff weeks — POTG/POTW are regular season only
+      if(getPlayoffWeeks(s.year).includes(week))return;
       const byId={};
       mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
 
