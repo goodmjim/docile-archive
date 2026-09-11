@@ -3162,7 +3162,11 @@ async function loadSeason(year,lid){
   });
   const scoring=league.scoring_settings||{};
   const playoffStart=parseInt(league.settings?.playoff_week_start||14);
-  const weekCount=Math.min(playoffStart+2, 18); // include all 3 playoff rounds (R1, Semis, Final)
+  const maxWeek=Math.min(playoffStart+2, 18); // full season including playoffs
+  // Use league.settings.leg (current week) to avoid fetching future empty weeks
+  // leg=0 means pre-season; leg>=1 means at least 1 week has been played
+  const currentLeg=parseInt(league.settings?.leg||0);
+  const weekCount=currentLeg>=1?Math.min(currentLeg,maxWeek):1; // always fetch at least week 1
   const weekNums=Array.from({length:weekCount},(_,i)=>i+1);
   // Only fetch projections for 2020+ (data reliability)
   const fetchProj=parseInt(year)>=2020;
