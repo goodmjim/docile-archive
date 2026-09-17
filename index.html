@@ -970,6 +970,9 @@ tbody tr.highlight td{background:var(--gold-dim)}
           <option value="all">All positions</option>
           <option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option>
         </select>
+        <select class="f-sel" id="p-week" onchange="resetAndRenderPlayers()" title="Cap data to this week (useful when current week has no data yet)">
+          <option value="all">All weeks</option>
+        </select>
         <div id="players-pagination" style="margin-left:auto"></div>
       </div>
       <div class="tbl-wrap"><table>
@@ -3413,8 +3416,15 @@ function getSeasons(){
 }
 function onSeasonChange(){renderAll();}
 function renderAll(){
-  // Reset trade filters so they repopulate with current data
-  ['trade-yr-sel','trade-mgr-sel'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="all">All</option>';});
+  // Populate week cap selector — all weeks across all loaded seasons
+  const wkSel=document.getElementById('p-week');
+  if(wkSel){
+    const allWks=[...new Set(DB.allStarters.map(s=>`${s.year}|${s.week}`))].sort();
+    wkSel.innerHTML='<option value="all">All weeks</option>'+
+      allWks.map(k=>{const[yr,wk]=k.split('|');return`<option value="${k}">Wk ${wk} ${yr}</option>`;}).join('');
+    // Default to most recent week with data
+    if(allWks.length)wkSel.value=allWks[allWks.length-1];
+  }
   renderMetrics();renderHome();renderStandings();renderMatchups();renderPlayers();renderH2H();renderPlayoffs();renderTrades();renderAwards();renderDocile();renderProbowl();renderHof();generateInsights();
   // Reset graph chip state so new data takes effect
   pgActiveMgrs=new Set();
@@ -4712,9 +4722,16 @@ function buildWeeklyRanks(starters, sortBy){
 function renderPlayers(){
   const search=(document.getElementById('p-search').value||'').toLowerCase();
   const posF=document.getElementById('p-pos').value;
+  const weekCap=document.getElementById('p-week')?.value||'all';
   const sortBy=playerScoringSort.col;
   const dir=playerScoringSort.dir;
+
+  // Filter starters by week cap if set
   let starters=DB.allStarters.filter(s=>activeYrs.has(s.year)&&activeTeams.has(s.managerKey));
+  if(weekCap!=='all'){
+    const[capYr,capWk]=weekCap.split('|').map(Number);
+    starters=starters.filter(s=>s.year<capYr||(s.year===capYr&&s.week<=capWk));
+  }
   const agg={};
   starters.forEach(s=>{
     if(!agg[s.pid])agg[s.pid]={pid:s.pid,starts:0,total:0,best:0};
