@@ -3618,11 +3618,15 @@ function renderHome(){
   const latestSeason=DB.seasons.find(s=>s.year===latestYear);
   const me=latestSeason?.teams.find(t=>t.isMe);
 
-  // Current week matchup
+  // Current week matchup — use last week with actual matchup scores
   const matchupEl=document.getElementById('home-matchup');
   if(matchupEl&&latestSeason){
-    const weeks=Object.keys(latestSeason.matchupsByWeek).map(Number).sort((a,b)=>b-a);
-    const latestWk=weeks[0];
+    const allWks=Object.keys(latestSeason.matchupsByWeek).map(Number).sort((a,b)=>b-a);
+    // Find last week that has actual point data
+    const latestWk=allWks.find(wk=>{
+      const mus=latestSeason.matchupsByWeek[wk]||[];
+      return mus.some(m=>(m.points||0)>0);
+    })||allWks[0];
     const mus=latestSeason.matchupsByWeek[latestWk]||[];
     const byId={};mus.forEach(m=>{byId[m.matchup_id]=byId[m.matchup_id]||[];byId[m.matchup_id].push(m);});
     let myMatchup=null;
@@ -3661,9 +3665,11 @@ function renderHome(){
     const allTeams=[...latestSeason.teams].sort((a,b)=>b.wins-a.wins||b.pf-a.pf);
     const myRank=allTeams.findIndex(t=>t.isMe)+1;
     const leader=allTeams[0];
-    // POTW this season
+    // POTW — most recent week that actually has data
     const potgData=computePotgData('all').filter(e=>e.year===latestYear);
-    const potwEntry=potgData.filter(e=>e.type==='POTW').sort((a,b)=>b.week-a.week)[0];
+    const latestDataWk=Math.max(...[...new Set(DB.allStarters.filter(s=>s.year===latestYear).map(s=>s.week))],0);
+    const potwEntry=potgData.filter(e=>e.type==='POTW'&&e.week===latestDataWk)[0]
+      ||potgData.filter(e=>e.type==='POTW').sort((a,b)=>b.week-a.week)[0];
     const potwName=potwEntry?getPlayerName(potwEntry.pid):'—';
     statsEl.innerHTML=`
       <div class="home-card"><div class="hc-label">Your season</div><div class="hc-val">${me.wins}–${me.losses}</div><div class="hc-sub">#${myRank} · ${me.pf.toFixed(0)} PF</div></div>
@@ -3675,11 +3681,11 @@ function renderHome(){
   // Risers + fallers (rank movement from previous week)
   const risersEl=document.getElementById('home-risers');
   if(risersEl&&latestSeason){
-    const weeks=Object.keys(latestSeason.matchupsByWeek).map(Number).sort((a,b)=>a-b);
-    if(weeks.length>=2){
-      const curWk=weeks[weeks.length-1],prevWk=weeks[weeks.length-2];
-      // Player rank this week vs last week in this season
-      const weekStarters=DB.allStarters.filter(s=>s.year===latestYear);
+    const weekStarters=DB.allStarters.filter(s=>s.year===latestYear);
+    // Use last week that has actual starter data (not just matchupsByWeek keys)
+    const weeksWithData=[...new Set(weekStarters.map(s=>s.week))].sort((a,b)=>a-b);
+    if(weeksWithData.length>=2){
+      const curWk=weeksWithData[weeksWithData.length-1],prevWk=weeksWithData[weeksWithData.length-2];
       const rankAtWeek=(wk)=>{
         const agg={};
         weekStarters.filter(s=>s.week<=wk).forEach(s=>{
