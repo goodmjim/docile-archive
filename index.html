@@ -7544,18 +7544,14 @@ function renderDraft(){
       </div>`;
     }
 
-    // Enrich with pts scored FOR THE DRAFTING TEAM
+    // Enrich with league-wide pts/starts (regardless of team) since draft year
     const enriched=allYrPicks.map(p=>{
       const pid=p.pid||lookupPid(p.player);
-      // Find the drafting team's rosterId in this year
-      const season=DB.seasons.find(s=>s.year===yr);
-      const team=season?.teams.find(t=>t.managerKey===p.mgr);
-      const rosterId=team?.rosterId;
-      const startsForTeam=pid&&rosterId
-        ?DB.allStarters.filter(s=>s.pid===pid&&String(s.teamRosterId)===String(rosterId)&&s.year>=yr)
+      const allLeagueStarts=pid
+        ?DB.allStarters.filter(s=>s.pid===pid&&s.year>=yr)
         :[];
-      const ptsForTeam=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
-      return{...p,pid,pts:ptsForTeam,startsForTeam:startsForTeam.length};
+      const leaguePts=allLeagueStarts.reduce((a,b)=>a+(b.points||0),0);
+      return{...p,pid,pts:leaguePts,startsForTeam:allLeagueStarts.length};
     });
 
     const draftOnly=enriched.filter(p=>p.source==='Draft');
@@ -7572,26 +7568,18 @@ function renderDraft(){
     };
     const sortedPicks=[...enriched].sort(dSortFn[col]||dSortFn.pickNo);
 
-    // Points by manager — for THIS year, pts scored for the drafting team
+    // Points by manager — league-wide starts/pts for their picks since draft year
     const mgrPts={};
-    const season=DB.seasons.find(s=>s.year===yr);
     enriched.forEach(p=>{
-      if(!p.pid)return;
-      const team=season?.teams.find(t=>t.managerKey===p.mgr);
-      const rosterId=team?.rosterId;
-      const startsForTeam=rosterId
-        ?DB.allStarters.filter(s=>s.pid===p.pid&&String(s.teamRosterId)===String(rosterId)&&s.year>=yr)
-        :[];
-      const teamPts=startsForTeam.reduce((a,b)=>a+(b.points||0),0);
       if(!mgrPts[p.mgr])mgrPts[p.mgr]={pts:0,picks:0,starts:0};
-      mgrPts[p.mgr].pts+=teamPts;
-      mgrPts[p.mgr].starts+=startsForTeam.length;
+      mgrPts[p.mgr].pts+=p.pts;
+      mgrPts[p.mgr].starts+=p.startsForTeam;
       mgrPts[p.mgr].picks++;
     });
     const mgrsSorted=Object.entries(mgrPts).sort((a,b)=>b[1].pts-a[1].pts);
-    const ptsTableHtml=`<div class="sh" style="margin-top:1.25rem;margin-bottom:0.5rem"><h2 style="font-size:1rem">Manager Totals</h2><span class="sh-sub">Pts/starts scored by picks FOR the team that drafted them</span></div>
+    const ptsTableHtml=`<div class="sh" style="margin-top:1.25rem;margin-bottom:0.5rem"><h2 style="font-size:1rem">Manager Totals</h2><span class="sh-sub">League-wide starts & pts scored by their picks since ${yr}</span></div>
       <div class="tbl-wrap" style="margin-bottom:1.25rem"><table>
-        <thead><tr><th>#</th><th>Manager</th><th>Picks</th><th>Starts for team</th><th>Pts for team</th><th>Pts/start</th></tr></thead>
+        <thead><tr><th>#</th><th>Manager</th><th>Picks</th><th>League starts</th><th>League pts</th><th>Pts/start</th></tr></thead>
         <tbody>${mgrsSorted.map(([mgr,d],i)=>`<tr>
           <td class="mono" style="color:var(--text3)">${i+1}</td>
           <td style="font-weight:500">${mgr}</td>
@@ -7614,8 +7602,8 @@ function renderDraft(){
           <th class="sortable-th" onclick="sortDraft('pos')">Pos <span class="sort-arrow">${darrow('pos')}</span></th>
           <th class="sortable-th" onclick="sortDraft('mgr')">Manager <span class="sort-arrow">${darrow('mgr')}</span></th>
           <th>NFL Team</th><th>Acq.</th>
-          <th class="sortable-th" onclick="sortDraft('starts')">Starts <span class="sort-arrow">${darrow('starts')}</span></th>
-          <th class="sortable-th" onclick="sortDraft('pts')">Pts <span class="sort-arrow">${darrow('pts')}</span></th>
+          <th class="sortable-th" onclick="sortDraft('starts')">League starts <span class="sort-arrow">${darrow('starts')}</span></th>
+          <th class="sortable-th" onclick="sortDraft('pts')">League pts <span class="sort-arrow">${darrow('pts')}</span></th>
         </tr></thead>
         <tbody>${sortedPicks.map(p=>{
           const pickLabel=p.source==='UDFA'
