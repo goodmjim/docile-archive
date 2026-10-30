@@ -6017,13 +6017,34 @@ function buildLeagueContext(){
     Object.values(debuts)
       .filter(d=>d.pts>0)
       .sort((a,b)=>b.pts-a.pts)
-      .slice(0,50)
+      .slice(0,100)
       .forEach(d=>{
         const m=DB.playerMeta[d.pid];
         const name=m?`${m.first_name} ${m.last_name}`:'PID:'+d.pid;
         const pos=m?.fantasy_positions?.[0]||'?';
         lines.push(`  ${name}(${pos}): ${d.pts.toFixed(1)} pts debut for ${d.mgr} (${d.year} Wk${d.week})`);
       });
+
+    // Debut for each manager's team: each player's first start for that manager
+    lines.push('\nDEBUTS FOR EACH MANAGER (a player\'s first start for that manager\'s team, top 20 per manager by points):');
+    const mdeb={};
+    DB.allStarters.forEach(s=>{
+      const k=s.pid+'|'+s.managerKey;
+      if(!mdeb[k]||s.year<mdeb[k].year||(s.year===mdeb[k].year&&s.week<mdeb[k].week)){
+        mdeb[k]={pid:s.pid,mgr:s.managerKey,pts:s.points||0,year:s.year,week:s.week};
+      }
+    });
+    const byMgr={};
+    Object.values(mdeb).forEach(d=>{(byMgr[d.mgr]||(byMgr[d.mgr]=[])).push(d);});
+    Object.entries(byMgr).forEach(([mgr,arr])=>{
+      lines.push(`  ${mgr}:`);
+      arr.sort((a,b)=>b.pts-a.pts).slice(0,20).forEach(d=>{
+        const m=DB.playerMeta[d.pid];
+        const name=m?`${m.first_name} ${m.last_name}`:'PID:'+d.pid;
+        const pos=m?.fantasy_positions?.[0]||'?';
+        lines.push(`    ${name}(${pos}) ${d.pts.toFixed(1)} (${d.year} Wk${d.week})`);
+      });
+    });
 
     // Per-player per-season starts (league-wide): enables "started every season" style questions
     lines.push('\nPLAYER STARTS BY SEASON (format: Name(Pos) seasonsCount | year:starts/pts ...):');
@@ -6035,9 +6056,9 @@ function buildLeagueContext(){
     });
     Object.entries(psn)
       .map(([pid,o])=>({pid,o,yrs:Object.keys(o).length,tot:Object.values(o).reduce((a,b)=>a+b.n,0)}))
-      .filter(r=>r.tot>=3)
+      .filter(r=>r.tot>=1)
       .sort((a,b)=>b.yrs-a.yrs||b.tot-a.tot)
-      .slice(0,400)
+      .slice(0,2500)
       .forEach(r=>{
         const m=DB.playerMeta[r.pid];
         const name=m?`${m.first_name} ${m.last_name}`:'PID:'+r.pid;
