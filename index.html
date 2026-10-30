@@ -6024,6 +6024,26 @@ function buildLeagueContext(){
         const pos=m?.fantasy_positions?.[0]||'?';
         lines.push(`  ${name}(${pos}): ${d.pts.toFixed(1)} pts debut for ${d.mgr} (${d.year} Wk${d.week})`);
       });
+
+    // Per-player per-season starts (league-wide): enables "started every season" style questions
+    lines.push('\nPLAYER STARTS BY SEASON (format: Name(Pos) seasonsCount | year:starts/pts ...):');
+    const psn={};
+    DB.allStarters.forEach(s=>{
+      const o=psn[s.pid]||(psn[s.pid]={});
+      const y=o[s.year]||(o[s.year]={n:0,p:0});
+      y.n++; y.p+=(s.points||0);
+    });
+    Object.entries(psn)
+      .map(([pid,o])=>({pid,o,yrs:Object.keys(o).length,tot:Object.values(o).reduce((a,b)=>a+b.n,0)}))
+      .filter(r=>r.tot>=3)
+      .sort((a,b)=>b.yrs-a.yrs||b.tot-a.tot)
+      .slice(0,400)
+      .forEach(r=>{
+        const m=DB.playerMeta[r.pid];
+        const name=m?`${m.first_name} ${m.last_name}`:'PID:'+r.pid;
+        const pos=m?.fantasy_positions?.[0]||'?';
+        lines.push(`  ${name}(${pos}) ${r.yrs}yrs | `+Object.keys(r.o).sort().map(y=>`${y}:${r.o[y].n}/${Math.round(r.o[y].p)}`).join(' '));
+      });
   }
 
   // Historical awards
