@@ -3131,6 +3131,7 @@ async function startLoad(){
     buildApp();
     document.getElementById('setup').style.display='none';
     document.getElementById('app').style.display='block';
+    handleDeepLink();
   }catch(e){setSt('Error: '+e.message,true);setProg(0);}
 }
 
@@ -4943,6 +4944,8 @@ function openPlayerModal(pid){
     byPlayoffSeason[s.year].managers.add(s.managerKey||s.teamName);
   });
 
+  window._shareCtx={pid,name,pos,nflTeam,total,starts,avg,best,posRk,overallRk,playoffStarts,
+    acq:acq?acq.label:'',awards:playerAwards.map(x=>x.line)};
   (document.getElementById('modal-body')||{innerHTML:''}).innerHTML=`
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:0.75rem">
       <div style="position:relative;width:64px;height:64px;flex-shrink:0">
@@ -4961,6 +4964,8 @@ function openPlayerModal(pid){
           <span>Sleeper ID: <span style="color:var(--text2);user-select:all">${pid}</span></span>
           <button onclick="navigator.clipboard.writeText('${pid}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})"
             style="background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);font-size:0.65rem;padding:1px 6px;cursor:pointer;font-family:var(--font-body)">Copy</button>
+          <button id="share-btn" onclick="sharePlayerCard()"
+            style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:4px;color:var(--gold);font-size:0.68rem;padding:2px 10px;cursor:pointer;font-family:var(--font-body);font-weight:600">Share ↗</button>
         </div>
       </div>
     </div>
@@ -5074,6 +5079,118 @@ function openPlayerModal(pid){
     </div>`:''}`;
   document.getElementById('player-modal').style.display='flex';
 }
+
+// ── SHARE PLAYER CARD ───────────────────────────────────────
+function loadShareImg(src){
+  return new Promise(res=>{
+    const img=new Image();img.crossOrigin='anonymous';
+    const t=setTimeout(()=>res(null),4000);
+    img.onload=()=>{clearTimeout(t);res(img);};
+    img.onerror=()=>{clearTimeout(t);res(null);};
+    img.src=src;
+  });
+}
+async function renderShareCanvas(c){
+  try{await Promise.all([document.fonts.load('600 80px Rajdhani'),document.fonts.load('400 24px "Instrument Sans"'),document.fonts.load('400 24px "DM Mono"')]);}catch{}
+  const W=1080,PAD=56,MAXAW=7;
+  let aw=c.awards.slice();
+  if(aw.length>MAXAW){const extra=aw.length-(MAXAW-1);aw=aw.slice(0,MAXAW-1);aw.push(`+ ${extra} more honors`);}
+  const gridTop=312,cellH=152,gap=20;
+  const gridEnd=gridTop+cellH*2+gap;
+  let y=gridEnd+(c.acq?58:34);
+  const awStart=y+(aw.length?10:0);
+  const H=Math.max(810,awStart+aw.length*46+110);
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const x=cv.getContext('2d');
+  const g=x.createLinearGradient(0,0,W*0.6,H);g.addColorStop(0,'#1a1a1f');g.addColorStop(1,'#0d0d0f');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.strokeStyle='rgba(212,168,67,0.35)';x.lineWidth=3;x.strokeRect(1.5,1.5,W-3,H-3);
+  const DISP='600 {s}px Rajdhani, "Arial Narrow", sans-serif',BODY='{w} {s}px "Instrument Sans", Arial, sans-serif',MONO='{s}px "DM Mono", monospace';
+  // avatar
+  const ax=PAD+100,ay=PAD+100,ar=100;
+  x.save();x.beginPath();x.arc(ax,ay,ar,0,Math.PI*2);x.closePath();x.clip();
+  x.fillStyle='#1c1c21';x.fillRect(ax-ar,ay-ar,ar*2,ar*2);
+  const img=await loadShareImg(`https://sleepercdn.com/content/nfl/players/thumb/${c.pid}.jpg`);
+  if(img){
+    const sc=(ar*2)/Math.min(img.width,img.height);const dw=img.width*sc,dh=img.height*sc;
+    x.drawImage(img,ax-dw/2,ay-ar,dw,dh);
+  }else{
+    x.fillStyle='#a09880';x.font=DISP.replace('{s}','90');x.textAlign='center';x.textBaseline='middle';
+    x.fillText(c.name.split(' ').map(w=>w[0]).slice(0,2).join(''),ax,ay+4);
+  }
+  x.restore();
+  x.beginPath();x.arc(ax,ay,ar,0,Math.PI*2);x.strokeStyle='rgba(212,168,67,0.5)';x.lineWidth=3;x.stroke();
+  // name block
+  const tx=PAD+200+36;x.textAlign='left';x.textBaseline='alphabetic';
+  let fs=92;x.font=DISP.replace('{s}',fs);
+  while(x.measureText(c.name.toUpperCase()).width>W-tx-PAD&&fs>48){fs-=4;x.font=DISP.replace('{s}',fs);}
+  x.fillStyle='#e8dfc8';x.fillText(c.name.toUpperCase(),tx,ay-6);
+  x.fillStyle='#d4a843';x.font=MONO.replace('{s}','34');
+  x.fillText(`${c.pos}${c.nflTeam?' · '+c.nflTeam:''}`,tx,ay+40);
+  // stats
+  const stats=[['Total Pts',c.total.toFixed(0)],['Starts',String(c.starts)],['Avg / Start',c.avg.toFixed(1)],['Best Game',c.best.toFixed(1)],[c.pos+' Rank','#'+c.posRk],
+    c.playoffStarts>0?['Playoff Starts',String(c.playoffStarts),true]:['Overall Rank','#'+c.overallRk]];
+  const cw=(W-PAD*2-gap*2)/3;
+  const rr=(px,py,w,h,r)=>{x.beginPath();x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath();};
+  stats.forEach((st,i)=>{
+    const px=PAD+(i%3)*(cw+gap),py=gridTop+Math.floor(i/3)*(cellH+gap);
+    x.fillStyle='#1c1c21';rr(px,py,cw,cellH,14);x.fill();
+    x.textAlign='center';
+    x.fillStyle=st[2]?'#2a9d8f':'#e8dfc8';x.font=DISP.replace('{s}','78');x.fillText(st[1],px+cw/2,py+92);
+    x.fillStyle='#a09880';x.font=BODY.replace('{w}','500').replace('{s}','21');
+    x.fillText(st[0].toUpperCase().split('').join(' '),px+cw/2,py+128);
+  });
+  // acquisition + awards
+  x.textAlign='left';
+  y=gridEnd+48;
+  if(c.acq){x.fillStyle='#a09880';x.font=BODY.replace('{w}','400').replace('{s}','26');x.fillText('Acquired: '+c.acq,PAD,y);y+=10;}
+  y=awStart+34;
+  aw.forEach(line=>{
+    let f=29;x.font=BODY.replace('{w}','500').replace('{s}',f);
+    while(x.measureText(line).width>W-PAD*2&&f>18){f--;x.font=BODY.replace('{w}','500').replace('{s}',f);}
+    x.fillStyle=line.startsWith('+ ')?'#a09880':'#d4a843';
+    x.fillText(line,PAD,y);y+=46;
+  });
+  // footer
+  x.fillStyle='#5a5445';x.font=DISP.replace('{s}','24');x.textBaseline='alphabetic';
+  x.fillText('THE DOCILE LEAGUE ARCHIVE',PAD,H-34);
+  x.textAlign='right';x.font=BODY.replace('{w}','400').replace('{s}','21');
+  x.fillText('goodmjim.github.io/docile-archive',W-PAD,H-34);
+  return cv;
+}
+function shareLinkFor(pid){return location.origin+location.pathname+'?player='+encodeURIComponent(pid);}
+async function sharePlayerCard(){
+  const c=window._shareCtx;if(!c)return;
+  const btn=document.getElementById('share-btn');
+  const setBtn=t=>{if(btn)btn.textContent=t;};
+  setBtn('Building…');
+  try{
+    const cv=await renderShareCanvas(c);
+    const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+    const file=new File([blob],c.name.replace(/[^a-z0-9]+/gi,'-')+'-docile.png',{type:'image/png'});
+    const url=shareLinkFor(c.pid);
+    const text=`${c.name} · The Docile League Archive\n${url}`;
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],text});
+      setBtn('Share ↗');return;
+    }
+    // Desktop fallback: download image + copy link
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file.name;
+    document.body.appendChild(a);a.click();a.remove();
+    try{await navigator.clipboard.writeText(url);setBtn('Saved + link copied');}catch{setBtn('Image saved');}
+    setTimeout(()=>setBtn('Share ↗'),2500);
+  }catch(e){
+    setBtn(e&&e.name==='AbortError'?'Share ↗':'Share failed');
+    setTimeout(()=>setBtn('Share ↗'),2000);
+  }
+}
+function handleDeepLink(){
+  try{
+    const pid=new URLSearchParams(location.search).get('player');
+    if(pid&&DB.playerMeta[pid]){openPlayerModal(pid);document.getElementById('player-modal').style.display='flex';}
+  }catch{}
+}
+
 function closeModal(){document.getElementById('player-modal').style.display='none';}
 
 // ══════════════════════════════════════════════════════════════
