@@ -3420,7 +3420,8 @@ function renderAll(){
   // Populate week cap selector — all weeks across all loaded seasons
   const wkSel=document.getElementById('p-week');
   if(wkSel){
-    const allWks=[...new Set(DB.allStarters.map(s=>`${s.year}|${s.week}`))].sort();
+    const allWks=[...new Set(DB.allStarters.map(s=>`${s.year}|${s.week}`))]
+      .sort((x,y)=>{const[a1,a2]=x.split('|').map(Number),[b1,b2]=y.split('|').map(Number);return a1-b1||a2-b2;});
     wkSel.innerHTML='<option value="all">All weeks</option>'+
       allWks.map(k=>{const[yr,wk]=k.split('|');return`<option value="${k}">Wk ${wk} ${yr}</option>`;}).join('');
     // Default to most recent week with data
