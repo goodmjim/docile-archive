@@ -869,13 +869,10 @@ tbody tr.highlight td{background:var(--gold-dim)}
         </div>
         <div>
           <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Min appearances</div>
-          <select class="f-sel" id="pg-min" onchange="renderPlayerGraphs()">
-            <option value="1">All players</option>
-            <option value="5" selected>5+ starts</option>
-            <option value="10">10+ starts</option>
-            <option value="20">20+ starts</option>
-            <option value="40">40+ starts</option>
-          </select>
+          <div style="display:flex;align-items:center;gap:10px;min-width:200px">
+            <input type="range" id="pg-min" min="1" max="60" step="1" value="5" oninput="pgMinChange()" style="flex:1;accent-color:var(--gold)">
+            <span id="pg-min-lbl" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--gold);min-width:74px">5+ starts</span>
+          </div>
         </div>
         <div>
           <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Overlays</div>
@@ -1017,6 +1014,11 @@ tbody tr.highlight td{background:var(--gold-dim)}
         <select class="f-sel" id="p-week" onchange="resetAndRenderPlayers()" title="Cap data to this week (useful when current week has no data yet)">
           <option value="all">All weeks</option>
         </select>
+        <div style="display:flex;align-items:center;gap:8px" title="Hide players with fewer starts than this">
+          <span style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em">Min starts</span>
+          <input type="range" id="p-min" min="1" max="60" step="1" value="1" oninput="pMinChange()" style="width:130px;accent-color:var(--gold)">
+          <span id="p-min-lbl" style="font-family:var(--font-mono);font-size:0.76rem;color:var(--gold);min-width:84px">All players</span>
+        </div>
         <div id="players-pagination" style="margin-left:auto"></div>
       </div>
       <div class="tbl-wrap"><table>
@@ -2857,6 +2859,23 @@ function sortMyScoring(col){
   renderMyScoring();
 }
 
+// Shared "minimum starts" slider: 1 = all players. Keeps max in step with the data.
+function minLabel(v){return v<=1?'All players':v+'+ starts';}
+function syncMinSlider(id,lblId,maxVal,dflt){
+  const el=document.getElementById(id);if(!el)return dflt||1;
+  const mx=Math.max(2,maxVal|0);
+  if(parseInt(el.max)!==mx)el.max=mx;
+  let v=parseInt(el.value);if(isNaN(v))v=dflt||1;
+  if(v>mx){v=mx;el.value=v;}
+  const lbl=document.getElementById(lblId);if(lbl)lbl.textContent=minLabel(v);
+  return v;
+}
+let _pgMinRaf=0;
+function pgMinChange(){
+  const el=document.getElementById('pg-min'),lbl=document.getElementById('pg-min-lbl');
+  if(el&&lbl)lbl.textContent=minLabel(parseInt(el.value));
+  cancelAnimationFrame(_pgMinRaf);_pgMinRaf=requestAnimationFrame(()=>renderPlayerGraphs());
+}
 function sortPlayers(col){
   playerScoringSort=playerScoringSort.col===col?{col,dir:playerScoringSort.dir*-1}:{col,dir:-1};
   playerScoringPage=0; // reset to first page on sort
@@ -2869,6 +2888,11 @@ function sortPlayers(col){
 }
 
 function resetAndRenderPlayers(){playerScoringPage=0;renderPlayers();}
+function pMinChange(){
+  const el=document.getElementById('p-min'),lbl=document.getElementById('p-min-lbl');
+  if(el&&lbl)lbl.textContent=minLabel(parseInt(el.value));
+  playerScoringPage=0;renderPlayers();
+}
 function resetAndRenderMyScoring(){myScoringPage=0;renderMyScoring();}
 function sortPotgTable(col){
   potgSort=potgSort.col===col?{col,dir:potgSort.dir*-1}:{col,dir:-1};
@@ -4039,9 +4063,8 @@ function renderPlayerGraphs(){
   const xKey=document.getElementById('pg-x')?.value||'starts';
   const yKey=document.getElementById('pg-y')?.value||'total';
   const chartType=document.getElementById('pg-type')?.value||'scatter';
-  const minStarts=parseInt(document.getElementById('pg-min')?.value||'5');
-
   const byPid=buildPlayerGraphData();
+  const minStarts=syncMinSlider('pg-min','pg-min-lbl',Math.max(...Object.values(byPid).map(d=>d.starts),2),5);
 
   // Filter
   const points=Object.values(byPid).filter(d=>{
@@ -4803,6 +4826,8 @@ function renderPlayers(){
   });
   if(search)rows=rows.filter(r=>r.name.toLowerCase().includes(search)||r.pos.toLowerCase().includes(search)||r.nflTeam.toLowerCase().includes(search));
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
+  const minS=syncMinSlider('p-min','p-min-lbl',rows.reduce((a,r)=>Math.max(a,r.starts),2),1);
+  if(minS>1)rows=rows.filter(r=>r.starts>=minS);
   const sf={total:(a,b)=>(a.total-b.total)*dir,starts:(a,b)=>(a.starts-b.starts)*dir,avg:(a,b)=>(a.avg-b.avg)*dir,best:(a,b)=>(a.best-b.best)*dir,
     wins:(a,b)=>(a.w-b.w||a.pct-b.pct)*dir,
     winpct:(a,b)=>((a.pct??-1)-(b.pct??-1)||a.dec-b.dec)*dir};
@@ -6032,7 +6057,7 @@ function wlRecord(list){
 // ══════════════════════════════════════════════════════════════
 // PLAYER COMPARE
 // ══════════════════════════════════════════════════════════════
-let cmpA=null,cmpB=null,cmpSeason='all',cmpMode='week',cmpChart=null,cmpPool=[],cmpHi={A:0,B:0},cmpShown={A:[],B:[]};
+let cmpA=null,cmpB=null,cmpSel=new Set(),cmpMode='week',cmpChart=null,cmpPool=[],cmpHi={A:0,B:0},cmpShown={A:[],B:[]};
 const cmpNorm=t=>(t||'').toLowerCase().replace(/[.'’]/g,'').replace(/\s+/g,' ').trim();
 function cmpInit(){
   const seen={};
@@ -6112,14 +6137,22 @@ function cmpChoose(which,pid){
   renderCompare();
 }
 function cmpSwap(){const t=cmpA;cmpA=cmpB;cmpB=t;renderCompare();}
-function cmpSetSeason(v){cmpSeason=v;renderCompare();}
+function cmpYrOk(y){return cmpSel.size===0||cmpSel.has(String(y));}
+function cmpSetSeason(v){
+  if(v==='all')cmpSel=new Set();
+  else{const k=String(v);if(cmpSel.has(k))cmpSel.delete(k);else cmpSel.add(k);}
+  renderCompare();
+}
+function cmpScopeText(){
+  if(!cmpSel.size)return'';
+  return[...cmpSel].sort().join(', ');
+}
 function cmpSetMode(v){cmpMode=v;renderCompare();}
 
 const CMP_THRESH={QB:[25,10],RB:[20,8],WR:[20,8],TE:[15,5],K:[14,4],DEF:[15,3]};
 function cmpThresh(pos){return CMP_THRESH[pos]||CMP_THRESH.RB;}
 function cmpStats(pid,scopeTot){
-  const yr=cmpSeason;
-  const inScope=s=>String(s.pid)===String(pid)&&(yr==='all'||String(s.year)===String(yr));
+  const inScope=s=>String(s.pid)===String(pid)&&cmpYrOk(s.year);
   const reg=DB.allStarters.filter(inScope);
   const po=DB.playoffStarters.filter(inScope);
   const m=DB.playerMeta[pid];
@@ -6150,7 +6183,7 @@ function renderCompare(){
   // season chips
   const yrs=[...new Set(DB.allStarters.map(s=>s.year))].sort((a,b)=>b-a);
   const chipEl=document.getElementById('cmp-chips');
-  chipEl.innerHTML=['all',...yrs].map(y=>`<button class="yr-chip${String(cmpSeason)===String(y)?' active':''}" onclick="cmpSetSeason('${y}')">${y==='all'?'All time':y}</button>`).join('');
+  chipEl.innerHTML=['all',...yrs].map(y=>{const on=y==='all'?cmpSel.size===0:cmpSel.has(String(y));return`<button class="yr-chip${on?' active':''}" onclick="cmpSetSeason('${y}')">${y==='all'?'All time':y}</button>`;}).join('')+`<span style="font-size:0.72rem;color:var(--text3);align-self:center;margin-left:4px">tap several seasons to combine them</span>`;
   const ia=document.getElementById('cmp-in-a'),ib=document.getElementById('cmp-in-b');
   if(ia&&document.activeElement!==ia&&cmpA)ia.value=cmpLabelFor(cmpA);
   if(ib&&document.activeElement!==ib&&cmpB)ib.value=cmpLabelFor(cmpB);
@@ -6158,7 +6191,7 @@ function renderCompare(){
   // scope totals for position rank
   const scopeTot={};
   DB.allStarters.forEach(s=>{
-    if(cmpSeason!=='all'&&String(s.year)!==String(cmpSeason))return;
+    if(!cmpYrOk(s.year))return;
     const k=String(s.pid);
     if(!scopeTot[k]){const m=DB.playerMeta[s.pid];scopeTot[k]={pid:k,pts:0,pos:m?.fantasy_positions?.[0]||m?.position||'?'};}
     scopeTot[k].pts+=(s.points||0);
@@ -6166,7 +6199,7 @@ function renderCompare(){
   const A=cmpStats(cmpA,scopeTot),B=cmpStats(cmpB,scopeTot);
   // POTG / POTW counts
   let potg;try{potg=computePotgData('all');}catch{potg=[];}
-  const potgCount=p=>potg.filter(e=>String(e.pid)===p.pid&&(cmpSeason==='all'||String(e.year)===String(cmpSeason))).length;
+  const potgCount=p=>potg.filter(e=>String(e.pid)===p.pid&&cmpYrOk(e.year)).length;
   A.potg=potgCount(A);B.potg=potgCount(B);
 
   const fmt=(v,d=1,suf='')=>v==null?'—':v.toFixed(d)+suf;
@@ -6209,9 +6242,9 @@ function renderCompare(){
 
   // chart data over every league week in scope
   const wkSet=new Set();
-  DB.allStarters.forEach(s=>{if(cmpSeason==='all'||String(s.year)===String(cmpSeason))wkSet.add(s.year+'|'+s.week);});
+  DB.allStarters.forEach(s=>{if(cmpYrOk(s.year))wkSet.add(s.year+'|'+s.week);});
   const wks=[...wkSet].sort((x,y)=>{const[a1,a2]=x.split('|').map(Number),[b1,b2]=y.split('|').map(Number);return a1-b1||a2-b2;});
-  const labels=wks.map(k=>{const[y,w]=k.split('|');return cmpSeason==='all'?`'${y.slice(2)} W${w}`:`Wk ${w}`;});
+  const labels=wks.map(k=>{const[y,w]=k.split('|');return cmpSel.size===1?`Wk ${w}`:`'${y.slice(2)} W${w}`;});
   const series=P=>{
     const byK={};P.reg.forEach(s=>{byK[s.year+'|'+s.week]=s.points||0;});
     if(cmpMode==='cum'){let run=0;return wks.map(k=>{if(byK[k]!=null)run+=byK[k];return Math.round(run*10)/10;});}
@@ -6239,7 +6272,7 @@ function renderCompare(){
       ${row('Playoff points',A.poPts,B.poPts)}
       ${row('Playoff starts',A.poStarts,B.poStarts,{d:0})}
       ${row(A.pos===B.pos?A.pos+' rank':'Pos rank',A.rk||null,B.rk||null,{d:0,pre:'#',low:true,rank:true})}
-      <div style="font-size:0.7rem;color:var(--text3);margin-top:6px">Projection data starts in 2020 (${A.projN} starts for ${first(A.name)}, ${B.projN} for ${first(B.name)}). Positive = beats projection. Team wins count the weeks the player was started by a team that won that week's matchup. Rank is within each player's own position${cmpSeason==='all'?'':' for '+cmpSeason}. ${tNote}</div>
+      <div style="font-size:0.7rem;color:var(--text3);margin-top:6px">Projection data starts in 2020 (${A.projN} starts for ${first(A.name)}, ${B.projN} for ${first(B.name)}). Positive = beats projection. Team wins count the weeks the player was started by a team that won that week's matchup. Rank is within each player's own position${cmpSel.size?' for '+cmpScopeText():''}. ${tNote}</div>
     </div>
     <div class="cmp-card"><div class="cmp-sec" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
         <span>${cmpMode==='cum'?'Cumulative points':'Points per start'} by week</span>
