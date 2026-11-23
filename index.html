@@ -578,6 +578,16 @@ tbody tr.highlight td{background:var(--gold-dim)}
 @media(max-width:640px){.topbar{padding:0 1rem;gap:1rem}.app-body{padding:1rem}.metrics{grid-template-columns:repeat(2,1fr)}}
 
 .cmp-pick{display:grid;grid-template-columns:1fr 44px 1fr;gap:10px;align-items:center;margin-bottom:1rem}
+.cmp-sel{position:relative;min-width:0}
+.cmp-dd{display:none;position:absolute;top:100%;left:0;right:0;z-index:40;background:var(--surface2);border:1px solid var(--border3);border-radius:8px;margin-top:4px;max-height:330px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+.cmp-dd.open{display:block}
+.cmp-opt{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;font-size:0.86rem;border-top:1px solid var(--border)}
+.cmp-opt:first-child{border-top:0}
+.cmp-opt.hi,.cmp-opt:hover{background:var(--gold-dim)}
+.cmp-opt .pm{font-family:var(--font-mono);font-size:0.7rem;color:var(--text3);white-space:nowrap}
+.cmp-opt .pp{font-family:var(--font-mono);font-size:0.68rem;color:var(--gold);margin-right:6px}
+.cmp-swap{background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--gold);font-size:1.1rem;height:36px;cursor:pointer}
+.cmp-swap:hover{background:var(--gold-dim)}
 .cmp-vs{text-align:center;font-family:var(--font-display);font-size:1.4rem;color:var(--gold)}
 .cmp-head{display:grid;grid-template-columns:1fr 44px 1fr;gap:10px;align-items:center;margin-bottom:1rem}
 .cmp-pc{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center;cursor:pointer;min-width:0}
@@ -808,10 +818,9 @@ tbody tr.highlight td{background:var(--gold-dim)}
       <div class="sh"><h2>Player Compare</h2><span class="sh-sub">Pick any two players and see who wins each category</span></div>
       <div id="cmp-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0.9rem"></div>
       <div class="cmp-pick">
-        <div><input class="f-sel" id="cmp-in-a" list="cmp-list" placeholder="Player A — type a name" style="width:100%" onchange="cmpPick('A',this.value)"></div>
-        <div class="cmp-vs">VS</div>
-        <div><input class="f-sel" id="cmp-in-b" list="cmp-list" placeholder="Player B — type a name" style="width:100%" onchange="cmpPick('B',this.value)"></div>
-        <datalist id="cmp-list"></datalist>
+        <div class="cmp-sel"><input class="f-sel" id="cmp-in-a" autocomplete="off" spellcheck="false" placeholder="Player A — start typing a name" style="width:100%" oninput="cmpType('A')" onfocus="cmpFocus('A')" onblur="cmpBlur('A')" onkeydown="cmpKey(event,'A')"><div class="cmp-dd" id="cmp-dd-A"></div></div>
+        <button class="cmp-swap" onclick="cmpSwap()" title="Swap players" aria-label="Swap players">⇄</button>
+        <div class="cmp-sel"><input class="f-sel" id="cmp-in-b" autocomplete="off" spellcheck="false" placeholder="Player B — start typing a name" style="width:100%" oninput="cmpType('B')" onfocus="cmpFocus('B')" onblur="cmpBlur('B')" onkeydown="cmpKey(event,'B')"><div class="cmp-dd" id="cmp-dd-B"></div></div>
       </div>
       <div id="cmp-body"></div>
     </div>
@@ -5967,23 +5976,17 @@ function switchTab(name){
 // ══════════════════════════════════════════════════════════════
 // PLAYER COMPARE
 // ══════════════════════════════════════════════════════════════
-let cmpA=null,cmpB=null,cmpSeason='all',cmpMode='week',cmpChart=null,cmpLabelMap={};
+let cmpA=null,cmpB=null,cmpSeason='all',cmpMode='week',cmpChart=null,cmpPool=[],cmpHi={A:0,B:0},cmpShown={A:[],B:[]};
+const cmpNorm=t=>(t||'').toLowerCase().replace(/[.'’]/g,'').replace(/\s+/g,' ').trim();
 function cmpInit(){
   const seen={};
-  DB.allStarters.forEach(s=>{seen[s.pid]=(seen[s.pid]||0)+(1);});
-  const pool=Object.keys(seen).map(pid=>{
+  DB.allStarters.forEach(s=>{seen[s.pid]=(seen[s.pid]||0)+1;});
+  cmpPool=Object.keys(seen).map(pid=>{
     const m=DB.playerMeta[pid];
-    return m?{pid,name:`${m.first_name} ${m.last_name}`,pos:m.fantasy_positions?.[0]||m.position||'?',n:seen[pid]}:null;
+    if(!m)return null;
+    const name=`${m.first_name} ${m.last_name}`;
+    return{pid,name,pos:m.fantasy_positions?.[0]||m.position||'?',team:m.team||'FA',n:seen[pid],key:cmpNorm(name)};
   }).filter(Boolean).sort((a,b)=>b.n-a.n);
-  cmpLabelMap={};
-  const opts=pool.map(p=>{
-    let label=`${p.name} (${p.pos})`;
-    if(cmpLabelMap[label])label+=` #${p.pid}`;
-    cmpLabelMap[label]=p.pid;
-    return `<option value="${label.replace(/"/g,'&quot;')}"></option>`;
-  });
-  const dl=document.getElementById('cmp-list');
-  if(dl)dl.innerHTML=opts.join('');
   if(!cmpA||!cmpB){
     const tot={};DB.allStarters.forEach(s=>{tot[s.pid]=(tot[s.pid]||0)+(s.points||0);});
     const top=Object.entries(tot).sort((a,b)=>b[1]-a[1]).map(e=>e[0]).filter(id=>DB.playerMeta[id]);
@@ -5992,24 +5995,72 @@ function cmpInit(){
   }
 }
 function cmpLabelFor(pid){
-  const m=DB.playerMeta[pid];if(!m)return'';
-  const l=`${m.first_name} ${m.last_name} (${m.fantasy_positions?.[0]||m.position||'?'})`;
-  return cmpLabelMap[l]===pid?l:Object.keys(cmpLabelMap).find(k=>cmpLabelMap[k]===pid)||l;
+  const p=cmpPool.find(x=>x.pid===String(pid));
+  return p?`${p.name} (${p.pos})`:'';
 }
-function cmpPick(which,val){
-  let pid=cmpLabelMap[val];
-  if(!pid){ // fallback: match by name text
-    const v=val.toLowerCase().replace(/\s*\(.*$/,'').trim();
-    const k=Object.keys(cmpLabelMap).find(k=>k.toLowerCase().startsWith(v));
-    if(k)pid=cmpLabelMap[k];
-  }
-  if(!pid)return;
-  if(which==='A')cmpA=pid;else cmpB=pid;
+function cmpMatches(q){
+  const nq=cmpNorm(q);
+  if(!nq)return cmpPool.slice(0,8);
+  const toks=nq.split(' ');
+  const scored=[];
+  cmpPool.forEach(p=>{
+    if(!toks.every(t=>p.key.includes(t)))return;
+    const last=p.key.split(' ').slice(1).join(' ');
+    let sc=2;
+    if(p.key.startsWith(nq))sc=0;
+    else if(last.startsWith(nq)||toks.every(t=>p.key.split(' ').some(w=>w.startsWith(t))))sc=1;
+    scored.push([sc,p]);
+  });
+  return scored.sort((a,b)=>a[0]-b[0]||b[1].n-a[1].n).slice(0,8).map(x=>x[1]);
+}
+function cmpOpen(which){
+  const inp=document.getElementById('cmp-in-'+which.toLowerCase());
+  const dd=document.getElementById('cmp-dd-'+which);
+  if(!inp||!dd)return;
+  const list=cmpMatches(inp.dataset.typed==='1'?inp.value:'');
+  cmpShown[which]=list;
+  if(cmpHi[which]>=list.length)cmpHi[which]=0;
+  dd.innerHTML=list.length?list.map((p,i)=>`<div class="cmp-opt${i===cmpHi[which]?' hi':''}" onmousedown="event.preventDefault();cmpChoose('${which}','${p.pid}')"><span><span class="pp">${p.pos}</span>${p.name}</span><span class="pm">${p.team} · ${p.n} starts</span></div>`).join('')
+    :'<div class="cmp-opt" style="color:var(--text3);cursor:default">No players match</div>';
+  dd.classList.add('open');
+}
+function cmpFocus(which){
+  const inp=document.getElementById('cmp-in-'+which.toLowerCase());
+  if(inp){inp.dataset.typed='0';inp.select();}
+  cmpHi[which]=0;cmpOpen(which);
+}
+function cmpType(which){
+  const inp=document.getElementById('cmp-in-'+which.toLowerCase());
+  if(inp)inp.dataset.typed='1';
+  cmpHi[which]=0;cmpOpen(which);
+}
+function cmpBlur(which){
+  const dd=document.getElementById('cmp-dd-'+which);if(dd)dd.classList.remove('open');
+  const inp=document.getElementById('cmp-in-'+which.toLowerCase());
+  const cur=which==='A'?cmpA:cmpB;
+  if(inp&&cur)inp.value=cmpLabelFor(cur); // restore if nothing was chosen
+}
+function cmpKey(e,which){
+  const n=cmpShown[which].length;
+  if(e.key==='ArrowDown'){e.preventDefault();cmpHi[which]=(cmpHi[which]+1)%Math.max(n,1);cmpOpen(which);}
+  else if(e.key==='ArrowUp'){e.preventDefault();cmpHi[which]=(cmpHi[which]-1+Math.max(n,1))%Math.max(n,1);cmpOpen(which);}
+  else if(e.key==='Enter'){e.preventDefault();const p=cmpShown[which][cmpHi[which]];if(p)cmpChoose(which,p.pid);}
+  else if(e.key==='Escape'){e.target.blur();}
+}
+function cmpChoose(which,pid){
+  if(which==='A')cmpA=String(pid);else cmpB=String(pid);
+  const inp=document.getElementById('cmp-in-'+which.toLowerCase());
+  const dd=document.getElementById('cmp-dd-'+which);
+  if(dd)dd.classList.remove('open');
+  if(inp){inp.value=cmpLabelFor(pid);inp.blur();}
   renderCompare();
 }
+function cmpSwap(){const t=cmpA;cmpA=cmpB;cmpB=t;renderCompare();}
 function cmpSetSeason(v){cmpSeason=v;renderCompare();}
 function cmpSetMode(v){cmpMode=v;renderCompare();}
 
+const CMP_THRESH={QB:[25,10],RB:[20,8],WR:[20,8],TE:[15,5],K:[14,4],DEF:[15,3]};
+function cmpThresh(pos){return CMP_THRESH[pos]||CMP_THRESH.RB;}
 function cmpStats(pid,scopeTot){
   const yr=cmpSeason;
   const inScope=s=>String(s.pid)===String(pid)&&(yr==='all'||String(s.year)===String(yr));
@@ -6019,6 +6070,7 @@ function cmpStats(pid,scopeTot){
   const pos=m?.fantasy_positions?.[0]||m?.position||'?';
   const total=reg.reduce((a,s)=>a+(s.points||0),0);
   const starts=reg.length;
+  const [boomT,bustT]=cmpThresh(pos);
   const withProj=reg.filter(s=>typeof s.projected==='number'&&s.projected>0);
   const projDiff=withProj.length?withProj.reduce((a,s)=>a+((s.points||0)-s.projected),0)/withProj.length:null;
   const posArr=Object.values(scopeTot).filter(t=>t.pos===pos).sort((a,b)=>b.pts-a.pts);
@@ -6027,8 +6079,9 @@ function cmpStats(pid,scopeTot){
   return{pid:String(pid),name:m?`${m.first_name} ${m.last_name}`:'Player '+pid,pos,team:m?.team||'',reg,po,total,starts,
     avg:starts?total/starts:null,
     best:starts?Math.max(...reg.map(s=>s.points||0)):null,
-    boom:starts?reg.filter(s=>(s.points||0)>=20).length/starts*100:null,
-    dud:starts?reg.filter(s=>(s.points||0)<8).length/starts*100:null,
+    boomT,bustT,
+    boom:starts?reg.filter(s=>(s.points||0)>=boomT).length/starts*100:null,
+    dud:starts?reg.filter(s=>(s.points||0)<bustT).length/starts*100:null,
     projDiff,projN:withProj.length,
     poPts:po.reduce((a,s)=>a+(s.points||0),0),poStarts:po.length,
     rk,mgrs:Object.entries(mgrCount).sort((a,b)=>b[1]-a[1]).slice(0,3)};
@@ -6036,7 +6089,7 @@ function cmpStats(pid,scopeTot){
 function renderCompare(){
   const body=document.getElementById('cmp-body');if(!body)return;
   if(!DB.allStarters.length){body.innerHTML='<div class="empty">Load seasons first.</div>';return;}
-  if(!document.getElementById('cmp-list').children.length||!cmpA||!cmpB)cmpInit();
+  cmpInit();
   // season chips
   const yrs=[...new Set(DB.allStarters.map(s=>s.year))].sort((a,b)=>b-a);
   const chipEl=document.getElementById('cmp-chips');
@@ -6089,7 +6142,9 @@ function renderCompare(){
   });
   const both=aW+bW+ties;
   const bigLine=(g)=>g?`${g.sa.year} Wk${g.sa.week} · ${(g.sa.points||0).toFixed(1)} – ${(g.sb.points||0).toFixed(1)}`:'—';
-  const first=n=>n.split(' ')[0];
+  const first=n=>n.split(' ').slice(1).join(' ')||n; // last name
+  const sameT=A.boomT===B.boomT&&A.bustT===B.bustT;
+  const tNote=`Boom/bust cutoffs are set by position — ${Object.entries(CMP_THRESH).map(([k,v])=>`${k} ${v[0]}+ / <${v[1]}`).join(', ')}.`;
 
   // chart data over every league week in scope
   const wkSet=new Set();
@@ -6113,14 +6168,14 @@ function renderCompare(){
       ${row('Starts',A.starts,B.starts,{d:0})}
       ${row('Avg / start',A.avg,B.avg)}
       ${row('Best game',A.best,B.best)}
-      ${row('20+ pt games',A.boom,B.boom,{d:0,suf:'%'})}
-      ${row('Under 8 pts',A.dud,B.dud,{d:0,suf:'%',low:true})}
+      ${row(sameT?`Boom games (${A.boomT}+)`:'Boom games',A.boom,B.boom,{d:0,suf:'%'})}
+      ${row(sameT?`Bust games (<${A.bustT})`:'Bust games',A.dud,B.dud,{d:0,suf:'%',low:true})}
       ${row('POTG / POTW',A.potg,B.potg,{d:0})}
       ${row('vs projection (avg)',A.projDiff,B.projDiff,{d:1,pre:''})}
       ${row('Playoff points',A.poPts,B.poPts)}
       ${row('Playoff starts',A.poStarts,B.poStarts,{d:0})}
       ${row(A.pos===B.pos?A.pos+' rank':'Pos rank',A.rk||null,B.rk||null,{d:0,pre:'#',low:true,rank:true})}
-      <div style="font-size:0.7rem;color:var(--text3);margin-top:6px">Projection data starts in 2020 (${A.projN} starts for ${first(A.name)}, ${B.projN} for ${first(B.name)}). Positive = beats projection. Rank is within each player's own position${cmpSeason==='all'?'':' for '+cmpSeason}.</div>
+      <div style="font-size:0.7rem;color:var(--text3);margin-top:6px">Projection data starts in 2020 (${A.projN} starts for ${first(A.name)}, ${B.projN} for ${first(B.name)}). Positive = beats projection. Rank is within each player's own position${cmpSeason==='all'?'':' for '+cmpSeason}. ${tNote}</div>
     </div>
     <div class="cmp-card"><div class="cmp-sec" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
         <span>${cmpMode==='cum'?'Cumulative points':'Points per start'} by week</span>
