@@ -1027,6 +1027,8 @@ tbody tr.highlight td{background:var(--gold-dim)}
           <th class="sortable-th" onclick="sortPlayers('starts')" id="pth-starts">Starts <span class="sort-arrow"></span></th>
           <th class="sortable-th" onclick="sortPlayers('avg')" id="pth-avg">Avg Pts <span class="sort-arrow"></span></th>
           <th class="sortable-th" onclick="sortPlayers('best')" id="pth-best">Best Game <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortPlayers('wins')" id="pth-wins" title="Team record in games where this player was started">Team W–L <span class="sort-arrow"></span></th>
+          <th class="sortable-th" onclick="sortPlayers('winpct')" id="pth-winpct" title="Team win % in games where this player was started">Win % <span class="sort-arrow"></span></th>
           <th>Trend</th>
         </tr></thead>
         <tbody id="players-body"></tbody>
@@ -2858,7 +2860,7 @@ function sortMyScoring(col){
 function sortPlayers(col){
   playerScoringSort=playerScoringSort.col===col?{col,dir:playerScoringSort.dir*-1}:{col,dir:-1};
   playerScoringPage=0; // reset to first page on sort
-  ['total','starts','avg','best'].forEach(c=>{
+  ['total','starts','avg','best','wins','winpct'].forEach(c=>{
     const th=document.getElementById('pth-'+c);if(!th)return;
     th.classList.toggle('active-sort',c===col);
     th.querySelector('.sort-arrow').textContent=c===col?(playerScoringSort.dir===-1?'↓':'↑'):'';
@@ -4786,8 +4788,9 @@ function renderPlayers(){
   }
   const agg={};
   starters.forEach(s=>{
-    if(!agg[s.pid])agg[s.pid]={pid:s.pid,starts:0,total:0,best:0};
+    if(!agg[s.pid])agg[s.pid]={pid:s.pid,starts:0,total:0,best:0,w:0,l:0,t:0};
     agg[s.pid].starts++;agg[s.pid].total+=(s.points||0);
+    {const r=starterResult(s);if(r==='W')agg[s.pid].w++;else if(r==='L')agg[s.pid].l++;else if(r==='T')agg[s.pid].t++;}
     if((s.points||0)>agg[s.pid].best)agg[s.pid].best=s.points||0;
   });
   let rows=Object.values(agg).map(p=>{
@@ -4795,11 +4798,14 @@ function renderPlayers(){
     const name=m?`${m.first_name} ${m.last_name}`:'Player '+p.pid;
     const pos=m?.fantasy_positions?.[0]||m?.position||'?';
     const nflTeam=m?.team||'';
-    return{...p,name,pos,nflTeam,avg:p.starts?p.total/p.starts:0};
+    const dec=p.w+p.l+p.t;
+    return{...p,name,pos,nflTeam,avg:p.starts?p.total/p.starts:0,dec,pct:dec?(p.w+p.t*0.5)/dec*100:null};
   });
   if(search)rows=rows.filter(r=>r.name.toLowerCase().includes(search)||r.pos.toLowerCase().includes(search)||r.nflTeam.toLowerCase().includes(search));
   if(posF!=='all')rows=rows.filter(r=>r.pos===posF||(posF==='DEF'&&(r.pos==='DEF'||r.pos==='DST')));
-  const sf={total:(a,b)=>(a.total-b.total)*dir,starts:(a,b)=>(a.starts-b.starts)*dir,avg:(a,b)=>(a.avg-b.avg)*dir,best:(a,b)=>(a.best-b.best)*dir};
+  const sf={total:(a,b)=>(a.total-b.total)*dir,starts:(a,b)=>(a.starts-b.starts)*dir,avg:(a,b)=>(a.avg-b.avg)*dir,best:(a,b)=>(a.best-b.best)*dir,
+    wins:(a,b)=>(a.w-b.w||a.pct-b.pct)*dir,
+    winpct:(a,b)=>((a.pct??-1)-(b.pct??-1)||a.dec-b.dec)*dir};
   rows.sort(sf[sortBy]||sf.total);
 
   // Build debut map: pid -> {year, week} of first-ever start
@@ -4816,7 +4822,7 @@ function renderPlayers(){
   const maxTotal=rows.length?Math.max(...rows.map(r=>r.total)):1;
   const pc={QB:'badge-QB',RB:'badge-RB',WR:'badge-WR',TE:'badge-TE',K:'badge-K',DEF:'badge-DEF',DST:'badge-DST',FB:'badge-RB'};
   const body=document.getElementById('players-body');
-  if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">No players found.</td></tr>';return;}
+  if(!rows.length){body.innerHTML='<tr><td colspan="10" class="empty">No players found.</td></tr>';return;}
 
   // Update column header with context
   const trendTh=document.querySelector('#panel-players thead th:last-child');
@@ -4861,6 +4867,8 @@ function renderPlayers(){
       <td class="mono">${r.starts}</td>
       <td class="mono">${r.avg.toFixed(1)}</td>
       <td class="mono">${r.best.toFixed(1)}</td>
+      <td class="mono">${r.dec?`${r.w}–${r.l}${r.t?'–'+r.t:''}`:'—'}</td>
+      <td class="mono">${r.pct==null?'—':r.pct.toFixed(0)+'%'}</td>
       <td>${trendCell}</td>
     </tr>`;
   }).join('');
@@ -4989,6 +4997,7 @@ function openPlayerModal(pid){
     byPlayoffSeason[s.year].managers.add(s.managerKey||s.teamName);
   });
 
+  const wlAll=wlRecord(all),wlPo=wlRecord(playoffAll);
   window._shareCtx={pid,name,pos,nflTeam,total,starts,avg,best,posRk,overallRk,playoffStarts,
     acq:acq?acq.label:'',awards:playerAwards.map(x=>x.line)};
   (document.getElementById('modal-body')||{innerHTML:''}).innerHTML=`
@@ -5022,6 +5031,11 @@ function openPlayerModal(pid){
       <div class="mstat"><div class="ml">${pos} Rank</div><div class="mv">#${posRk}</div></div>
       <div class="mstat"><div class="ml">Overall Rank</div><div class="mv">#${overallRk}</div></div>
     </div>
+    <div class="modal-stats" style="margin-top:0.5rem;grid-template-columns:repeat(3,1fr)">
+      <div class="mstat"><div class="ml">Team Record</div><div class="mv">${wlAll.txt}</div></div>
+      <div class="mstat"><div class="ml">Team Win %</div><div class="mv">${wlAll.pct==null?'—':wlAll.pct.toFixed(0)+'%'}</div></div>
+      <div class="mstat"><div class="ml">Playoff Record</div><div class="mv" style="color:var(--teal)">${wlPo.txt}</div></div>
+    </div>
     ${playoffStarts>0?`<div style="margin-top:0.5rem">
       <div style="font-size:0.65rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem">Playoff Stats (Championship bracket)</div>
       <div class="modal-stats" style="grid-template-columns:repeat(3,1fr)">
@@ -5049,6 +5063,7 @@ function openPlayerModal(pid){
                 <thead><tr style="color:var(--text3)">
                   <th style="text-align:left;padding:3px 6px">Wk</th>
                   <th style="text-align:left;padding:3px 6px">Manager</th>
+                  <th style="text-align:center;padding:3px 6px">Team</th>
                   <th style="text-align:right;padding:3px 6px">Pts</th>
                 </tr></thead>
                 <tbody>${games.map(g=>{
@@ -5059,6 +5074,7 @@ function openPlayerModal(pid){
                   return`<tr style="border-top:0.5px solid var(--border)">
                     <td style="padding:3px 6px;color:var(--text3)">Wk ${g.week}</td>
                     <td style="padding:3px 6px">${mgr}</td>
+                    <td style="padding:3px 6px;text-align:center;font-family:var(--font-mono);font-weight:600;color:${{W:'var(--teal)',L:'var(--crimson)',T:'var(--text2)'}[starterResult(g)]||'var(--text3)'}">${starterResult(g)||'—'}</td>
                     <td style="padding:3px 6px;text-align:right;font-family:var(--font-mono);color:${isGood?'var(--teal)':isBad?'var(--crimson)':'var(--text)'};font-weight:${isGood?600:400}">${pts}</td>
                   </tr>`;
                 }).join('')}</tbody>
@@ -5973,6 +5989,46 @@ function switchTab(name){
 }
 
 
+
+// ══════════════════════════════════════════════════════════════
+// TEAM RESULT WHEN STARTED (W/L credited to a player)
+// ══════════════════════════════════════════════════════════════
+const _wlCache=new WeakMap();
+function wlIndex(season){
+  const mb=season.matchupsByWeek||{};
+  const n=Object.keys(mb).length;
+  const c=_wlCache.get(season);
+  if(c&&c.mb===mb&&c.n===n)return c.map;
+  const map={};
+  Object.entries(mb).forEach(([wk,mus])=>{
+    if(!Array.isArray(mus))return;
+    const byId={};
+    mus.forEach(m=>{if(m.matchup_id!=null)(byId[m.matchup_id]=byId[m.matchup_id]||[]).push(m);});
+    Object.values(byId).forEach(pair=>{
+      if(pair.length!==2)return;
+      const[a,b]=pair,pa=a.points||0,pb=b.points||0;
+      if(pa===0&&pb===0)return; // not played yet
+      const ra=pa>pb?'W':pa<pb?'L':'T';
+      map[wk+'|'+a.roster_id]=ra;
+      map[wk+'|'+b.roster_id]=ra==='W'?'L':ra==='L'?'W':'T';
+    });
+  });
+  _wlCache.set(season,{mb,n,map});
+  return map;
+}
+// 'W' | 'L' | 'T' | null for the team that started this starter entry that week
+function starterResult(s){
+  const season=DB.seasons.find(x=>x.year===s.year);
+  if(!season)return null;
+  return wlIndex(season)[s.week+'|'+s.teamRosterId]||null;
+}
+function wlRecord(list){
+  let w=0,l=0,t=0;
+  list.forEach(s=>{const r=starterResult(s);if(r==='W')w++;else if(r==='L')l++;else if(r==='T')t++;});
+  const n=w+l+t;
+  return{w,l,t,n,pct:n?(w+t*0.5)/n*100:null,txt:n?`${w}–${l}${t?'–'+t:''}`:'—'};
+}
+
 // ══════════════════════════════════════════════════════════════
 // PLAYER COMPARE
 // ══════════════════════════════════════════════════════════════
@@ -6084,6 +6140,7 @@ function cmpStats(pid,scopeTot){
     dud:starts?reg.filter(s=>(s.points||0)<bustT).length/starts*100:null,
     projDiff,projN:withProj.length,
     poPts:po.reduce((a,s)=>a+(s.points||0),0),poStarts:po.length,
+    wl:wlRecord(reg),wlPo:wlRecord(po),
     rk,mgrs:Object.entries(mgrCount).sort((a,b)=>b[1]-a[1]).slice(0,3)};
 }
 function renderCompare(){
@@ -6124,6 +6181,10 @@ function renderCompare(){
       <div class="cmp-bar l${wa?' w':''}"><span>${show(va)}</span><i style="width:${bw(va)}px"></i></div>
       <div class="cmp-lab">${label}</div>
       <div class="cmp-bar${wb?' w':''}"><span>${show(vb)}</span><i style="width:${bw(vb)}px"></i></div></div>`;
+  };
+  const rowTxt=(label,ta,tb,pa,pb)=>{
+    const wa=pa!=null&&pb!=null&&pa>pb,wb=pa!=null&&pb!=null&&pb>pa;
+    return`<div class="cmp-row"><div class="cmp-bar l${wa?' w':''}"><span>${ta}</span></div><div class="cmp-lab">${label}</div><div class="cmp-bar${wb?' w':''}"><span>${tb}</span></div></div>`;
   };
   const head=(P,color)=>`<div class="cmp-pc" onclick="openPlayerModal('${P.pid}')">
     <div class="cmp-av"><img src="https://sleepercdn.com/content/nfl/players/thumb/${P.pid}.jpg" alt="" onerror="this.remove()"><span>${P.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</span></div>
@@ -6172,10 +6233,13 @@ function renderCompare(){
       ${row(sameT?`Bust games (<${A.bustT})`:'Bust games',A.dud,B.dud,{d:0,suf:'%',low:true})}
       ${row('POTG / POTW',A.potg,B.potg,{d:0})}
       ${row('vs projection (avg)',A.projDiff,B.projDiff,{d:1,pre:''})}
+      ${row('Team wins when started',A.wl.n?A.wl.w:null,B.wl.n?B.wl.w:null,{d:0})}
+      ${row('Team win % when started',A.wl.pct,B.wl.pct,{d:0,suf:'%'})}
+      ${rowTxt('Team record',A.wl.txt,B.wl.txt,A.wl.pct,B.wl.pct)}
       ${row('Playoff points',A.poPts,B.poPts)}
       ${row('Playoff starts',A.poStarts,B.poStarts,{d:0})}
       ${row(A.pos===B.pos?A.pos+' rank':'Pos rank',A.rk||null,B.rk||null,{d:0,pre:'#',low:true,rank:true})}
-      <div style="font-size:0.7rem;color:var(--text3);margin-top:6px">Projection data starts in 2020 (${A.projN} starts for ${first(A.name)}, ${B.projN} for ${first(B.name)}). Positive = beats projection. Rank is within each player's own position${cmpSeason==='all'?'':' for '+cmpSeason}. ${tNote}</div>
+      <div style="font-size:0.7rem;color:var(--text3);margin-top:6px">Projection data starts in 2020 (${A.projN} starts for ${first(A.name)}, ${B.projN} for ${first(B.name)}). Positive = beats projection. Team wins count the weeks the player was started by a team that won that week's matchup. Rank is within each player's own position${cmpSeason==='all'?'':' for '+cmpSeason}. ${tNote}</div>
     </div>
     <div class="cmp-card"><div class="cmp-sec" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
         <span>${cmpMode==='cum'?'Cumulative points':'Points per start'} by week</span>
@@ -6186,14 +6250,14 @@ function renderCompare(){
     <div class="cmp-two">
       <div class="cmp-card"><div class="cmp-sec">When both started the same week</div>
         <div class="cmp-line"><span style="color:var(--text2)">Weeks both started</span><b>${both}</b></div>
-        <div class="cmp-line"><span style="color:var(--text2)">Higher score wins</span><b style="color:var(--gold)">${first(A.name)} ${aW} – ${bW} ${first(B.name)}${ties?' ('+ties+' tied)':''}</b></div>
-        <div class="cmp-line"><span style="color:var(--text2)">Biggest ${first(A.name)} win</span><span>${bigLine(bigA)}</span></div>
-        <div class="cmp-line"><span style="color:var(--text2)">Biggest ${first(B.name)} win</span><span>${bigLine(bigB)}</span></div></div>
+        <div class="cmp-line"><span style="color:var(--text2)">Higher score wins</span><b><span style="color:var(--gold)">${first(A.name)} ${aW}</span> – <span style="color:var(--teal)">${bW} ${first(B.name)}</span>${ties?' ('+ties+' tied)':''}</b></div>
+        <div class="cmp-line" style="color:var(--gold)"><span>Biggest ${first(A.name)} win</span><span>${bigLine(bigA)}</span></div>
+        <div class="cmp-line" style="color:var(--teal)"><span>Biggest ${first(B.name)} win</span><span>${bigLine(bigB)}</span></div></div>
       <div class="cmp-card"><div class="cmp-sec">Who started them</div>
-        <div class="cmp-line"><span style="color:var(--text2)">${first(A.name)}</span><span>${mgrs(A)}</span></div>
-        <div class="cmp-line"><span style="color:var(--text2)">${first(B.name)}</span><span>${mgrs(B)}</span></div>
-        <div class="cmp-line"><span style="color:var(--text2)">${first(A.name)} acquired</span><span style="text-align:right">${acq(A.pid)}</span></div>
-        <div class="cmp-line"><span style="color:var(--text2)">${first(B.name)} acquired</span><span style="text-align:right">${acq(B.pid)}</span></div></div>
+        <div class="cmp-line" style="color:var(--gold)"><span>${first(A.name)}</span><span>${mgrs(A)}</span></div>
+        <div class="cmp-line" style="color:var(--teal)"><span>${first(B.name)}</span><span>${mgrs(B)}</span></div>
+        <div class="cmp-line" style="color:var(--gold)"><span>${first(A.name)} acquired</span><span style="text-align:right">${acq(A.pid)}</span></div>
+        <div class="cmp-line" style="color:var(--teal)"><span>${first(B.name)} acquired</span><span style="text-align:right">${acq(B.pid)}</span></div></div>
     </div>
     <div class="cmp-card"><div class="cmp-sec">Honors</div><div class="cmp-two" style="gap:18px"><div style="color:var(--gold)">${honors(A)}</div><div style="color:var(--teal)">${honors(B)}</div></div></div>`;
 
